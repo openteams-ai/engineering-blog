@@ -279,8 +279,6 @@ def convert_markdown_to_html(
     def stash_mermaid(m):
         key = f"MERMAIDBLOCK{len(mermaid_blocks)}MERMAIDBLOCK"
         diagram = m.group(1).strip()
-        if not diagram.startswith("%%{init"):
-            diagram = '%%{init: {"theme": "dark"}}%%\n' + diagram
         mermaid_blocks[key] = diagram
         return key
 
@@ -312,6 +310,82 @@ def convert_markdown_to_html(
             f'<!-- wp:html --><pre class="mermaid" style="text-align:center;">{diagram}</pre><!-- /wp:html -->',
         )
 
+    # Post-process code blocks for Prism.js plugins (line-highlight, command-line)
+    # Parses #| directives from code content and moves them to <pre> attributes
+    detected_languages = set()
+    has_line_highlight = False
+    has_command_line = False
+
+    def enhance_code_blocks(html):
+        nonlocal has_line_highlight, has_command_line
+        code_block_pattern = re.compile(
+            r"<pre><code\s+class=\"language-(\w+)\">(.*?)</code></pre>",
+            re.DOTALL,
+        )
+
+        def process_block(match):
+            nonlocal has_line_highlight, has_command_line
+            lang = match.group(1)
+            detected_languages.add(lang)
+            code = match.group(2)
+            pre_attrs = {}
+            pre_classes = [f"language-{lang}"]
+            lines_to_remove = []
+
+            code_lines = code.split("\n")
+            for i, line in enumerate(code_lines):
+                stripped = line.strip()
+                # #| highlight: 1-3, 5
+                hl_match = re.match(r"#\|\s*highlight:\s*(.+)", stripped)
+                if hl_match:
+                    pre_attrs["data-line"] = hl_match.group(1).strip()
+                    has_line_highlight = True
+                    lines_to_remove.append(i)
+                    continue
+                # #| command-line (with optional data-user, data-host, data-prompt)
+                cmd_match = re.match(r"#\|\s*command-line(?:\s+(.+))?", stripped)
+                if cmd_match:
+                    pre_classes.append("command-line")
+                    has_command_line = True
+                    if cmd_match.group(1):
+                        for part in cmd_match.group(1).split():
+                            if "=" in part:
+                                k, v = part.split("=", 1)
+                                pre_attrs[k] = v.strip("\"'")
+                    lines_to_remove.append(i)
+                    continue
+                # #| data-output: 2, 4-8
+                out_match = re.match(r"#\|\s*data-output:\s*(.+)", stripped)
+                if out_match:
+                    pre_attrs["data-output"] = out_match.group(1).strip()
+                    lines_to_remove.append(i)
+                    continue
+                # #| data-filter-output: (out)
+                filt_match = re.match(
+                    r"#\|\s*data-filter-output:\s*(.+)", stripped
+                )
+                if filt_match:
+                    pre_attrs["data-filter-output"] = filt_match.group(1).strip()
+                    lines_to_remove.append(i)
+                    continue
+
+            # Remove directive lines from code
+            for i in sorted(lines_to_remove, reverse=True):
+                code_lines.pop(i)
+            cleaned_code = "\n".join(code_lines)
+
+            # Build <pre> tag
+            class_str = " ".join(pre_classes)
+            attrs_str = f'class="{class_str}"'
+            for k, v in pre_attrs.items():
+                attrs_str += f' {k}="{v}"'
+
+            return f'<!-- wp:html --><pre {attrs_str}><code class="language-{lang}">{cleaned_code}</code></pre><!-- /wp:html -->'
+
+        return code_block_pattern.sub(process_block, html)
+
+    html_content = enhance_code_blocks(html_content)
+
     # Wrap tables in scrollable containers
     html_content = re.sub(
         r"(<table.*?</table>)",
@@ -324,14 +398,96 @@ def convert_markdown_to_html(
     if mermaid_blocks:
         mermaid_script = (
             "\n<!-- wp:html -->\n"
-            '<style>pre.mermaid { background: transparent !important; padding: 0 !important; } '
-            "pre.mermaid svg { background: transparent !important; } "
-            "pre.mermaid .cluster rect { fill: transparent !important; stroke: #555 !important; }</style>\n"
+            '<style>pre.mermaid { background: transparent !important; padding: 0 !important; }</style>\n'
             '<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>\n'
             "<script>mermaid.initialize({startOnLoad:true});</script>\n"
             "<!-- /wp:html -->"
         )
         html_content += mermaid_script
+
+    # Inject Prism.js if any code blocks are present
+    if detected_languages:
+        # Map markdown language names to Prism.js component names
+        lang_map = {
+            "python": "python",
+            "bash": "bash",
+            "shell": "bash",
+            "sh": "bash",
+            "sql": "sql",
+            "yaml": "yaml",
+            "yml": "yaml",
+            "json": "json",
+            "javascript": "javascript",
+            "js": "javascript",
+            "typescript": "typescript",
+            "ts": "typescript",
+            "html": "markup",
+            "xml": "markup",
+            "css": "css",
+            "go": "go",
+            "rust": "rust",
+            "java": "java",
+            "c": "c",
+            "cpp": "cpp",
+            "r": "r",
+            "toml": "toml",
+            "docker": "docker",
+            "dockerfile": "docker",
+            "makefile": "makefile",
+        }
+
+        prism_base = "https://cdn.jsdelivr.net/npm/prismjs@1"
+        theme_css = f"{prism_base}/themes/prism.min.css"
+        core_js = f"{prism_base}/prism.min.js"
+
+        # Build language script tags
+        lang_scripts = []
+        for lang in detected_languages:
+            prism_lang = lang_map.get(lang, lang)
+            if prism_lang != "text":
+                lang_scripts.append(
+                    f'<script src="{prism_base}/components/prism-{prism_lang}.min.js"></script>'
+                )
+
+        # Build plugin script/css tags
+        plugin_assets = []
+        plugin_assets.append(
+            f'<link rel="stylesheet" href="{prism_base}/plugins/toolbar/prism-toolbar.min.css"/>'
+        )
+        plugin_assets.append(
+            f'<script src="{prism_base}/plugins/toolbar/prism-toolbar.min.js"></script>'
+        )
+        plugin_assets.append(
+            f'<script src="{prism_base}/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script>'
+        )
+        plugin_assets.append(
+            f'<script src="{prism_base}/plugins/show-language/prism-show-language.min.js"></script>'
+        )
+        if has_line_highlight:
+            plugin_assets.append(
+                f'<link rel="stylesheet" href="{prism_base}/plugins/line-highlight/prism-line-highlight.min.css"/>'
+            )
+            plugin_assets.append(
+                f'<script src="{prism_base}/plugins/line-highlight/prism-line-highlight.min.js"></script>'
+            )
+        if has_command_line:
+            plugin_assets.append(
+                f'<link rel="stylesheet" href="{prism_base}/plugins/command-line/prism-command-line.min.css"/>'
+            )
+            plugin_assets.append(
+                f'<script src="{prism_base}/plugins/command-line/prism-command-line.min.js"></script>'
+            )
+
+        prism_injection = (
+            '\n<!-- wp:html -->\n'
+            f'<link rel="stylesheet" href="{theme_css}"/>\n'
+            f'<script src="{core_js}" data-manual></script>\n'
+            + "\n".join(lang_scripts) + "\n"
+            + "\n".join(plugin_assets) + "\n"
+            '<script>Prism.highlightAll();</script>\n'
+            '<!-- /wp:html -->'
+        )
+        html_content += prism_injection
 
     return html_content
 
