@@ -152,8 +152,12 @@ def process_file(
         post_data["content"], file_path, wp_token, wp_api_url, username
     )
 
+    # Resolve author: use frontmatter 'author' field if set, otherwise fall back to env USERNAME
+    author_username = post_data.get("author") or username
+
     print(f"Title: {post_data['title']}")
     print(f"Slug: {post_data['slug']}")
+    print(f"Author: {author_username}")
 
     if has_wordpress_id(file_path):
         # Sync existing post
@@ -166,9 +170,10 @@ def process_file(
     else:
         # Create new post
         print("Mode: create (new draft)")
-        author_id = get_user_id(username, wp_token, wp_api_url)
+        author_id = get_user_id(author_username, wp_token, wp_api_url, username)
         if not author_id:
-            print(f"  ❌ Could not find user ID for {username}")
+            print(f"  ❌ Could not find WordPress user '{author_username}'")
+            print(f"     Ensure this user exists on WordPress")
             return False
 
         wp_post = create_post(

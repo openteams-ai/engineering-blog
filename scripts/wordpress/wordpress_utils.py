@@ -45,6 +45,7 @@ class PostMetadata(BaseModel):
 
     title: Optional[str] = None
     slug: Optional[str] = None
+    author: Optional[str] = None
     wordpress_id: Optional[int] = None
     categories: List[str] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
@@ -58,7 +59,7 @@ class PostMetadata(BaseModel):
         return v if isinstance(v, list) else []
 
     @field_validator(
-        "title", "slug", "meta_description", "focus_keyword", mode="before"
+        "title", "slug", "author", "meta_description", "focus_keyword", mode="before"
     )
     @classmethod
     def ensure_optional_str(cls, v: Any):
@@ -109,6 +110,7 @@ def extract_post_data(file_path: str) -> Dict:
 
     return {
         "title": title,
+        "author": validated_meta.author,
         "content": markdown_content,
         "categories": validated_meta.categories,
         "tags": validated_meta.tags,
@@ -124,23 +126,47 @@ def get_auth_headers(username: str, wp_token: str) -> Dict[str, str]:
     """Create authentication headers for WordPress Application Password."""
     credentials = f"{username}:{wp_token}"
     encoded_credentials = base64.b64encode(credentials.encode("utf-8")).decode("utf-8")
-    return {"Authorization": f"Basic {encoded_credentials}"}
+    return {
+        "Authorization": f"Basic {encoded_credentials}",
+        "User-Agent": "OpenTeams-Engineering-Blog/1.0",
+    }
 
 
-def get_user_id(username: str, wp_token: str, wp_api_url: str) -> Optional[int]:
-    """Get WordPress user ID from username."""
-    headers = get_auth_headers(username, wp_token)
+def get_user_id(
+    author: str, wp_token: str, wp_api_url: str, auth_username: str
+) -> Optional[int]:
+    """Get WordPress user ID by name, slug, or username.
+
+    Args:
+        author: The author to look up (display name, slug, or username)
+        wp_token: WordPress application password
+        wp_api_url: WordPress REST API URL
+        auth_username: Username for API authentication (from .env)
+    """
+    headers = get_auth_headers(auth_username, wp_token)
     response = requests.get(
-        f"{wp_api_url}/users?search={username}", headers=headers, timeout=10
+        f"{wp_api_url}/users",
+        headers=headers,
+        params={"search": author},
+        timeout=10,
     )
 
     if response.status_code == 200:
         users = response.json()
+        author_lower = author.lower()
         for user in users:
-            if user["slug"] == username:
+            # Match by slug, name, or username (case-insensitive)
+            if (
+                user["slug"] == author_lower
+                or user["name"].lower() == author_lower
+                or user.get("username", "").lower() == author_lower
+            ):
                 return user["id"]
+        # If only one result, use it
+        if len(users) == 1:
+            return users[0]["id"]
 
-    print(f"⚠️  User '{username}' not found")
+    print(f"⚠️  User '{author}' not found")
 
 
 def get_categories_map(wp_token: str, wp_api_url: str, username: str) -> Dict[str, int]:
