@@ -8,9 +8,11 @@ to WordPress via the REST API.
 
 import os
 import argparse
+import json
 import re
 import requests
 import base64
+import yaml
 import markdown
 from pathlib import Path
 from typing import Optional, Dict, List, Any
@@ -22,6 +24,10 @@ from dotenv import load_dotenv
 script_dir = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(os.path.dirname(os.path.dirname(script_dir)), ".env")
 load_dotenv(env_path, override=True)
+
+# API request timeouts (seconds)
+DEFAULT_TIMEOUT = 10
+UPLOAD_TIMEOUT = 60
 
 
 def setup_common_args(description: str) -> argparse.ArgumentParser:
@@ -90,11 +96,9 @@ def extract_post_data(file_path: str) -> Dict:
         yaml_content = ""
         markdown_content = content
 
-    import yaml as _yaml
-
     meta = {}
     if yaml_content:
-        meta = _yaml.safe_load(yaml_content) or {}
+        meta = yaml.safe_load(yaml_content) or {}
 
     validated_meta = PostMetadata.from_yaml(meta)
 
@@ -244,252 +248,273 @@ def resolve_categories_and_tags(
     }
 
 
-def convert_markdown_to_html(
-    markdown_content: str, post_data: Optional[Dict] = None
-) -> str:
-    """Convert markdown content to HTML for WordPress."""
+def _preprocess_markdown(content: str) -> str:
+    """Normalize Quarto/custom markdown syntax to standard markdown."""
     # Remove code blocks with #| echo: false
     echo_false_pattern = r"```\{(\w+)\}\s*\n\s*#\|\s*echo:\s*false\s*\n.*?```"
-    processed_content = re.sub(
-        echo_false_pattern, "", markdown_content, flags=re.DOTALL
-    )
+    content = re.sub(echo_false_pattern, "", content, flags=re.DOTALL)
 
-    # Convert plain code blocks to ```text for consistent styling
-    def fix_plain_code_blocks(content):
-        lines = content.split("\n")
-        for i, line in enumerate(lines):
-            if line.strip() == "```":
-                if (
-                    i + 1 < len(lines)
-                    and lines[i + 1].strip()
-                    and not lines[i + 1].strip().startswith("```")
-                ):
-                    lines[i] = "```text"
-        return "\n".join(lines)
+    # Label unmarked code fences as ```text for consistent styling
+    lines = content.split("\n")
+    for i, line in enumerate(lines):
+        if line.strip() == "```":
+            if (
+                i + 1 < len(lines)
+                and lines[i + 1].strip()
+                and not lines[i + 1].strip().startswith("```")
+            ):
+                lines[i] = "```text"
+    content = "\n".join(lines)
 
-    processed_content = fix_plain_code_blocks(processed_content)
+    # Convert Quarto-style ```{python} to ```python
+    content = re.sub(r"```\{(\w+)\}", r"```\1", content)
+    return content
 
-    # Convert Quarto-style code blocks to standard markdown
-    processed_content = re.sub(r"```\{(\w+)\}", r"```\1", processed_content)
 
-    # Extract mermaid blocks before markdown processing
-    mermaid_blocks = {}
-    mermaid_pattern = re.compile(r"```mermaid\s*\n(.*?)```", re.DOTALL)
+def _stash_mermaid_blocks(content: str) -> tuple[str, Dict[str, str]]:
+    """Replace mermaid code blocks with placeholders before markdown conversion.
 
-    def stash_mermaid(m):
-        key = f"MERMAIDBLOCK{len(mermaid_blocks)}MERMAIDBLOCK"
-        diagram = m.group(1).strip()
-        mermaid_blocks[key] = diagram
+    Returns the modified content and a dict mapping placeholders to diagrams.
+    """
+    blocks = {}
+    pattern = re.compile(r"```mermaid\s*\n(.*?)```", re.DOTALL)
+
+    def replacer(m):
+        key = f"MERMAIDBLOCK{len(blocks)}MERMAIDBLOCK"
+        blocks[key] = m.group(1).strip()
         return key
 
-    processed_content = mermaid_pattern.sub(stash_mermaid, processed_content)
+    return pattern.sub(replacer, content), blocks
 
-    # Convert markdown to HTML
-    md = markdown.Markdown(
-        extensions=[
-            "tables",
-            "fenced_code",
-            "nl2br",
-            "attr_list",
-            "def_list",
-            "abbr",
-            "footnotes",
-            "md_in_html",
-        ]
-    )
-    html_content = md.convert(processed_content)
 
-    # Restore mermaid blocks as renderable HTML
-    for key, diagram in mermaid_blocks.items():
-        html_content = html_content.replace(
-            f"<p>{key}</p>",
-            f'<!-- wp:html --><pre class="mermaid" style="text-align:center;">{diagram}</pre><!-- /wp:html -->',
-        )
-        html_content = html_content.replace(
-            key,
-            f'<!-- wp:html --><pre class="mermaid" style="text-align:center;">{diagram}</pre><!-- /wp:html -->',
-        )
+def _restore_mermaid_blocks(html: str, blocks: Dict[str, str]) -> str:
+    """Replace mermaid placeholders with renderable WordPress HTML."""
+    for key, diagram in blocks.items():
+        mermaid_html = f'<!-- wp:html --><pre class="mermaid" style="text-align:center;">{diagram}</pre><!-- /wp:html -->'
+        html = html.replace(f"<p>{key}</p>", mermaid_html)
+        html = html.replace(key, mermaid_html)
+    return html
 
-    # Post-process code blocks for Prism.js plugins (line-highlight, command-line)
-    # Parses #| directives from code content and moves them to <pre> attributes
+
+_DIRECTIVE_PATTERNS = [
+    (r"#\|\s*highlight:\s*(.+)", "data-line"),
+    (r"#\|\s*data-output:\s*(.+)", "data-output"),
+    (r"#\|\s*data-filter-output:\s*(.+)", "data-filter-output"),
+]
+
+
+def _parse_key_value_pairs(text: str) -> Dict[str, str]:
+    """Parse 'key=value key2=value2' into a dict."""
+    attrs = {}
+    for part in text.split():
+        if "=" in part:
+            k, v = part.split("=", 1)
+            attrs[k] = v.strip("\"'")
+    return attrs
+
+
+def _match_directive(line: str) -> Optional[tuple[str, str]]:
+    """Match a line against known #| directives.
+
+    Returns (directive_type, matched_value) or None.
+    """
+    for pattern, attr_name in _DIRECTIVE_PATTERNS:
+        m = re.match(pattern, line)
+        if m:
+            return attr_name, m.group(1).strip()
+
+    cmd_match = re.match(r"#\|\s*command-line(?:\s+(.+))?", line)
+    if cmd_match:
+        return "command-line", cmd_match.group(1) or ""
+
+    return None
+
+
+def _parse_code_directives(code: str) -> tuple[str, Dict[str, str], List[str], bool]:
+    """Extract #| directives from code block content.
+
+    Returns (cleaned_code, pre_attrs, extra_classes, is_command_line).
+    """
+    pre_attrs = {}
+    extra_classes = []
+    is_command_line = False
+    kept_lines = []
+
+    for line in code.split("\n"):
+        result = _match_directive(line.strip())
+        if not result:
+            kept_lines.append(line)
+            continue
+
+        directive_type, value = result
+        if directive_type == "command-line":
+            extra_classes.append("command-line")
+            is_command_line = True
+            pre_attrs.update(_parse_key_value_pairs(value))
+        else:
+            pre_attrs[directive_type] = value
+
+    return "\n".join(kept_lines), pre_attrs, extra_classes, is_command_line
+
+
+def _enhance_code_blocks_for_prism(html: str) -> tuple[str, set, bool, bool]:
+    """Add Prism.js attributes to code blocks based on #| directives.
+
+    Returns (enhanced_html, detected_languages, has_line_highlight, has_command_line).
+    """
     detected_languages = set()
     has_line_highlight = False
     has_command_line = False
 
-    def enhance_code_blocks(html):
+    code_block_pattern = re.compile(
+        r"<pre><code\s+class=\"language-(\w+)\">(.*?)</code></pre>",
+        re.DOTALL,
+    )
+
+    def process_block(match):
         nonlocal has_line_highlight, has_command_line
-        code_block_pattern = re.compile(
-            r"<pre><code\s+class=\"language-(\w+)\">(.*?)</code></pre>",
-            re.DOTALL,
+        lang = match.group(1)
+        detected_languages.add(lang)
+
+        cleaned_code, pre_attrs, extra_classes, is_cmd = _parse_code_directives(
+            match.group(2)
         )
 
-        def process_block(match):
-            nonlocal has_line_highlight, has_command_line
-            lang = match.group(1)
-            detected_languages.add(lang)
-            code = match.group(2)
-            pre_attrs = {}
-            pre_classes = [f"language-{lang}"]
-            lines_to_remove = []
+        if "data-line" in pre_attrs:
+            has_line_highlight = True
+        if is_cmd:
+            has_command_line = True
 
-            code_lines = code.split("\n")
-            for i, line in enumerate(code_lines):
-                stripped = line.strip()
-                # #| highlight: 1-3, 5
-                hl_match = re.match(r"#\|\s*highlight:\s*(.+)", stripped)
-                if hl_match:
-                    pre_attrs["data-line"] = hl_match.group(1).strip()
-                    has_line_highlight = True
-                    lines_to_remove.append(i)
-                    continue
-                # #| command-line (with optional data-user, data-host, data-prompt)
-                cmd_match = re.match(r"#\|\s*command-line(?:\s+(.+))?", stripped)
-                if cmd_match:
-                    pre_classes.append("command-line")
-                    has_command_line = True
-                    if cmd_match.group(1):
-                        for part in cmd_match.group(1).split():
-                            if "=" in part:
-                                k, v = part.split("=", 1)
-                                pre_attrs[k] = v.strip("\"'")
-                    lines_to_remove.append(i)
-                    continue
-                # #| data-output: 2, 4-8
-                out_match = re.match(r"#\|\s*data-output:\s*(.+)", stripped)
-                if out_match:
-                    pre_attrs["data-output"] = out_match.group(1).strip()
-                    lines_to_remove.append(i)
-                    continue
-                # #| data-filter-output: (out)
-                filt_match = re.match(
-                    r"#\|\s*data-filter-output:\s*(.+)", stripped
-                )
-                if filt_match:
-                    pre_attrs["data-filter-output"] = filt_match.group(1).strip()
-                    lines_to_remove.append(i)
-                    continue
+        classes = [f"language-{lang}"] + extra_classes
+        attrs_str = f'class="{" ".join(classes)}"'
+        for k, v in pre_attrs.items():
+            attrs_str += f' {k}="{v}"'
 
-            # Remove directive lines from code
-            for i in sorted(lines_to_remove, reverse=True):
-                code_lines.pop(i)
-            cleaned_code = "\n".join(code_lines)
+        return f'<!-- wp:html --><pre {attrs_str}><code class="language-{lang}">{cleaned_code}</code></pre><!-- /wp:html -->'
 
-            # Build <pre> tag
-            class_str = " ".join(pre_classes)
-            attrs_str = f'class="{class_str}"'
-            for k, v in pre_attrs.items():
-                attrs_str += f' {k}="{v}"'
+    enhanced = code_block_pattern.sub(process_block, html)
+    return enhanced, detected_languages, has_line_highlight, has_command_line
 
-            return f'<!-- wp:html --><pre {attrs_str}><code class="language-{lang}">{cleaned_code}</code></pre><!-- /wp:html -->'
 
-        return code_block_pattern.sub(process_block, html)
+PRISM_LANGUAGE_MAP = {
+    "python": "python",
+    "bash": "bash",
+    "shell": "bash",
+    "sh": "bash",
+    "sql": "sql",
+    "yaml": "yaml",
+    "yml": "yaml",
+    "json": "json",
+    "javascript": "javascript",
+    "js": "javascript",
+    "typescript": "typescript",
+    "ts": "typescript",
+    "html": "markup",
+    "xml": "markup",
+    "css": "css",
+    "go": "go",
+    "rust": "rust",
+    "java": "java",
+    "c": "c",
+    "cpp": "cpp",
+    "r": "r",
+    "toml": "toml",
+    "docker": "docker",
+    "dockerfile": "docker",
+    "makefile": "makefile",
+}
 
-    html_content = enhance_code_blocks(html_content)
+
+def _build_prism_injection(
+    languages: set, has_line_highlight: bool, has_command_line: bool
+) -> str:
+    """Build the Prism.js CDN script/style tags for detected languages and plugins."""
+    prism_base = "https://cdn.jsdelivr.net/npm/prismjs@1"
+
+    lang_scripts = [
+        f'<script src="{prism_base}/components/prism-{PRISM_LANGUAGE_MAP.get(lang, lang)}.min.js"></script>'
+        for lang in languages
+        if PRISM_LANGUAGE_MAP.get(lang, lang) != "text"
+    ]
+
+    plugin_assets = [
+        f'<link rel="stylesheet" href="{prism_base}/plugins/toolbar/prism-toolbar.min.css"/>',
+        f'<script src="{prism_base}/plugins/toolbar/prism-toolbar.min.js"></script>',
+        f'<script src="{prism_base}/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script>',
+        f'<script src="{prism_base}/plugins/show-language/prism-show-language.min.js"></script>',
+    ]
+    if has_line_highlight:
+        plugin_assets.append(
+            f'<link rel="stylesheet" href="{prism_base}/plugins/line-highlight/prism-line-highlight.min.css"/>'
+        )
+        plugin_assets.append(
+            f'<script src="{prism_base}/plugins/line-highlight/prism-line-highlight.min.js"></script>'
+        )
+    if has_command_line:
+        plugin_assets.append(
+            f'<link rel="stylesheet" href="{prism_base}/plugins/command-line/prism-command-line.min.css"/>'
+        )
+        plugin_assets.append(
+            f'<script src="{prism_base}/plugins/command-line/prism-command-line.min.js"></script>'
+        )
+
+    return (
+        '\n<!-- wp:html -->\n'
+        f'<link rel="stylesheet" href="{prism_base}/themes/prism.min.css"/>\n'
+        f'<script src="{prism_base}/prism.min.js" data-manual></script>\n'
+        + "\n".join(lang_scripts) + "\n"
+        + "\n".join(plugin_assets) + "\n"
+        '<script>Prism.highlightAll();</script>\n'
+        '<!-- /wp:html -->'
+    )
+
+
+_MERMAID_SCRIPT = (
+    "\n<!-- wp:html -->\n"
+    '<style>pre.mermaid { background: transparent !important; padding: 0 !important; }</style>\n'
+    '<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>\n'
+    "<script>mermaid.initialize({startOnLoad:true});</script>\n"
+    "<!-- /wp:html -->"
+)
+
+_MARKDOWN_EXTENSIONS = [
+    "tables",
+    "fenced_code",
+    "nl2br",
+    "attr_list",
+    "def_list",
+    "abbr",
+    "footnotes",
+    "md_in_html",
+]
+
+
+def convert_markdown_to_html(
+    markdown_content: str, post_data: Optional[Dict] = None
+) -> str:
+    """Convert markdown content to WordPress-ready HTML."""
+    content = _preprocess_markdown(markdown_content)
+    content, mermaid_blocks = _stash_mermaid_blocks(content)
+
+    html = markdown.Markdown(extensions=_MARKDOWN_EXTENSIONS).convert(content)
+
+    html = _restore_mermaid_blocks(html, mermaid_blocks)
+    html, languages, has_hl, has_cmd = _enhance_code_blocks_for_prism(html)
 
     # Wrap tables in scrollable containers
-    html_content = re.sub(
+    html = re.sub(
         r"(<table.*?</table>)",
         r'<div style="overflow-x: auto;">\1</div>',
-        html_content,
+        html,
         flags=re.DOTALL,
     )
 
-    # Inject mermaid.js if any diagrams are present
     if mermaid_blocks:
-        mermaid_script = (
-            "\n<!-- wp:html -->\n"
-            '<style>pre.mermaid { background: transparent !important; padding: 0 !important; }</style>\n'
-            '<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>\n'
-            "<script>mermaid.initialize({startOnLoad:true});</script>\n"
-            "<!-- /wp:html -->"
-        )
-        html_content += mermaid_script
+        html += _MERMAID_SCRIPT
+    if languages:
+        html += _build_prism_injection(languages, has_hl, has_cmd)
 
-    # Inject Prism.js if any code blocks are present
-    if detected_languages:
-        # Map markdown language names to Prism.js component names
-        lang_map = {
-            "python": "python",
-            "bash": "bash",
-            "shell": "bash",
-            "sh": "bash",
-            "sql": "sql",
-            "yaml": "yaml",
-            "yml": "yaml",
-            "json": "json",
-            "javascript": "javascript",
-            "js": "javascript",
-            "typescript": "typescript",
-            "ts": "typescript",
-            "html": "markup",
-            "xml": "markup",
-            "css": "css",
-            "go": "go",
-            "rust": "rust",
-            "java": "java",
-            "c": "c",
-            "cpp": "cpp",
-            "r": "r",
-            "toml": "toml",
-            "docker": "docker",
-            "dockerfile": "docker",
-            "makefile": "makefile",
-        }
-
-        prism_base = "https://cdn.jsdelivr.net/npm/prismjs@1"
-        theme_css = f"{prism_base}/themes/prism.min.css"
-        core_js = f"{prism_base}/prism.min.js"
-
-        # Build language script tags
-        lang_scripts = []
-        for lang in detected_languages:
-            prism_lang = lang_map.get(lang, lang)
-            if prism_lang != "text":
-                lang_scripts.append(
-                    f'<script src="{prism_base}/components/prism-{prism_lang}.min.js"></script>'
-                )
-
-        # Build plugin script/css tags
-        plugin_assets = []
-        plugin_assets.append(
-            f'<link rel="stylesheet" href="{prism_base}/plugins/toolbar/prism-toolbar.min.css"/>'
-        )
-        plugin_assets.append(
-            f'<script src="{prism_base}/plugins/toolbar/prism-toolbar.min.js"></script>'
-        )
-        plugin_assets.append(
-            f'<script src="{prism_base}/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script>'
-        )
-        plugin_assets.append(
-            f'<script src="{prism_base}/plugins/show-language/prism-show-language.min.js"></script>'
-        )
-        if has_line_highlight:
-            plugin_assets.append(
-                f'<link rel="stylesheet" href="{prism_base}/plugins/line-highlight/prism-line-highlight.min.css"/>'
-            )
-            plugin_assets.append(
-                f'<script src="{prism_base}/plugins/line-highlight/prism-line-highlight.min.js"></script>'
-            )
-        if has_command_line:
-            plugin_assets.append(
-                f'<link rel="stylesheet" href="{prism_base}/plugins/command-line/prism-command-line.min.css"/>'
-            )
-            plugin_assets.append(
-                f'<script src="{prism_base}/plugins/command-line/prism-command-line.min.js"></script>'
-            )
-
-        prism_injection = (
-            '\n<!-- wp:html -->\n'
-            f'<link rel="stylesheet" href="{theme_css}"/>\n'
-            f'<script src="{core_js}" data-manual></script>\n'
-            + "\n".join(lang_scripts) + "\n"
-            + "\n".join(plugin_assets) + "\n"
-            '<script>Prism.highlightAll();</script>\n'
-            '<!-- /wp:html -->'
-        )
-        html_content += prism_injection
-
-    return html_content
+    return html
 
 
 def verify_authentication(
@@ -525,14 +550,12 @@ def update_qmd_metadata(
     yaml_content = parts[1]
     after_yaml = parts[2]
 
-    import yaml as _yaml
-
-    meta = _yaml.safe_load(yaml_content) or {}
+    meta = yaml.safe_load(yaml_content) or {}
 
     for field, value in metadata_updates.items():
         meta[field] = value
 
-    updated_yaml = _yaml.safe_dump(meta, sort_keys=False)
+    updated_yaml = yaml.safe_dump(meta, sort_keys=False)
     new_content = f"---\n{updated_yaml}---{after_yaml}"
 
     with open(file_path, "w", encoding="utf-8") as f:
@@ -543,8 +566,6 @@ def update_qmd_metadata(
 
 def prepare_yoast_meta_fields(post_data: Dict) -> Dict[str, str]:
     """Convert SEO fields to Yoast SEO meta field format."""
-    import json
-
     yoast_meta = {}
 
     if post_data.get("meta_description"):
