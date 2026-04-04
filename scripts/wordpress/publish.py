@@ -231,13 +231,13 @@ def main():
     )
     args = parser.parse_args()
 
-    username = os.environ.get("USERNAME")
+    username = os.environ.get("WP_USERNAME")
     wp_api_url = os.environ.get("WP_API_URL")
     wp_token = os.environ.get("WP_TOKEN")
 
     if not all([username, wp_api_url, wp_token]):
         print("❌ Missing environment variables. Ensure .env has:")
-        print("   WP_TOKEN, WP_API_URL, USERNAME")
+        print("   WP_TOKEN, WP_API_URL, WP_USERNAME")
         sys.exit(1)
 
     success = process_file(args.file, username, wp_token, wp_api_url)
