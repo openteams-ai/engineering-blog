@@ -26,7 +26,7 @@ from wordpress_utils import (
     convert_markdown_to_html,
     verify_authentication,
     update_qmd_metadata,
-    prepare_yoast_meta_fields,
+    prepare_seo_meta_fields,
     upload_and_replace_article_images,
 )
 
@@ -47,14 +47,14 @@ def _prepare_wp_context(post_data: Dict, wp_token: str, wp_api_url: str, usernam
     taxonomy_ids = resolve_categories_and_tags(
         post_data, wp_token, wp_api_url, username
     )
-    yoast_meta = prepare_yoast_meta_fields(post_data)
+    seo_meta = prepare_seo_meta_fields(post_data)
 
     return {
         "headers": headers,
         "author_id": current_user["id"],
         "html_content": html_content,
         "taxonomy_ids": taxonomy_ids,
-        "yoast_meta": yoast_meta,
+        "seo_meta": seo_meta,
     }
 
 
@@ -83,8 +83,8 @@ def _build_wp_payload(post_data: Dict, context: Dict, *, include_create_fields: 
         payload["categories"] = context["taxonomy_ids"]["category_ids"]
     if context["taxonomy_ids"]["tag_ids"]:
         payload["tags"] = context["taxonomy_ids"]["tag_ids"]
-    if context["yoast_meta"]:
-        payload["meta"] = context["yoast_meta"]
+    if context["seo_meta"]:
+        payload["meta"] = context["seo_meta"]
 
     return payload
 
