@@ -6,10 +6,12 @@ categories:
 - Engineering
 tags:
 - test
-meta_description: Testing Quarto Markdown rendering for WordPress.
+meta_description: Learn how to use Quarto Markdown for WordPress blog posts with executable
+  Python code blocks, syntax highlighting, and command-line rendering.
+focus_keyword: quarto markdown wordpress
 wordpress_url: https://openteams.com/qmd-rendering-test/
 wordpress_id: 21836
-last_synced: '2026-04-04T10:50:05Z'
+last_synced: '2026-04-04T15:22:14Z'
 ---
 
 ## Quarto Code Blocks

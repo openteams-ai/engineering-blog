@@ -22,9 +22,6 @@ tags:
   - data-engineering
 meta_description: "A short summary for SEO (150-160 chars)."
 focus_keyword: "main keyword"
-seo_keywords:
-  - "keyword one"
-  - "keyword two"
 ---
 ```
 
@@ -32,7 +29,7 @@ seo_keywords:
 
 `author` is the WordPress username of the post author. The post will be published under their name. The author must have an account on the OpenTeams WordPress site.
 
-**Optional fields:** `tags`, `meta_description`, `focus_keyword`, `seo_keywords`
+**Optional fields:** `tags`, `meta_description`, `focus_keyword`
 
 **Auto-added after publishing:** `wordpress_id`, `wordpress_url`, `last_synced`
 
