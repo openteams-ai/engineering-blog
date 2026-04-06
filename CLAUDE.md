@@ -7,6 +7,7 @@ Full reference for contributors writing engineering blog posts.
 1. Create a `.md` or `.qmd` file under `posts/` with a URL-friendly slug (e.g., `posts/building-ml-pipelines.md`).
 2. Add YAML frontmatter at the top of the file.
 3. Write your content in standard markdown.
+4. Run `/seo-meta-description posts/your-article.md` to optimize SEO before publishing. This generates tags, focus keyword, and meta description interactively, then audits against SmartCrawl's checklist.
 
 ## Frontmatter
 
@@ -17,9 +18,6 @@ slug: your-post-slug
 author: wordpress-username
 categories:
   - Engineering
-tags:
-  - python
-  - data-engineering
 meta_description: "A short summary for SEO (150-160 chars)."
 focus_keyword: "main keyword"
 ---
@@ -29,7 +27,7 @@ focus_keyword: "main keyword"
 
 `author` is the WordPress username of the post author. The post will be published under their name. The author must have an account on the OpenTeams WordPress site.
 
-**Optional fields:** `tags`, `meta_description`, `focus_keyword`
+**Optional fields:** `meta_description`, `focus_keyword`
 
 **Auto-added after publishing:** `wordpress_id`, `wordpress_url`, `last_synced`
 

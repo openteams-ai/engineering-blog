@@ -44,4 +44,4 @@ posts/
 
 3. Submit a PR, get it reviewed, and merge.
 
-See [CLAUDE.md](CLAUDE.md) for the full writing guide — frontmatter fields, code block syntax, image handling, and examples.
+See [CLAUDE.md](CLAUDE.md) for the full writing guide: frontmatter fields, code block syntax, image handling, and examples.
