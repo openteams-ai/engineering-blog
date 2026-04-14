@@ -1,0 +1,18 @@
+# Author Registry
+#
+# Add yourself here to be set up as a blog author.
+# Run: uv run scripts/wordpress/sync_authors.py
+#
+# Fields:
+#   name        - Display name shown on posts (required)
+#   slug        - URL-safe identifier, used in post frontmatter as `author` (required)
+#   email       - Used for Gravatar profile image (required)
+#   bio         - Short author biography (optional)
+
+authors:
+  - name: Khuyen Tran
+    slug: khuyen-tran
+    email: ktran@openteams.com
+    bio: >-
+      Senior DevRel at OpenTeams. Writes about data science,
+      MLOps, and open-source tooling.

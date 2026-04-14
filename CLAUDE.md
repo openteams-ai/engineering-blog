@@ -25,7 +25,7 @@ focus_keyword: "main keyword"
 
 **Required fields:** `title`, `slug`, `author`, `categories`
 
-`author` is the WordPress username of the post author. The post will be published under their name. If you don't have a WordPress account, contact the team to get one set up.
+`author` is the author's slug from `authors.yml`. If this is your first post, add yourself to `authors.yml` with your name, slug, email, and bio before publishing.
 
 **Optional fields:** `meta_description`, `focus_keyword`
 

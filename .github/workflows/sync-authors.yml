@@ -1,0 +1,24 @@
+name: Sync Authors to WordPress
+
+on:
+  push:
+    branches: [main]
+    paths: ['authors.yml']
+
+jobs:
+  sync-authors:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Sync authors
+        env:
+          WP_TOKEN: ${{ secrets.WP_TOKEN }}
+          WP_API_URL: ${{ secrets.WP_API_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+        run: uv run scripts/wordpress/sync_authors.py
