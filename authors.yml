@@ -10,6 +10,11 @@
 #   bio         - Short author biography (optional)
 
 authors:
+  - name: Anuj Kumar Singh
+    slug: anuj-kumar-singh
+    email: asingh@openteams.com
+    bio: >-
+      OS Intern at OpenTeams. Works on Project Jupyter.
   - name: Khuyen Tran
     slug: khuyen-tran
     email: ktran@openteams.com
