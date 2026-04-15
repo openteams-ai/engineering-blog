@@ -7,8 +7,8 @@ body:
     id: summary
     attributes:
       label: Summary
-      description: One or two sentences describing what this post is about and why it's worth writing.
-      placeholder: A short post showing how to use X to do Y, based on lessons from project Z.
+      description: In a few sentences, tell us what you'd like to write about. Even a half-formed idea works.
+      placeholder: I've been working with X lately and learned some non-obvious things about Y. Could turn into a short post.
     validations:
       required: true
 
@@ -16,13 +16,13 @@ body:
     id: context
     attributes:
       label: Context
-      description: Optional. Link to related posts, PRs, issues, tools, or external resources.
+      description: Optional. Link to related posts, tools, or external resources.
       placeholder: |
-        - Follow-up to #3
-        - Related tool: https://github.com/openai/evals
+        - Inspired by https://example.com/article
+        - Tool we'd cover: https://github.com/owner/repo
 
   - type: input
     id: author
     attributes:
       label: Author
-      description: Optional. Who is planning to write this?
+      description: Your GitHub handle if you plan to write this, or @-mention someone who could. Leave blank if neither applies.
