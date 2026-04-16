@@ -16,3 +16,10 @@ authors:
     bio: >-
       Senior DevRel at OpenTeams. Writes about data science,
       MLOps, and open-source tooling.
+
+  - name: Brandon Geraci
+    slug: brandon-geraci
+    email: brandon.geraci@gmail.com
+    bio: >-
+      Engineer at OpenTeams. Focuses on developer tooling,
+      CI/CD performance, and Python packaging infrastructure.
