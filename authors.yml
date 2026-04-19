@@ -16,3 +16,8 @@ authors:
     bio: >-
       Senior DevRel at OpenTeams. Writes about data science,
       MLOps, and open-source tooling.
+  - name: jbouder
+    slug: jbouder
+    email: jbouder@openteams.com
+    bio: >-
+      Engineer at OpenTeams.
