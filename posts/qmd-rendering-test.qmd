@@ -9,9 +9,10 @@ tags:
 meta_description: Learn how to use Quarto Markdown for WordPress blog posts with executable
   Python code blocks, syntax highlighting, and command-line rendering.
 focus_keyword: quarto markdown wordpress
+featured_image: images/qmd-rendering-test/hero.jpg
 wordpress_url: https://openteams.com/qmd-rendering-test/
 wordpress_id: 21836
-last_synced: '2026-04-14T16:49:03Z'
+last_synced: '2026-04-21T20:16:22Z'
 ---
 
 ## Quarto Code Blocks
@@ -64,3 +65,7 @@ quarto render posts/qmd-rendering-test.qmd
 | Python | `{python}` | `python` |
 | R | `{r}` | `r` |
 | Julia | `{julia}` | `julia` |
+
+## Inline Image
+
+![OpenTeams banner inline test](images/qmd-rendering-test/hero.jpg)
