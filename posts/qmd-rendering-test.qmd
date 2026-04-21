@@ -69,3 +69,4 @@ quarto render posts/qmd-rendering-test.qmd
 ## Inline Image
 
 ![OpenTeams banner inline test](images/qmd-rendering-test/hero.jpg)
+
