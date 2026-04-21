@@ -10,6 +10,7 @@ Usage:
     uv run scripts/wordpress/sync_authors.py --dry-run
 """
 
+import hashlib
 import os
 import secrets
 import string
@@ -146,6 +147,112 @@ def update_user(
     return False
 
 
+IMAGE_EXTENSIONS = {
+    "image/png": ".png",
+    "image/jpeg": ".jpg",
+    "image/webp": ".webp",
+    "image/gif": ".gif",
+}
+
+
+def sync_avatar(
+    author: Dict,
+    user_id: int,
+    headers: Dict,
+    wp_api_url: str,
+    dry_run: bool,
+) -> bool:
+    """Upload avatar image and set it as the user's local avatar.
+
+    Uses Simple Local Avatars to override the default Gravatar. Media
+    ownership is transferred to the target user because the plugin
+    only accepts avatars uploaded by the user themselves.
+    """
+    avatar_url = author.get("avatar_url")
+    if not avatar_url:
+        return False
+
+    # Idempotency: the uploaded filename encodes a hash of avatar_url, so when
+    # the user edits avatar_url in authors.yml the filename marker changes and
+    # we re-upload. Without the hash, any URL change would be silently ignored.
+    url_hash = hashlib.sha256(avatar_url.encode("utf-8")).hexdigest()[:8]
+    marker = f"avatar-{author['slug']}-{url_hash}"
+
+    resp = requests.get(
+        f"{wp_api_url}/users/{user_id}", headers=headers, timeout=DEFAULT_TIMEOUT
+    )
+    current = (resp.json() or {}).get("simple_local_avatar") or {}
+    if marker in current.get("full", ""):
+        print(f"  Avatar up to date: {author['name']}")
+        return False
+    previous_media_id = current.get("media_id")
+
+    if dry_run:
+        print(f"  [DRY RUN] Would set avatar for {author['name']} from {avatar_url}")
+        return False
+
+    img = requests.get(
+        avatar_url,
+        headers={"User-Agent": "OpenTeams-Engineering-Blog/1.0"},
+        timeout=30,
+    )
+    if img.status_code != 200:
+        print(f"  Failed to download avatar for {author['name']}: {img.status_code}")
+        return False
+
+    content_type = img.headers.get("Content-Type", "image/png").split(";")[0].strip()
+    extension = IMAGE_EXTENSIONS.get(content_type, ".png")
+    filename = f"{marker}{extension}"
+
+    upload_headers = {
+        **headers,
+        "Content-Type": content_type,
+        "Content-Disposition": f'attachment; filename="{filename}"',
+    }
+    upload_resp = requests.post(
+        f"{wp_api_url}/media",
+        headers=upload_headers,
+        data=img.content,
+        timeout=DEFAULT_TIMEOUT,
+    )
+    if upload_resp.status_code not in (200, 201):
+        print(f"  Failed to upload avatar for {author['name']}: {upload_resp.status_code}")
+        return False
+    media_id = upload_resp.json()["id"]
+
+    # Simple Local Avatars requires the media's author to match the target user.
+    requests.post(
+        f"{wp_api_url}/media/{media_id}",
+        headers=headers,
+        json={"author": user_id},
+        timeout=DEFAULT_TIMEOUT,
+    )
+
+    avatar_resp = requests.post(
+        f"{wp_api_url}/users/{user_id}",
+        headers=headers,
+        json={"simple_local_avatar": {"media_id": media_id}},
+        timeout=DEFAULT_TIMEOUT,
+    )
+    if avatar_resp.status_code != 200:
+        print(f"  Failed to set avatar for {author['name']}: "
+              f"{avatar_resp.status_code} {avatar_resp.text}")
+        return False
+
+    # Delete the replaced avatar so the media library doesn't accumulate
+    # orphaned avatar uploads. Best-effort: ignore failures.
+    if previous_media_id and previous_media_id != media_id:
+        requests.delete(
+            f"{wp_api_url}/media/{previous_media_id}",
+            headers=headers,
+            params={"force": "true"},
+            timeout=DEFAULT_TIMEOUT,
+        )
+
+    print(f"  Avatar set for {author['name']}")
+    return True
+
+
 def sync_authors(dry_run: bool = False) -> None:
     """Sync all authors from YAML to WordPress."""
     wp_token = os.environ.get("WP_TOKEN")
@@ -168,18 +275,24 @@ def sync_authors(dry_run: bool = False) -> None:
         print("(dry run — no changes will be made)\n")
 
     existing = get_existing_users(headers, wp_api_url)
-    created, updated = 0, 0
+    created, updated, avatars_set = 0, 0, 0
 
     for author in authors:
         slug = author["slug"]
         if slug in existing:
+            user_id = existing[slug]["id"]
             if update_user(author, existing[slug], headers, wp_api_url, dry_run):
                 updated += 1
         else:
-            if create_user(author, headers, wp_api_url, dry_run):
+            user_id = create_user(author, headers, wp_api_url, dry_run)
+            if user_id:
                 created += 1
 
+        if user_id and sync_avatar(author, user_id, headers, wp_api_url, dry_run):
+            avatars_set += 1
+
     print(f"\nDone: {created} created, {updated} updated, "
+          f"{avatars_set} avatar(s) set, "
           f"{len(authors) - created - updated} unchanged")
 
 

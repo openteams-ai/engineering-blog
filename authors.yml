@@ -6,8 +6,11 @@
 # Fields:
 #   name        - Display name shown on posts (required)
 #   slug        - URL-safe identifier, used in post frontmatter as `author` (required)
-#   email       - Used for Gravatar profile image (required)
+#   email       - Used for Gravatar fallback (required)
 #   bio         - Short author biography (optional)
+#   avatar_url  - URL to author photo. Overrides Gravatar via the
+#                 Simple Local Avatars plugin. Any https image URL works
+#                 (WordPress media library, Gravatar, personal site, etc.) (optional)
 
 authors:
   - name: Khuyen Tran
@@ -16,6 +19,7 @@ authors:
     bio: >-
       Senior DevRel at OpenTeams. Writes about data science,
       MLOps, and open-source tooling.
+    avatar_url: https://openteams.com/wp-content/uploads/2024/11/Khuyen-Tran.png
 
   - name: Adam Lewis
     slug: adam-lewis
