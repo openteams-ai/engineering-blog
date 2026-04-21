@@ -74,3 +74,4 @@ Before fine-tuning, consider the alternatives: better prompts, moving more logic
 
 The best agent architecture is one that doesn't depend on the model being brilliant. Push precision into code, let the LLM handle intent, invest in evals, and start with the best model available to you. You can always optimize later — and by the time you need to, there might be a better small model anyway.
 
+

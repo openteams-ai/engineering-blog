@@ -44,3 +44,4 @@ I think skills and idea files are a thought-provoking new pattern, and I'm curio
 
 Something like the sandbox described above is a better design for anything sensitive, and I want to play around with it in the future. But for now, I took a simpler approach: I built a proper agent using [Pydantic AI](https://ai.pydantic.dev/) with a very limited toolset. The agent can only call specific Harvest operations — no file reading, no bash commands, no reading environment variables, and no arbitrary environment access. Credentials flow through environment variables to the Harvest CLI subprocess, but the agent code never reads or exposes them. It's not a full sandbox, but good enough for now.  Read more in the companion post — [What I Learned Making a Local LLM Do Real Work](what-i-learned-making-a-local-llm-do-real-work).
 
+
