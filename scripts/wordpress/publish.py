@@ -3,8 +3,9 @@
 WordPress Publish Script
 
 Unified script that creates new WordPress draft posts or syncs updates
-to existing posts. Determines behavior based on whether the file already
-has a wordpress_id in its YAML frontmatter.
+to existing posts. Matches posts by slug via the WP REST API: if a post
+with the same slug exists, it is updated; otherwise a new draft is
+created.
 
 Usage:
     uv run scripts/wordpress/publish.py posts/<slug>/index.md
@@ -14,7 +15,6 @@ import hashlib
 import os
 import sys
 import tempfile
-import time
 from pathlib import Path
 from typing import Optional, Dict
 
@@ -22,14 +22,13 @@ import requests
 
 from wordpress_utils import (
     setup_common_args,
-    has_wordpress_id,
     extract_post_data,
     get_auth_headers,
     get_user_id,
+    lookup_post_id_by_slug,
     resolve_categories_and_tags,
     convert_markdown_to_html,
     verify_authentication,
-    update_qmd_metadata,
     prepare_seo_meta_fields,
     upload_and_replace_article_images,
     upload_image_to_wordpress,
@@ -272,19 +271,15 @@ def _validate_and_prepare(
 
 
 def _sync_existing_post(
-    post_data: Dict, file_path: str, wp_token: str, wp_api_url: str, username: str
+    post_data: Dict, wp_token: str, wp_api_url: str, username: str
 ) -> bool:
     """Sync updates to an existing WordPress post."""
     print(f"Mode: sync (wordpress_id: {post_data['wordpress_id']})")
-    if not sync_post(post_data, wp_token, wp_api_url, username):
-        return False
-    metadata_updates = {"last_synced": time.strftime("%Y-%m-%dT%H:%M:%SZ")}
-    update_qmd_metadata(file_path, metadata_updates, mode="update")
-    return True
+    return sync_post(post_data, wp_token, wp_api_url, username)
 
 
 def _create_new_post(
-    post_data: Dict, file_path: str, wp_token: str, wp_api_url: str, username: str
+    post_data: Dict, wp_api_url: str, wp_token: str, username: str
 ) -> bool:
     """Create a new WordPress draft post."""
     print("Mode: create (new draft)")
@@ -302,15 +297,6 @@ def _create_new_post(
     final_url = _build_published_url(wp_api_url, wp_post, post_data)
     print(f"Draft URL: {wp_post['link']}")
     print(f"Published URL: {final_url}")
-
-    metadata_updates = {
-        "wordpress_url": final_url,
-        "wordpress_id": wp_post["id"],
-        "last_synced": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-    }
-    if not update_qmd_metadata(file_path, metadata_updates, mode="create"):
-        print(f"  ❌ Failed to update {file_path}")
-        return False
     return True
 
 
@@ -322,17 +308,21 @@ def process_file(
     if not post_data:
         return False
 
-    if has_wordpress_id(file_path):
-        return _sync_existing_post(post_data, file_path, wp_token, wp_api_url, username)
-    return _create_new_post(post_data, file_path, wp_token, wp_api_url, username)
+    existing_id = lookup_post_id_by_slug(
+        post_data["slug"], wp_token, wp_api_url, username
+    )
+    if existing_id:
+        post_data["wordpress_id"] = existing_id
+        return _sync_existing_post(post_data, wp_token, wp_api_url, username)
+    return _create_new_post(post_data, wp_api_url, wp_token, username)
 
 
 def main():
     """Main entry point."""
     parser = setup_common_args(
         "Publish or sync a blog post to WordPress.\n"
-        "Creates a new draft if no wordpress_id exists, "
-        "or syncs updates if wordpress_id is present."
+        "Creates a new draft if no post with the same slug exists, "
+        "or syncs updates to the existing post."
     )
     args = parser.parse_args()
 

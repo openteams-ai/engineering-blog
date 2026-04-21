@@ -43,7 +43,7 @@ focus_keyword: "main keyword"
 
 `featured_image` sets the post's hero/thumbnail image. Accepts either a local path relative to the post file (e.g., `images/my-post/hero.jpg`) or an absolute `https://` URL. Omit the field if the post has no featured image.
 
-**Auto-added after publishing:** `wordpress_id`, `wordpress_url`, `last_synced`
+The publish script matches posts to WordPress by `slug`, so do not change the slug of a live post. Renaming it orphans the existing WordPress post and creates a new draft under the new slug.
 
 ## File Formats
 

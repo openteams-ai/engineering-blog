@@ -8,8 +8,6 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -63,12 +61,3 @@ jobs:
             echo "Publishing: $file"
             uv run scripts/wordpress/publish.py "$file"
           done <<< "${{ steps.changed.outputs.files }}"
-
-      - name: Commit updated metadata
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add posts/
-          # Only commit if there are changes (publish.py updates frontmatter)
-          git diff --cached --quiet || git commit -m "chore: update WordPress metadata [skip ci]"
-          git push

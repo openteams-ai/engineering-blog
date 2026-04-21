@@ -170,6 +170,28 @@ def get_user_id(
     print(f"⚠️  User '{author}' not found")
 
 
+def lookup_post_id_by_slug(
+    slug: str, wp_token: str, wp_api_url: str, username: str
+) -> Optional[int]:
+    """Return the WordPress post ID for a given slug, or None if not found.
+
+    Searches across all statuses (draft, publish, private, etc.) so that a
+    publish run can locate posts it previously created, regardless of their
+    current state.
+    """
+    headers = get_auth_headers(username, wp_token)
+    response = requests.get(
+        f"{wp_api_url}/posts",
+        headers=headers,
+        params={"slug": slug, "status": "any"},
+        timeout=DEFAULT_TIMEOUT,
+    )
+    if response.status_code != 200:
+        return None
+    results = response.json()
+    return results[0]["id"] if results else None
+
+
 def get_categories_map(wp_token: str, wp_api_url: str, username: str) -> Dict[str, int]:
     """Return a mapping of category name (lowercased) -> ID from WordPress."""
     headers = get_auth_headers(username, wp_token)
