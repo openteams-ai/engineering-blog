@@ -27,7 +27,9 @@ focus_keyword: "main keyword"
 
 `author` is the author's slug from `authors.yml`. If this is your first post, add yourself to `authors.yml` with your name, slug, email, and bio before publishing.
 
-**Optional fields:** `meta_description`, `focus_keyword`
+**Optional fields:** `meta_description`, `focus_keyword`, `featured_image`
+
+`featured_image` sets the post's hero/thumbnail image. Accepts either a local path relative to the post file (e.g., `images/my-post/hero.jpg`) or an absolute `https://` URL. Omit the field if the post has no featured image.
 
 **Auto-added after publishing:** `wordpress_id`, `wordpress_url`, `last_synced`
 
@@ -47,6 +49,10 @@ Place images in `posts/images/<post-slug>/` and reference them with relative pat
 ```
 
 Images are automatically uploaded to WordPress when the post is published.
+
+Commits that only change files under `posts/images/<slug>/` (without touching the `.md`/`.qmd`) also trigger a republish of `posts/<slug>.md` or `posts/<slug>.qmd`. If no matching post file exists for the slug, the image change is skipped.
+
+**Refreshing an existing image:** uploads are deduplicated by filename. If you edit an image's bytes but keep the same filename, WordPress will keep serving the old copy. To force a refresh, rename the file (e.g., `hero.png` to `hero-v2.png`) and update references, or delete the existing media from WordPress admin before republishing.
 
 ## Markdown Syntax Reference
 

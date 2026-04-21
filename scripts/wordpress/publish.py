@@ -10,11 +10,15 @@ Usage:
     uv run scripts/wordpress/publish.py posts/<slug>/index.md
 """
 
+import hashlib
 import os
 import sys
+import tempfile
 import time
-import requests
+from pathlib import Path
 from typing import Optional, Dict
+
+import requests
 
 from wordpress_utils import (
     setup_common_args,
@@ -28,10 +32,93 @@ from wordpress_utils import (
     update_qmd_metadata,
     prepare_seo_meta_fields,
     upload_and_replace_article_images,
+    upload_image_to_wordpress,
 )
 
 REQUEST_TIMEOUT = 30
 SUCCESS_STATUSES = (200, 201)
+FEATURED_IMAGE_EXTENSIONS = {
+    "image/png": ".png",
+    "image/jpeg": ".jpg",
+    "image/webp": ".webp",
+    "image/gif": ".gif",
+}
+
+
+def _resolve_featured_media_id(
+    post_data: Dict,
+    file_path: str,
+    wp_token: str,
+    wp_api_url: str,
+    username: str,
+) -> Optional[int]:
+    """Resolve `featured_image` frontmatter to a WordPress media ID.
+
+    Accepts either a local path (resolved relative to the post file) or an
+    absolute http(s) URL. Returns None when no featured image is configured
+    or when upload fails.
+    """
+    featured = (post_data.get("featured_image") or "").strip()
+    if not featured:
+        return None
+
+    if featured.startswith(("http://", "https://")):
+        return _upload_featured_image_from_url(
+            featured, wp_token, wp_api_url, username
+        )
+
+    local_path = Path(file_path).parent / featured
+    if not local_path.exists():
+        print(f"  ⚠️  Featured image not found: {local_path}")
+        return None
+
+    media = upload_image_to_wordpress(local_path, wp_token, wp_api_url, username)
+    if not media:
+        return None
+    print(f"  Featured image: {local_path.name} (id={media['id']})")
+    return media["id"]
+
+
+def _upload_featured_image_from_url(
+    image_url: str, wp_token: str, wp_api_url: str, username: str
+) -> Optional[int]:
+    """Download a featured image from a URL and upload to WordPress.
+
+    Uses a hash of the source URL in the uploaded filename so that changing
+    the URL in frontmatter triggers a fresh upload instead of reusing the
+    old media item.
+    """
+    resp = requests.get(
+        image_url,
+        headers={"User-Agent": "OpenTeams-Engineering-Blog/1.0"},
+        timeout=REQUEST_TIMEOUT,
+    )
+    if resp.status_code != 200:
+        print(f"  ⚠️  Failed to download featured image: {resp.status_code}")
+        return None
+
+    content_type = resp.headers.get("Content-Type", "image/png").split(";")[0].strip()
+    extension = FEATURED_IMAGE_EXTENSIONS.get(content_type, ".png")
+    url_hash = hashlib.sha256(image_url.encode("utf-8")).hexdigest()[:8]
+    filename = f"featured-{url_hash}{extension}"
+
+    with tempfile.NamedTemporaryFile(suffix=extension, delete=False) as tmp:
+        tmp.write(resp.content)
+        tmp_path = Path(tmp.name)
+
+    try:
+        renamed = tmp_path.with_name(filename)
+        tmp_path.rename(renamed)
+        media = upload_image_to_wordpress(renamed, wp_token, wp_api_url, username)
+    finally:
+        for p in (tmp_path, tmp_path.with_name(filename)):
+            if p.exists():
+                p.unlink()
+
+    if not media:
+        return None
+    print(f"  Featured image: {filename} (id={media['id']})")
+    return media["id"]
 
 
 def _prepare_wp_context(post_data: Dict, wp_token: str, wp_api_url: str, username: str):
@@ -85,6 +172,8 @@ def _build_wp_payload(post_data: Dict, context: Dict, *, include_create_fields: 
         payload["tags"] = context["taxonomy_ids"]["tag_ids"]
     if context["seo_meta"]:
         payload["meta"] = context["seo_meta"]
+    if post_data.get("_featured_media_id"):
+        payload["featured_media"] = post_data["_featured_media_id"]
 
     return payload
 
@@ -171,6 +260,9 @@ def _validate_and_prepare(
         post_data["content"], file_path, wp_token, wp_api_url, username
     )
     post_data["_author_username"] = post_data.get("author") or username
+    post_data["_featured_media_id"] = _resolve_featured_media_id(
+        post_data, file_path, wp_token, wp_api_url, username
+    )
 
     print(f"Title: {post_data['title']}")
     print(f"Slug: {post_data['slug']}")
