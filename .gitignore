@@ -5,3 +5,4 @@ __pycache__/
 .venv/
 .playwright-mcp
 .claude/commands
+.preview/
