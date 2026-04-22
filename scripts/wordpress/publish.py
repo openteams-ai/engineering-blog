@@ -36,12 +36,26 @@ from wordpress_utils import (
 
 REQUEST_TIMEOUT = 30
 SUCCESS_STATUSES = (200, 201)
+# Every post gets these WP categories, in addition to anything listed in
+# the frontmatter. Case-insensitive match against existing WP categories.
+REQUIRED_CATEGORIES = ("Engineering", "Blogs")
 FEATURED_IMAGE_EXTENSIONS = {
     "image/png": ".png",
     "image/jpeg": ".jpg",
     "image/webp": ".webp",
     "image/gif": ".gif",
 }
+
+
+def _ensure_required_categories(categories):
+    """Return a category list that includes every entry in REQUIRED_CATEGORIES."""
+    seen = {c.lower() for c in categories if c}
+    merged = list(categories)
+    for required in REQUIRED_CATEGORIES:
+        if required.lower() not in seen:
+            merged.append(required)
+            seen.add(required.lower())
+    return merged
 
 
 def _resolve_featured_media_id(
@@ -268,6 +282,9 @@ def _validate_and_prepare(
     post_data["_author_username"] = post_data.get("author") or username
     post_data["_featured_media_id"] = _resolve_featured_media_id(
         post_data, file_path, wp_token, wp_api_url, username
+    )
+    post_data["categories"] = _ensure_required_categories(
+        post_data.get("categories", [])
     )
 
     print(f"Title: {post_data['title']}")
