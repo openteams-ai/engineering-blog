@@ -1,0 +1,59 @@
+name: triage-pr
+
+on:
+  pull_request:
+    types: [labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  assign-reviewers:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sync reviewers for label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTION: ${{ github.event.action }}
+          LABEL: ${{ github.event.label.name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          set -euo pipefail
+
+          if ! yq -e '.[env(LABEL)]' .github/topics.yml >/dev/null 2>&1; then
+            echo "Label '$LABEL' is not a topic label — nothing to do."
+            exit 0
+          fi
+
+          raw_reviewers=$(yq -r '.[env(LABEL)].reviewers // [] | .[]' .github/topics.yml)
+          valid_reviewers=$(printf '%s\n' "$raw_reviewers" | grep -Fvx "$PR_AUTHOR" || true)
+
+          case "$ACTION" in
+            labeled)
+              if [ -z "$valid_reviewers" ]; then
+                if [ -z "$raw_reviewers" ]; then
+                  echo "::error::Topic label '$LABEL' has no reviewers listed in topics.yml. Add at least one reviewer."
+                else
+                  echo "::error::The only reviewer for topic '$LABEL' is the PR author ($PR_AUTHOR). Add another reviewer to this topic, or remove the label if the expert wrote the post."
+                fi
+                exit 1
+              fi
+              reviewer_csv=$(echo "$valid_reviewers" | paste -sd, -)
+              echo "Requesting reviewers: $reviewer_csv"
+              gh pr edit "$PR_NUMBER" --add-reviewer "$reviewer_csv"
+              ;;
+            unlabeled)
+              if [ -z "$valid_reviewers" ]; then
+                echo "No reviewers to remove for '$LABEL'."
+                exit 0
+              fi
+              reviewer_csv=$(echo "$valid_reviewers" | paste -sd, -)
+              echo "Removing reviewers: $reviewer_csv"
+              gh pr edit "$PR_NUMBER" --remove-reviewer "$reviewer_csv"
+              ;;
+          esac
