@@ -101,23 +101,6 @@ Pixi uses the same conda-forge packages as conda/mamba but with a faster solver 
 
 Disk usage is roughly similar across tools (5.7--6.3 GB). The conda-forge tools (pixi, conda, mamba) are slightly larger because conda packages include additional metadata and sometimes platform-specific binaries.
 
-### Test Execution
-
-![Test suite execution time](images/benchmark-python-package-managers/test-execution.png)
-
-This one surprised us. The same 35-test suite runs in **30 seconds** under conda/mamba but takes **280 seconds** under uv/pip/poetry.
-
-| Tool | Test Time | Why |
-|------|----------|-----|
-| conda | 29.7s | conda-forge PyTorch with MKL |
-| mamba | 30.2s | Same conda-forge packages |
-| pixi | 50.3s | conda-forge + PyPI mix |
-| pip | 263.8s | PyPI PyTorch (generic build) |
-| poetry | 277.6s | Same PyPI packages |
-| uv | 282.2s | Same PyPI packages |
-
-The reason: **conda-forge builds PyTorch with MKL optimizations** and platform-specific compilation. PyPI wheels are generic builds that work everywhere but run slower. This is a real advantage of conda-forge that install-speed benchmarks miss.
-
 ## The Mixed-Distribution Problem
 
 The most interesting finding wasn't a number. It was the debugging we had to do to get all six tools working.
