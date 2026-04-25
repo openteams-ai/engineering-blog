@@ -9,6 +9,18 @@ Full reference for contributors writing engineering blog posts.
 3. Add YAML frontmatter at the top of the file (see [Frontmatter](#frontmatter) below).
 4. *Optional:* If you use Claude Code, run `/seo-meta-description posts/your-article.md` to auto-generate title, slug, focus keyword, and meta description.
 
+## Preview
+
+Render a post locally before pushing to see how code blocks, Mermaid diagrams, tables, and the Quarto/Prism directives will look. No WordPress credentials are required.
+
+```bash
+uv run scripts/wordpress/preview.py posts/your-article.md
+```
+
+The rendered HTML is written to `.preview/<slug>.html` (gitignored) and opened in your default browser. Pass `--no-open` to write the file and print its path without opening a browser.
+
+The preview uses the same markdown pipeline as publishing, so what you see is faithful to the WordPress content area. It does not reproduce the OpenTeams theme chrome (author box, navigation, featured-image hero layout, brand fonts).
+
 ## Frontmatter
 
 ```yaml
@@ -29,7 +41,8 @@ focus_keyword: "main keyword"
 
 **Optional fields:** `meta_description`, `focus_keyword`
 
-**Auto-added after publishing:** `wordpress_id`, `wordpress_url`, `last_synced`
+
+The publish script matches posts to WordPress by `slug`, so do not change the slug of a live post. Renaming it orphans the existing WordPress post and creates a new draft under the new slug.
 
 ## File Formats
 
@@ -47,6 +60,10 @@ Place images in `posts/images/<post-slug>/` and reference them with relative pat
 ```
 
 Images are automatically uploaded to WordPress when the post is published.
+
+Commits that only change files under `posts/images/<slug>/` (without touching the `.md`/`.qmd`) also trigger a republish of `posts/<slug>.md` or `posts/<slug>.qmd`. If no matching post file exists for the slug, the image change is skipped.
+
+**Refreshing an existing image:** uploads are deduplicated by filename. If you edit an image's bytes but keep the same filename, WordPress will keep serving the old copy. To force a refresh, rename the file (e.g., `hero.png` to `hero-v2.png`) and update references, or delete the existing media from WordPress admin before republishing.
 
 ## Markdown Syntax Reference
 

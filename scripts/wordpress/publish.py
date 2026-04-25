@@ -3,8 +3,9 @@
 WordPress Publish Script
 
 Unified script that creates new WordPress draft posts or syncs updates
-to existing posts. Determines behavior based on whether the file already
-has a wordpress_id in its YAML frontmatter.
+to existing posts. Matches posts by slug via the WP REST API: if a post
+with the same slug exists, it is updated; otherwise a new draft is
+created.
 
 Usage:
     uv run scripts/wordpress/publish.py posts/<slug>/index.md
@@ -12,26 +13,64 @@ Usage:
 
 import os
 import sys
-import time
-import requests
 from typing import Optional, Dict
+
+import requests
 
 from wordpress_utils import (
     setup_common_args,
-    has_wordpress_id,
     extract_post_data,
     get_auth_headers,
     get_user_id,
+    lookup_post_id_by_slug,
     resolve_categories_and_tags,
     convert_markdown_to_html,
     verify_authentication,
-    update_qmd_metadata,
     prepare_seo_meta_fields,
     upload_and_replace_article_images,
 )
 
 REQUEST_TIMEOUT = 30
 SUCCESS_STATUSES = (200, 201)
+# Every post gets these WP categories, in addition to anything listed in
+# the frontmatter. Case-insensitive match against existing WP categories.
+REQUIRED_CATEGORIES = ("Engineering", "Blogs")
+
+
+def _ensure_required_categories(categories):
+    """Return a category list that includes every entry in REQUIRED_CATEGORIES."""
+    seen = {c.lower() for c in categories if c}
+    merged = list(categories)
+    for required in REQUIRED_CATEGORIES:
+        if required.lower() not in seen:
+            merged.append(required)
+            seen.add(required.lower())
+    return merged
+
+
+def _notify_slack_new_post(post_data: Dict, final_url: str) -> None:
+    """Fire the design-team Slack workflow when a NEW post is created.
+
+    Sync updates are intentionally excluded so post edits don't re-notify.
+    No-op when SLACK_PUBLISH_WEBHOOK is unset (local runs).
+    """
+    webhook = os.environ.get("SLACK_PUBLISH_WEBHOOK")
+    if not webhook:
+        return
+    try:
+        resp = requests.post(
+            webhook,
+            json={
+                "post_title": post_data.get("title") or "",
+                "post_url": final_url,
+                "author": post_data.get("_author_username") or "",
+            },
+            timeout=REQUEST_TIMEOUT,
+        )
+        if resp.status_code != 200:
+            print(f"  ⚠️  Slack notify failed: {resp.status_code}")
+    except requests.exceptions.RequestException as exc:
+        print(f"  ⚠️  Slack notify error: {exc}")
 
 
 def _prepare_wp_context(post_data: Dict, wp_token: str, wp_api_url: str, username: str):
@@ -43,6 +82,14 @@ def _prepare_wp_context(post_data: Dict, wp_token: str, wp_api_url: str, usernam
     headers = get_auth_headers(username, wp_token)
     headers["Content-Type"] = "application/json"
 
+    # The post appears under the frontmatter `author`, not the authenticated
+    # user. Fall back to the authenticated user if no author is specified.
+    target_author = post_data.get("_author_username") or username
+    author_id = get_user_id(target_author, wp_token, wp_api_url, username)
+    if not author_id:
+        print(f"  ❌ Could not find WordPress user '{target_author}'")
+        return None
+
     html_content = convert_markdown_to_html(post_data.get("content", ""), post_data)
     taxonomy_ids = resolve_categories_and_tags(
         post_data, wp_token, wp_api_url, username
@@ -51,7 +98,7 @@ def _prepare_wp_context(post_data: Dict, wp_token: str, wp_api_url: str, usernam
 
     return {
         "headers": headers,
-        "author_id": current_user["id"],
+        "author_id": author_id,
         "html_content": html_content,
         "taxonomy_ids": taxonomy_ids,
         "seo_meta": seo_meta,
@@ -69,13 +116,13 @@ def _build_wp_payload(post_data: Dict, context: Dict, *, include_create_fields: 
     payload = {
         "title": post_data["title"],
         "content": context["html_content"],
+        "author": context["author_id"],
     }
 
     if include_create_fields:
         payload["slug"] = post_data["slug"]
-        payload["author"] = context["author_id"]
         payload["format"] = "standard"
-        payload["status"] = post_data.get("status", "draft")
+        payload["status"] = post_data.get("status") or post_data.get("_default_status", "draft")
     elif post_data.get("status"):
         payload["status"] = post_data["status"]
 
@@ -115,7 +162,6 @@ def _send_wp_request(method: str, url: str, headers: Dict, payload: Dict) -> Opt
 
 def create_post(
     post_data: Dict,
-    author_id: int,
     wp_token: str,
     wp_api_url: str,
     username: str,
@@ -171,6 +217,9 @@ def _validate_and_prepare(
         post_data["content"], file_path, wp_token, wp_api_url, username
     )
     post_data["_author_username"] = post_data.get("author") or username
+    post_data["categories"] = _ensure_required_categories(
+        post_data.get("categories", [])
+    )
 
     print(f"Title: {post_data['title']}")
     print(f"Slug: {post_data['slug']}")
@@ -180,29 +229,19 @@ def _validate_and_prepare(
 
 
 def _sync_existing_post(
-    post_data: Dict, file_path: str, wp_token: str, wp_api_url: str, username: str
+    post_data: Dict, wp_token: str, wp_api_url: str, username: str
 ) -> bool:
     """Sync updates to an existing WordPress post."""
     print(f"Mode: sync (wordpress_id: {post_data['wordpress_id']})")
-    if not sync_post(post_data, wp_token, wp_api_url, username):
-        return False
-    metadata_updates = {"last_synced": time.strftime("%Y-%m-%dT%H:%M:%SZ")}
-    update_qmd_metadata(file_path, metadata_updates, mode="update")
-    return True
+    return sync_post(post_data, wp_token, wp_api_url, username)
 
 
 def _create_new_post(
-    post_data: Dict, file_path: str, wp_token: str, wp_api_url: str, username: str
+    post_data: Dict, wp_api_url: str, wp_token: str, username: str
 ) -> bool:
     """Create a new WordPress draft post."""
     print("Mode: create (new draft)")
-    author_username = post_data["_author_username"]
-    author_id = get_user_id(author_username, wp_token, wp_api_url, username)
-    if not author_id:
-        print(f"  ❌ Could not find WordPress user '{author_username}'")
-        return False
-
-    wp_post = create_post(post_data, author_id, wp_token, wp_api_url, username)
+    wp_post = create_post(post_data, wp_token, wp_api_url, username)
     if not wp_post:
         print("  ❌ Failed to create WordPress post")
         return False
@@ -210,37 +249,51 @@ def _create_new_post(
     final_url = _build_published_url(wp_api_url, wp_post, post_data)
     print(f"Draft URL: {wp_post['link']}")
     print(f"Published URL: {final_url}")
-
-    metadata_updates = {
-        "wordpress_url": final_url,
-        "wordpress_id": wp_post["id"],
-        "last_synced": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-    }
-    if not update_qmd_metadata(file_path, metadata_updates, mode="create"):
-        print(f"  ❌ Failed to update {file_path}")
-        return False
+    _notify_slack_new_post(post_data, final_url)
     return True
 
 
 def process_file(
-    file_path: str, username: str, wp_token: str, wp_api_url: str
+    file_path: str,
+    username: str,
+    wp_token: str,
+    wp_api_url: str,
+    default_status: str = "draft",
 ) -> bool:
-    """Publish or sync a markdown file to WordPress."""
+    """Publish or sync a markdown file to WordPress.
+
+    default_status is used for NEW posts only and only when frontmatter
+    does not specify `status`. Sync mode preserves whatever status the
+    post already has in WordPress.
+    """
     post_data = _validate_and_prepare(file_path, username, wp_token, wp_api_url)
     if not post_data:
         return False
+    post_data["_default_status"] = default_status
 
-    if has_wordpress_id(file_path):
-        return _sync_existing_post(post_data, file_path, wp_token, wp_api_url, username)
-    return _create_new_post(post_data, file_path, wp_token, wp_api_url, username)
+    existing_id = lookup_post_id_by_slug(
+        post_data["slug"], wp_token, wp_api_url, username
+    )
+    if existing_id:
+        post_data["wordpress_id"] = existing_id
+        return _sync_existing_post(post_data, wp_token, wp_api_url, username)
+    return _create_new_post(post_data, wp_api_url, wp_token, username)
 
 
 def main():
     """Main entry point."""
     parser = setup_common_args(
         "Publish or sync a blog post to WordPress.\n"
-        "Creates a new draft if no wordpress_id exists, "
-        "or syncs updates if wordpress_id is present."
+        "Creates a new draft if no post with the same slug exists, "
+        "or syncs updates to the existing post."
+    )
+    parser.add_argument(
+        "--status",
+        choices=("draft", "publish"),
+        default="draft",
+        help="Status to use for NEW posts when frontmatter doesn't specify one. "
+        "Default: draft (safe for local testing). Use 'publish' in CI to make "
+        "merged posts live.",
     )
     args = parser.parse_args()
 
@@ -253,7 +306,9 @@ def main():
         print("   WP_TOKEN, WP_API_URL, WP_USERNAME")
         sys.exit(1)
 
-    success = process_file(args.file, username, wp_token, wp_api_url)
+    success = process_file(
+        args.file, username, wp_token, wp_api_url, default_status=args.status
+    )
     sys.exit(0 if success else 1)
 
 

@@ -6,8 +6,11 @@
 # Fields:
 #   name        - Display name shown on posts (required)
 #   slug        - URL-safe identifier, used in post frontmatter as `author` (required)
-#   email       - Used for Gravatar profile image (required)
+#   email       - Used for Gravatar fallback (required)
 #   bio         - Short author biography (optional)
+#   avatar_url  - URL to author photo. Overrides Gravatar via the
+#                 Simple Local Avatars plugin. Any https image URL works
+#                 (WordPress media library, Gravatar, personal site, etc.) (optional)
 
 authors:
   - name: Anuj Kumar Singh
@@ -22,3 +25,25 @@ authors:
     bio: >-
       Senior DevRel at OpenTeams. Writes about data science,
       MLOps, and open-source tooling.
+    avatar_url: https://openteams.com/wp-content/uploads/2024/11/Khuyen-Tran.png
+
+  - name: Adam Lewis
+    slug: adam-lewis
+    email: alewis@openteams.com
+    bio: Senior Software Engineer
+    avatar_url: https://openteams.com/wp-content/uploads/2026/04/Adam-Lewis.jpg
+
+  - name: Brandon Geraci
+    slug: brandon-geraci
+    email: bgeraci@openteams.com
+    bio: >-
+      Senior Software Engineer at OpenTeams. Officially writes software,
+      unofficially whatever else the day needs.
+    avatar_url: https://openteams.com/wp-content/uploads/2026/04/Brandon-Geraci.png
+
+  - name: Johnny Bouder
+    slug: johnny-bouder
+    email: jbouder@openteams.com
+    bio: Director of AI Experience
+    avatar_url: https://openteams.com/wp-content/uploads/2026/04/johnny-bouder.png
+

@@ -59,7 +59,8 @@ class PostMetadata(BaseModel):
     focus_keyword: Optional[str] = None
 
     @field_validator(
-        "title", "slug", "author", "meta_description", "focus_keyword", mode="before"
+        "title", "slug", "author", "meta_description", "focus_keyword",
+        mode="before"
     )
     @classmethod
     def ensure_optional_str(cls, v: Any):
@@ -165,6 +166,28 @@ def get_user_id(
         return users[0]["id"]
 
     print(f"⚠️  User '{author}' not found")
+
+
+def lookup_post_id_by_slug(
+    slug: str, wp_token: str, wp_api_url: str, username: str
+) -> Optional[int]:
+    """Return the WordPress post ID for a given slug, or None if not found.
+
+    Searches across all statuses (draft, publish, private, etc.) so that a
+    publish run can locate posts it previously created, regardless of their
+    current state.
+    """
+    headers = get_auth_headers(username, wp_token)
+    response = requests.get(
+        f"{wp_api_url}/posts",
+        headers=headers,
+        params={"slug": slug, "status": "any"},
+        timeout=DEFAULT_TIMEOUT,
+    )
+    if response.status_code != 200:
+        return None
+    results = response.json()
+    return results[0]["id"] if results else None
 
 
 def get_categories_map(wp_token: str, wp_api_url: str, username: str) -> Dict[str, int]:
@@ -583,10 +606,10 @@ def upload_image_to_wordpress(
     wp_token: str,
     wp_api_url: str,
     username: str,
-) -> Optional[str]:
+) -> Optional[Dict]:
     """Upload an image to WordPress media library if not already uploaded.
 
-    Returns the WordPress URL (source_url) or None on failure.
+    Returns a dict with ``id`` and ``source_url`` keys, or None on failure.
     """
     file_path = Path(file_path)
     filename = file_path.name
@@ -600,7 +623,7 @@ def upload_image_to_wordpress(
         if response.status_code == 200:
             for item in response.json():
                 if item.get("source_url", "").endswith(f"/{filename}"):
-                    return item["source_url"]
+                    return {"id": item["id"], "source_url": item["source_url"]}
     except requests.exceptions.RequestException:
         pass
 
@@ -630,7 +653,8 @@ def upload_image_to_wordpress(
                 timeout=60,
             )
         if response.status_code in [200, 201]:
-            return response.json().get("source_url")
+            data = response.json()
+            return {"id": data["id"], "source_url": data["source_url"]}
         else:
             print(f"  Failed to upload {filename}: {response.status_code}")
             return None
@@ -659,8 +683,9 @@ def upload_and_replace_article_images(
         if not local_path.exists():
             print(f"  Warning: image not found: {local_path}")
             return full_match
-        wp_url = upload_image_to_wordpress(local_path, wp_token, wp_api_url, username)
-        if wp_url:
+        media = upload_image_to_wordpress(local_path, wp_token, wp_api_url, username)
+        if media:
+            wp_url = media["source_url"]
             print(f"  Image: {src} -> {wp_url}")
             return f"![{alt}]({wp_url})"
         return full_match

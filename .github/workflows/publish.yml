@@ -21,8 +21,30 @@ jobs:
       - name: Detect changed articles
         id: changed
         run: |
-          # Find .md and .qmd files in posts/ that were added or modified
-          FILES=$(git diff --name-only --diff-filter=AM HEAD~1 HEAD -- 'posts/*.md' 'posts/*.qmd')
+          # Directly-changed post files (added or modified)
+          DIRECT=$(git diff --name-only --diff-filter=AM HEAD~1 HEAD -- 'posts/*.md' 'posts/*.qmd')
+
+          # Posts whose images changed: map posts/images/<slug>/... back to posts/<slug>.{md,qmd}
+          IMAGE_CHANGES=$(git diff --name-only --diff-filter=AM HEAD~1 HEAD -- 'posts/images/**')
+          FROM_IMAGES=()
+          while IFS= read -r img; do
+            [ -z "$img" ] && continue
+            slug=$(echo "$img" | awk -F/ '{print $3}')
+            [ -z "$slug" ] && continue
+            for ext in md qmd; do
+              if [ -f "posts/$slug.$ext" ]; then
+                FROM_IMAGES+=("posts/$slug.$ext")
+                break
+              fi
+            done
+          done <<< "$IMAGE_CHANGES"
+
+          IMAGE_POSTS=""
+          if [ ${#FROM_IMAGES[@]} -gt 0 ]; then
+            IMAGE_POSTS=$(printf '%s\n' "${FROM_IMAGES[@]}")
+          fi
+
+          FILES=$(printf '%s\n%s\n' "$DIRECT" "$IMAGE_POSTS" | sed '/^$/d' | sort -u)
           echo "files<<EOF" >> "$GITHUB_OUTPUT"
           echo "$FILES" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
@@ -32,19 +54,11 @@ jobs:
         env:
           WP_TOKEN: ${{ secrets.WP_TOKEN }}
           WP_API_URL: ${{ secrets.WP_API_URL }}
-          USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          SLACK_PUBLISH_WEBHOOK: ${{ secrets.SLACK_PUBLISH_WEBHOOK }}
         run: |
           while IFS= read -r file; do
             [ -z "$file" ] && continue
             echo "Publishing: $file"
-            uv run scripts/wordpress/publish.py "$file"
+            uv run scripts/wordpress/publish.py --status publish "$file"
           done <<< "${{ steps.changed.outputs.files }}"
-
-      - name: Commit updated metadata
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add posts/
-          # Only commit if there are changes (publish.py updates frontmatter)
-          git diff --cached --quiet || git commit -m "chore: update WordPress metadata [skip ci]"
-          git push
