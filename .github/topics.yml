@@ -1,0 +1,38 @@
+# Topic labels for PR triage.
+#
+# Each key is a GitHub label name. The label must exist on the repo
+# (create with `gh label create "<name>" --description "..."`) before
+# the triage skill can apply it.
+#
+# Fields:
+#   description — one-line summary of what the label covers
+#   keywords    — terms that hint at this topic when they appear in a post
+#   reviewers   — list of GitHub handles to request review from (e.g. [alice, bob])
+#
+# Edit this file as the team's areas of expertise evolve. The triage skill
+# will never apply a label that isn't listed here.
+
+packaging:
+  description: Build, packaging and distribution systems, workflows and tooling
+  keywords: [pip, uv, poetry, conda, packaging, wheel, pixi]
+  reviewers: [amjames]
+
+ai-ml:
+  description: AI, LLMs, agents, prompt engineering, model evaluation
+  keywords: [llm, gpt, claude, agent, prompt, rag, embedding, fine-tune, model]
+  reviewers: [amjames]
+
+data-engineering:
+  description: Data pipelines, ETL, warehousing, analytics infra
+  keywords: [pipeline, etl, airflow, dbt, warehouse, parquet, spark, dataframe]
+  reviewers: [amjames]
+
+infrastructure:
+  description: Cloud, deployment, CI/CD, containers, observability
+  keywords: [kubernetes, docker, aws, gcp, terraform, ci, cd, deploy, monitoring]
+  reviewers: [amjames]
+
+engineering-practices:
+  description: Process, team dynamics, methodology, non-technical engineering topics
+  keywords: [process, team, methodology, agile, retrospective, velocity, shipping]
+  reviewers: [amjames]
