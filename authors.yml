@@ -13,6 +13,12 @@
 #                 (WordPress media library, Gravatar, personal site, etc.) (optional)
 
 authors:
+  - name: Anuj Kumar Singh
+    slug: anuj-kumar-singh
+    email: asingh@openteams.com
+    bio: >-
+      OSS Intern at OpenTeams. Works on Project Jupyter.
+    avatar_url: https://openteams.com/wp-content/uploads/2026/04/Anuj-Kumar-Singh.png
   - name: Khuyen Tran
     slug: khuyen-tran
     email: ktran@openteams.com
