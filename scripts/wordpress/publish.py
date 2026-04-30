@@ -34,7 +34,7 @@ REQUEST_TIMEOUT = 30
 SUCCESS_STATUSES = (200, 201)
 # Every post gets these WP categories, in addition to anything listed in
 # the frontmatter. Case-insensitive match against existing WP categories.
-REQUIRED_CATEGORIES = ("Engineering", "Blogs")
+REQUIRED_CATEGORIES = ("Engineering",)
 
 
 def _ensure_required_categories(categories):
