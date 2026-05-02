@@ -12,6 +12,8 @@ While exploring designs for running an LLM inside a desktop application, I ended
 
 A useful definition of an agent is Simon Willison's ["an LLM in a loop with access to tools"](https://simonwillison.net/2025/Sep/18/agents/). There are many ways to expose those tools: MCP servers, framework-native tools in Pydantic AI, custom API wrappers, or even shell commands.
 
+A sandbox is an isolated execution environment that limits what a program can read, write, execute, or reach over the network. In agent systems, sandboxes reduce the blast radius when a model misunderstands an instruction, follows a prompt injection, or uses a powerful tool too aggressively.
+
 The key point is that not every agent needs a sandbox. If a model can only read a calendar through a narrowly scoped API, sandboxing may not be the first problem to solve. Sandboxing becomes urgent when the tool you give the model can execute code.
 
 ## Why Coding Agents Make This Obvious
