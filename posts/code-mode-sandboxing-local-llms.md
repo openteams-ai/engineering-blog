@@ -38,6 +38,30 @@ Another approach, now getting more attention, is "code mode." Roughly speaking, 
 
 Instead of making N sequential tool calls through the chat loop, the model makes one call to the code-execution tool. The generated code then calls the relevant tools directly. That can reduce context pressure, reduce round trips, and let the model express simple control flow in code rather than in a long chain of tool calls.
 
+```mermaid
+flowchart TB
+    subgraph ChatLoop["Sequential tool calls through the chat loop"]
+        CL1["LLM"] --> CL2["Tool call 1"]
+        CL2 --> CL1
+        CL1 --> CL3["Tool call 2"]
+        CL3 --> CL1
+        CL1 --> CL4["Tool call 3"]
+        CL4 --> CL1
+    end
+
+    subgraph CodeMode["Code mode"]
+        CM1["LLM"] --> CM2["Code-execution tool"]
+        CM2 --> CM3["Generated code"]
+        CM3 --> CM4["Tool 1"]
+        CM3 --> CM5["Tool 2"]
+        CM3 --> CM6["Tool 3"]
+        CM4 --> CM7["Result"]
+        CM5 --> CM7
+        CM6 --> CM7
+        CM7 --> CM1
+    end
+```
+
 Cloudflare has one of the clearest early writeups of this pattern in its [Code Mode post](https://blog.cloudflare.com/code-mode/), and Pydantic AI's [Monty](https://pydantic.dev/articles/pydantic-monty) is an emerging Python-focused implementation. Both are worth reading if you're thinking about this design space.
 
 ## Why Sandboxing Comes Back
