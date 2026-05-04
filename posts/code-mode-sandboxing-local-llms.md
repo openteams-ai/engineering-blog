@@ -73,3 +73,13 @@ Cloudflare's implementation builds on browser sandboxing technology. The appeal 
 Pydantic AI's approach is more closely aligned with Python. Monty implements a subset of Python in Rust, starting from a smaller safe core and adding capabilities over time. That is a different tradeoff: less general purpose at first, but more control over what code can do.
 
 So, even though we are unlikely to be building a pure coding agent with local LLMs in the foreseeable future, sandboxes are still relevant for using code mode to run tools. I have been exploring two of the most common approaches, but it's an emerging field, with new solutions appearing regularly.
+
+## Takeaways
+
+If you're designing an agent around a local LLM, a few rules of thumb fall out of all this:
+
+- Start with carefully scoped tools. Defaulting to broad access like a full shell is risky and unnecessary.
+- Avoid exposing every tool at once. Large toolsets consume context with schemas before the agent can act. Instead, scope tools per step with workflow graphs or use code mode to consolidate actions.
+- Pair code mode with a well-defined sandbox. Generated code can behave unexpectedly or be manipulated, so the sandbox acts as a safety boundary for files, network, and sensitive data.
+
+These tradeoffs will evolve as local models improve, but the core idea remains: give the agent only the authority it actually needs.
