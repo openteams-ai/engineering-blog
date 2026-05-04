@@ -2,6 +2,8 @@
 title: "Sandboxing Code Mode for Local LLM Agents"
 slug: code-mode-sandboxing-local-llms
 author: nick-byrne
+coauthors:
+  - khuyen-tran
 categories:
   - Engineering
 meta_description: "Code mode can make local LLM agents more practical, but executing model-written code brings sandboxing back into the architecture."
@@ -78,7 +80,7 @@ So, even though we are unlikely to be building a pure coding agent with local LL
 
 If you're designing an agent around a local LLM, a few rules of thumb fall out of all this:
 
-- Start with carefully scoped tools. Defaulting to broad access like a full shell is risky and unnecessary.
+- Prefer narrow application tools over raw shell access. Local models are usually more reliable when deterministic work, such as validation, parsing, and API calls, lives in code instead of commands the model invents.
 - Avoid exposing every tool at once. Large toolsets consume context with schemas before the agent can act. Instead, scope tools per step with workflow graphs or use code mode to consolidate actions.
 - Pair code mode with a well-defined sandbox. Generated code can behave unexpectedly or be manipulated, so the sandbox acts as a safety boundary for files, network, and sensitive data.
 
