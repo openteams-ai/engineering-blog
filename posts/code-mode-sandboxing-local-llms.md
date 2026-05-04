@@ -12,13 +12,13 @@ While exploring designs for running an LLM inside a desktop application, I ended
 
 A useful definition of an agent is Simon Willison's ["an LLM in a loop with access to tools"](https://simonwillison.net/2025/Sep/18/agents/). There are many ways to expose those tools: MCP servers, framework-native tools in Pydantic AI, custom API wrappers, or even shell commands.
 
-A sandbox is an isolated execution environment that limits what a program can read, write, execute, or reach over the network. In agent systems, sandboxes reduce the blast radius when a model misunderstands an instruction, follows a prompt injection, or uses a powerful tool too aggressively.
+A sandbox is an isolated execution environment that limits what a program can read, write, execute, or reach over the network. In agent systems, sandboxes limit the damage a model can do if it misunderstands an instruction, follows a prompt injection, or uses a powerful tool too aggressively.
 
 The key point is that not every agent needs a sandbox. If a model can only read a calendar through a narrowly scoped API, sandboxing may not be the first problem to solve. Sandboxing becomes urgent when the tool you give the model can execute code.
 
 ## Why Coding Agents Make This Obvious
 
-The most visible example is the modern coding agent: Claude Code, Codex, Pi connected to a frontier model, and similar tools. In many cases, these systems are "an LLM plus a shell": the model reasons about the task, writes code or commands, runs them, inspects output, and repeats until the job is done.
+The most visible example is the modern coding agent: Claude Code, Codex, Pi connected to a frontier model, and similar tools. In many cases, these systems are an LLM with shell access: the model reasons about the task, writes code or commands, runs them, inspects output, and repeats until the job is done.
 
 With state-of-the-art hosted models, this is increasingly powerful. Users can ask for arbitrary tasks without wiring up a custom MCP server first. The model can often create the helper script or one-off tool it needs on the fly. It feels magical because the model's reasoning, code writing, and background knowledge are all strong enough to make that loop work.
 
@@ -28,9 +28,9 @@ Local models are not usually in the same place. Even if "local" includes models 
 
 Custom tools bring more of the agent back into application code. They constrain what the model can do, keep costs predictable, let the team choose the model quality it needs, and move deterministic behavior out of prompt text.
 
-But tool design creates another scaling problem. Small models can be overwhelmed by a long tool list. Even capable models burn finite context on tool schemas and tool-call history. MCP also has operational wrinkles: adding servers mid-conversation can break prefix caching, while loading many servers at the start can eat context before the user has asked anything.
+But tool design creates another scaling problem. Small models can be overwhelmed by a long tool list. Even capable models burn finite context on tool schemas and tool-call history. This is especially visible when tools are exposed through MCP servers: adding servers mid-conversation can break prefix caching, while loading many servers at the start can eat context before the user has asked anything.
 
-One response is to break the task into a graph and make only a subset of tools available at each node. That can work well, but it specializes the application: each family of user requests needs its own graph and tool set.
+One response is to route the task through a workflow graph and make only a subset of tools available at each step. For example, a time-tracking agent might first use project lookup tools, then date parsing tools, and only expose the tool for writing a time entry at the final step. That can work well, but it specializes the application: each family of user requests needs its own graph and tool set.
 
 ## Code Mode as a Middle Ground
 
