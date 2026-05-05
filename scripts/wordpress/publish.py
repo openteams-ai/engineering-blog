@@ -22,6 +22,7 @@ from wordpress_utils import (
     extract_post_data,
     get_auth_headers,
     get_user_id,
+    get_ppma_author_term_ids,
     lookup_post_id_by_slug,
     resolve_categories_and_tags,
     convert_markdown_to_html,
@@ -96,9 +97,17 @@ def _prepare_wp_context(post_data: Dict, wp_token: str, wp_api_url: str, usernam
     )
     seo_meta = prepare_seo_meta_fields(post_data)
 
+    # Resolve all authors against PublishPress Authors. Returns None when
+    # the plugin is not installed; in that case the post falls back to
+    # the standard single-author WP behavior via author_id.
+    ppma_author_ids = get_ppma_author_term_ids(
+        post_data.get("authors") or [], wp_token, wp_api_url, username
+    )
+
     return {
         "headers": headers,
         "author_id": author_id,
+        "ppma_author_ids": ppma_author_ids,
         "html_content": html_content,
         "taxonomy_ids": taxonomy_ids,
         "seo_meta": seo_meta,
@@ -132,6 +141,8 @@ def _build_wp_payload(post_data: Dict, context: Dict, *, include_create_fields: 
         payload["tags"] = context["taxonomy_ids"]["tag_ids"]
     if context["seo_meta"]:
         payload["meta"] = context["seo_meta"]
+    if context.get("ppma_author_ids"):
+        payload["ppma_author"] = context["ppma_author_ids"]
 
     return payload
 

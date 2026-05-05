@@ -168,6 +168,55 @@ def get_user_id(
     print(f"⚠️  User '{author}' not found")
 
 
+def get_ppma_author_term_ids(
+    slugs: List[str],
+    wp_token: str,
+    wp_api_url: str,
+    auth_username: str,
+) -> Optional[List[int]]:
+    """Resolve author slugs to PublishPress Authors taxonomy term IDs.
+
+    PublishPress Authors registers a custom taxonomy at /wp/v2/ppma_author.
+    Each WP user has a corresponding term whose slug matches the user slug.
+    To assign multiple authors to a post, set `ppma_author: [term_ids]` in
+    the post payload.
+
+    Returns the list of term IDs in the same order as the input slugs.
+    Returns None when the plugin is not installed (the endpoint 404s), so
+    the caller can omit the field from the post payload.
+    """
+    if not slugs:
+        return []
+
+    headers = get_auth_headers(auth_username, wp_token)
+    term_ids: List[int] = []
+
+    for slug in slugs:
+        response = requests.get(
+            f"{wp_api_url}/ppma_author",
+            headers=headers,
+            params={"slug": slug},
+            timeout=DEFAULT_TIMEOUT,
+        )
+
+        if response.status_code == 404:
+            return None
+
+        if response.status_code != 200:
+            print(f"⚠️  Failed to look up PPMA author '{slug}': {response.status_code}")
+            continue
+
+        results = response.json()
+        if not results:
+            print(f"⚠️  PPMA author '{slug}' not found in WordPress")
+            continue
+
+        match = next((t for t in results if t.get("slug") == slug), results[0])
+        term_ids.append(match["id"])
+
+    return term_ids
+
+
 def lookup_post_id_by_slug(
     slug: str, wp_token: str, wp_api_url: str, username: str
 ) -> Optional[int]:
