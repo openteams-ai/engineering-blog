@@ -10,7 +10,7 @@ meta_description: "Code mode can make local LLM agents more practical, but execu
 focus_keyword: "code mode sandboxing"
 ---
 
-While exploring designs for running an LLM inside a desktop application, I ended up researching where sandboxing matters in agent systems.
+While exploring designs for running an LLM inside a desktop application, I ended up digging into where sandboxing matters in agent systems.
 
 A useful definition of an agent is Simon Willison's ["an LLM in a loop with access to tools"](https://simonwillison.net/2025/Sep/18/agents/). There are many ways to expose those tools: MCP servers, framework-native tools in Pydantic AI, custom API wrappers, or even shell commands.
 
