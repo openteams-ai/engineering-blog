@@ -1,8 +1,8 @@
 ---
 title: "Sandboxing Code Mode for Local LLM Agents"
 slug: code-mode-sandboxing-local-llms
-author: nick-byrne
-coauthors:
+authors:
+  - nick-byrne
   - khuyen-tran
 categories:
   - Engineering

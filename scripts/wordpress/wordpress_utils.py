@@ -51,7 +51,7 @@ class PostMetadata(BaseModel):
 
     title: Optional[str] = None
     slug: Optional[str] = None
-    author: Optional[str] = None
+    authors: List[str] = Field(default_factory=list)
     wordpress_id: Optional[int] = None
     categories: List[str] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
@@ -59,7 +59,7 @@ class PostMetadata(BaseModel):
     focus_keyword: Optional[str] = None
 
     @field_validator(
-        "title", "slug", "author", "meta_description", "focus_keyword",
+        "title", "slug", "meta_description", "focus_keyword",
         mode="before"
     )
     @classmethod
@@ -109,7 +109,7 @@ def extract_post_data(file_path: str) -> Dict:
 
     return {
         "title": title,
-        "author": validated_meta.author,
+        "authors": validated_meta.authors,
         "content": markdown_content,
         "categories": validated_meta.categories,
         "tags": validated_meta.tags,
