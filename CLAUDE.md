@@ -27,7 +27,8 @@ The preview uses the same markdown pipeline as publishing, so what you see is fa
 ---
 title: "Your Post Title"
 slug: your-post-slug
-author: wordpress-username
+authors:
+  - wordpress-username
 categories:
   - Engineering
 meta_description: "A short summary for SEO (150-160 chars)."
@@ -35,9 +36,17 @@ focus_keyword: "main keyword"
 ---
 ```
 
-**Required fields:** `title`, `slug`, `author`, `categories`
+**Required fields:** `title`, `slug`, `authors`, `categories`
 
-`author` is the author's slug from `authors.yml`. If this is your first post, add yourself to `authors.yml` with your name, slug, email, and bio before publishing.
+`authors` is a list of author slugs from `authors.yml`. The first slug is the primary author shown in the byline; any additional slugs are co-authors. If this is your first post, add yourself to `authors.yml` with your name, slug, email, and bio before publishing.
+
+For a co-authored post, list every contributor:
+
+```yaml
+authors:
+  - primary-author-slug
+  - second-author-slug
+```
 
 **Optional fields:** `meta_description`, `focus_keyword`
 

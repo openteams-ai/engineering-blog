@@ -1,7 +1,8 @@
 ---
 title: What I Learned Making a Local LLM Do Real Work
 slug: what-i-learned-making-a-local-llm-do-real-work
-author: adam-lewis
+authors:
+- adam-lewis
 categories:
 - Engineering
 wordpress_url: https://openteams.com/what-i-learned-making-a-local-llm-do-real-work/

@@ -216,14 +216,16 @@ def _validate_and_prepare(
     post_data["content"] = upload_and_replace_article_images(
         post_data["content"], file_path, wp_token, wp_api_url, username
     )
-    post_data["_author_username"] = post_data.get("author") or username
+    authors = post_data.get("authors") or []
+    post_data["_author_username"] = authors[0] if authors else username
     post_data["categories"] = _ensure_required_categories(
         post_data.get("categories", [])
     )
 
     print(f"Title: {post_data['title']}")
     print(f"Slug: {post_data['slug']}")
-    print(f"Author: {post_data['_author_username']}")
+    authors_display = ", ".join(authors) if authors else post_data["_author_username"]
+    print(f"Authors: {authors_display}")
 
     return post_data
 

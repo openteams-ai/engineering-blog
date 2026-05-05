@@ -1,7 +1,8 @@
 ---
 title: "We Benchmarked 6 Python Package Managers on a Real ML Project. Here's What We Found."
 slug: benchmark-python-package-managers
-author: brandon-geraci
+authors:
+  - brandon-geraci
 categories:
   - Engineering
 meta_description: "Head-to-head benchmark of pixi, uv, conda, mamba, pip, and poetry on a real ML/AI project with 25+ mixed conda-forge and PyPI dependencies."

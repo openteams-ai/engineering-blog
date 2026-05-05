@@ -1,7 +1,8 @@
 ---
 title: 'From Skill to Agent: When a Text File Isn''t Enough'
 slug: from-skill-to-agent
-author: adam-lewis
+authors:
+- adam-lewis
 categories:
 - Engineering
 wordpress_url: https://openteams.com/from-skill-to-agent/

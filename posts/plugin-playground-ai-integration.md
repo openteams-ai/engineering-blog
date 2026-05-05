@@ -1,7 +1,8 @@
 ---
 title: "Plugin Playground AI Integration for Faster Plugin Prototyping"
 slug: plugin-playground-ai-integration
-author: anuj-kumar-singh
+authors:
+  - anuj-kumar-singh
 categories:
   - Engineering
 meta_description: "Learn how we integrated AI into Plugin Playground to help you create, edit, test, package, and share JupyterLab plugins faster in JupyterLite and Binder."
