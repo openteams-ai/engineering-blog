@@ -3,24 +3,31 @@ name: Publish to WordPress
 on:
   push:
     branches: [main]
-    paths: ['posts/**']
+    paths:
+      - 'authors.yml'
+      - 'posts/**'
 
 jobs:
-  publish:
+  detect:
     runs-on: ubuntu-latest
+    outputs:
+      authors-changed: ${{ steps.detect.outputs.authors-changed }}
+      post-files: ${{ steps.detect.outputs.post-files }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2  # Need previous commit to detect changed files
 
-      - uses: astral-sh/setup-uv@v4
-
-      - name: Install dependencies
-        run: uv sync
-
-      - name: Detect changed articles
-        id: changed
+      - name: Detect changed paths
+        id: detect
         run: |
+          # Did authors.yml change in this push?
+          if git diff --name-only HEAD~1 HEAD | grep -qx 'authors.yml'; then
+            echo "authors-changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "authors-changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
           # Directly-changed post files (added or modified)
           DIRECT=$(git diff --name-only --diff-filter=AM HEAD~1 HEAD -- 'posts/*.md' 'posts/*.qmd')
 
@@ -45,12 +52,49 @@ jobs:
           fi
 
           FILES=$(printf '%s\n%s\n' "$DIRECT" "$IMAGE_POSTS" | sed '/^$/d' | sort -u)
-          echo "files<<EOF" >> "$GITHUB_OUTPUT"
+          echo "post-files<<EOF" >> "$GITHUB_OUTPUT"
           echo "$FILES" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
 
+  sync-authors:
+    needs: detect
+    if: needs.detect.outputs.authors-changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Sync authors
+        env:
+          WP_TOKEN: ${{ secrets.WP_TOKEN }}
+          WP_API_URL: ${{ secrets.WP_API_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+        run: uv run scripts/wordpress/sync_authors.py
+
+  publish:
+    needs: [detect, sync-authors]
+    # Run when there are posts to publish AND sync-authors either succeeded
+    # or was skipped (no authors change). !cancelled() lets this evaluate
+    # even when sync-authors is skipped, which would otherwise cascade-skip.
+    if: |
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs.detect.outputs.post-files != '' &&
+      (needs.sync-authors.result == 'success' || needs.sync-authors.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync
+
       - name: Publish articles
-        if: steps.changed.outputs.files != ''
         env:
           WP_TOKEN: ${{ secrets.WP_TOKEN }}
           WP_API_URL: ${{ secrets.WP_API_URL }}
@@ -61,4 +105,4 @@ jobs:
             [ -z "$file" ] && continue
             echo "Publishing: $file"
             uv run scripts/wordpress/publish.py --status publish "$file"
-          done <<< "${{ steps.changed.outputs.files }}"
+          done <<< "${{ needs.detect.outputs.post-files }}"
