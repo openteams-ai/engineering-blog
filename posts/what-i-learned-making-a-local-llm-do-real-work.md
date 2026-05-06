@@ -5,6 +5,8 @@ authors:
 - adam-lewis
 categories:
 - Engineering
+meta_description: "Learn what makes a local LLM agent reliable enough for real work: evals, deterministic Python logic, and why a better model beats engineering."
+focus_keyword: "local llm agent"
 wordpress_url: https://openteams.com/what-i-learned-making-a-local-llm-do-real-work/
 wordpress_id: 22324
 last_synced: '2026-04-21T21:06:40Z'
