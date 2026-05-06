@@ -1,7 +1,7 @@
 ---
 name: seo-meta-description
 description: >
-  SEO optimization for blog articles — tags, focus keyword, meta description, and SmartCrawl checklist.
+  SEO optimization for blog articles: focus keyword, meta description, and on-page checklist.
   Use proactively before publishing articles, when the user mentions "SEO", "meta description",
   "focus keyword", "optimize SEO", or wants to improve search rankings.
 user-invocable: true
@@ -9,149 +9,137 @@ user-invocable: true
 
 # SEO Optimization
 
-Optimize an article's SEO frontmatter and content before publishing.
+Optimize an article's SEO frontmatter and (when needed) content before publishing.
 
 **Usage:** `/seo-meta-description posts/article-name.md`
 
-## Step 1: Read and Analyze Content
+## Step 1: Read and analyze
 
-1. Read the full article content
-2. Assume `title`, `slug`, `tags`, `focus_keyword`, and `meta_description` are **not yet set**. Generate all of them from the content.
-3. Identify from the content:
+1. Read the full article.
+2. Identify from the content:
    - **Main topic** and tools covered
    - **Search intent**: comparison ("X vs Y"), tutorial ("how to"), informational ("what is"), or tool overview
-   - **Unique value**: what makes this article worth clicking over competitors
+   - **Unique value**: what makes this article worth clicking
    - **Target audience**: who would search for this
 
-## Step 2: Generate Title and Slug
+## Step 2: Review title and slug
 
-1. **Title**: Generate an SEO-friendly title (50-65 characters). Include the primary topic and a hook. Present 2-3 options and ask the user to choose.
-2. **Slug**: Derive from the chosen title — lowercase, hyphens, 3-50 characters, no stop words.
+Use the existing title and slug from the frontmatter. Suggest improvements if either falls short:
 
-## Step 3: Generate Focus Keyword
+| Field | Good when |
+| --- | --- |
+| **Title** | 50 to 65 characters; primary topic front-loaded; has a hook (specific number, action verb, or compelling claim); reads naturally, not clickbait |
+| **Slug** | Lowercase, hyphenated; 3 to 50 characters; no stop words (the, a, of, in); mirrors the title's main topic |
 
-Identify the primary search term the article should rank for:
+If the title doesn't meet the criteria, present **3 alternative titles** using different angles and let the user choose. Derive a new slug from the chosen title.
 
+## Step 3: Generate focus keyword
+
+The primary search term the article should rank for. **It must appear in both the title and slug** so the keyword, headline, and URL reinforce each other.
+
+- 2 to 4 words, specific to the article's main topic
 - Should match what the target audience would actually search for
-- 2-4 words, specific to the article's main topic
-- Check that it appears naturally in the article title and content
 - For comparisons: `"tool-a vs tool-b"`
 - For tutorials: `"how to [task] with [tool]"`
 - For overviews: `"[tool] [primary use case]"`
 
-Pick the best focus keyword and apply it directly.
+## Step 4: Write meta description
 
-## Step 4: Write Meta Description
+Generate 3 options using the **Action + Benefit + Keyword** formula.
 
-Generate 3 SEO-optimized meta description options using the **Action + Benefit + Keywords** formula.
+### Formula
 
-### The Formula
-
-```
+```text
 [Action verb] + [Benefit to reader] + [Focus keyword / specific detail]
 ```
 
-The action tells users what they'll do, the benefit explains why it matters, and the keyword ensures search relevance. This order works because searchers scan left-to-right — the action catches attention, the benefit holds it, and the keyword confirms relevance.
+Searchers scan SERPs in milliseconds, looking for the result that promises to solve their problem. Each component does specific work:
+
+- **Action verb**: signals "this page will do something for you." Passive openers like "This article discusses..." fail the scan because they offer no clear payoff.
+- **Benefit**: answers the searcher's implicit "what's in it for me?" Without it, the action is hollow.
+- **Keyword**: closes the loop. Google bolds matching terms in the SERP, and seeing the exact phrase the searcher typed confirms "yes, this page is about my query."
+
+Drop any one and the description becomes generic, vague, or off-topic.
 
 ### Rules
 
 | Rule | Detail |
 | --- | --- |
-| **Length** | 120-155 characters ideal. Never exceed 160. Mobile truncates at ~136 chars on average, so front-load key info in the first 120 characters |
-| **Focus keyword** | Include naturally, ideally in the first half. Google bolds matching terms in SERPs, which draws the eye |
-| **Action verbs** | Open with: Learn, Discover, Compare, See how, Find out, Get, Build, Master. These signal usefulness and set expectations |
-| **Specifics** | Include tool names, numbers, or concrete outcomes. "5 key differences" beats "key differences" |
-| **Intent match** | Comparison → use "vs" language. Tutorial → "how to" or "step by step". Tool overview → lead with what it solves |
+| **Length** | 120 to 155 characters ideal. Never exceed 160. Mobile truncates at ~136, so front-load key info. |
+| **Focus keyword** | Include naturally in the first half. Google bolds matching terms in SERPs. |
+| **Action verbs** | Use direct, imperative language. Verbs like Learn, Discover, Compare, See how, Find out, Get, Build, Master work well as openers, but a strong specific claim can substitute. |
+| **Specifics** | Include tool names, numbers, or concrete outcomes. "5 key differences" beats "key differences". |
+| **Intent match** | Comparison: "vs". Tutorial: "how to" or "step by step". Tool overview: lead with what it solves. |
 
-### What to Avoid
+### What to avoid
 
-These patterns hurt CTR because they waste precious characters on filler instead of value:
+- "In this article we explore..." (searchers can see it's an article)
+- "Read more about..." or "This guide covers..." (generic)
+- "Click here to learn..." (spammy)
+- Keyword stuffing
+- Em dashes (eat characters and clash with the project's writing style)
 
-- "In this article we explore..." — searchers can see it's an article
-- "Read more about..." or "This guide covers..." — generic, tells nothing specific
-- "Click here to learn..." — feels like spam
-- Keyword stuffing — repeating the same term multiple times
-- Em dashes — they eat characters and fragment the message
-
-### Patterns by Article Type
+### Patterns by article type
 
 **Comparison articles:**
+
 - `[Tool A] vs [Tool B]: [specific differentiator]. [Benefit or outcome].`
 - `Compare [Tool A] and [Tool B] for [use case]. See which handles [specific problem] better.`
 
 **Tutorial / How-to:**
+
 - `Learn how to [achieve outcome] with [tool]. [Specific scope or detail].`
 - `[Tool] simplifies [task]. [What the reader will build or learn].`
 
 **Standalone tool overview:**
+
 - `[Tool] [solves what problem]. [Key feature] + [benefit].`
 - `Discover how [tool] handles [specific challenge] with [feature].`
 
 ### Variety
 
-Make the 3 options genuinely different in approach — not just rephrased versions of the same idea:
-- One that **leads with the problem** the reader faces
-- One that **leads with the tool/solution**
-- One that **leads with the benefit or outcome**
+Make the 3 options genuinely different in approach, not rephrased versions of the same idea.
 
-### Present Options
+### Present options
 
-Show the current description (if any) for comparison, then the 3 options:
+Show the current description (if any), then the 3 options with character counts:
 
-```
+```markdown
 **Current** (155 chars):
-> [existing meta description]
+> [existing meta description, or "(none)"]
 
 ---
 
-**Option 1** (148 chars) — Leads with the problem:
+**Option 1** (148 chars):
 > [meta description text]
 
-**Option 2** (153 chars) — Leads with the solution:
+**Option 2** (153 chars):
 > [meta description text]
 
-**Option 3** (158 chars) — Benefit-driven:
+**Option 3** (144 chars):
 > [meta description text]
 ```
 
-**Let the user choose their preferred option.**
+Let the user choose.
 
-## Step 5: Apply Changes
+## Step 5: Apply changes
 
-Use Edit to update the YAML frontmatter with all confirmed fields:
+Edit the YAML frontmatter to add `meta_description` and `focus_keyword`. Insert them after `categories:` and before any `wordpress_*` fields, matching the ordering in [CLAUDE.md](CLAUDE.md).
 
-- `title`
-- `slug`
-- `focus_keyword`
-- `meta_description`
+## Step 6: On-page checklist
 
-## Step 6: SmartCrawl SEO Checklist
+Report ✅ or ❌ for each check. **Do not edit the title, slug, or body.**
 
-After applying all SEO fields, audit the article against SmartCrawl's checks and fix any issues:
-
-| Check | How to Fix |
+| Check | Notes |
 | --- | --- |
-| Focus keyphrase in SEO title | Ensure `title` frontmatter contains the `focus_keyword` |
-| SEO title length | Title should be 50-65 characters |
-| Focus keyphrase in URL | Ensure `slug` contains the focus keyword (hyphenated) |
-| Meta description not autogenerated | Ensure `meta_description` is explicitly set (done in steps above) |
-| Focus keyphrase in meta description | Ensure `meta_description` contains the `focus_keyword` |
-| Meta description length | 120-160 characters |
-| Focus keyphrase in first paragraph | Ensure the focus keyword appears naturally in the opening paragraph |
-| Focus keyphrase in subheadings | Include the focus keyword in at least 1-2 H2/H3 headings |
-| Image alt text contains keyphrase | At least one image alt text should include the focus keyword |
-| Internal/external links | Article should contain at least one relevant link |
-| Article length | Minimum 300 words recommended |
-| Focus keyphrase usage | Use the focus keyword 2-3 times naturally throughout the content |
-
-Present the checklist results to the user and offer to fix any failing checks.
-
-## Completion Checklist
-
-| Field | Status |
-| --- | --- |
-| Title |  |
-| Slug |  |
-| Focus keyword |  |
-| Meta description |  |
-| SmartCrawl checklist |  |
+| Focus keyphrase in title | Pass after Step 3 |
+| Focus keyphrase in URL/slug | Pass after Step 3 |
+| Meta description set | Pass after Step 5 |
+| Focus keyphrase in meta description | Pass after Step 5 |
+| Meta description length 120 to 160 chars | Pass after Step 5 |
+| Focus keyphrase in first paragraph | Report only |
+| Focus keyphrase in 1+ subheading | Report only |
+| Focus keyphrase used 2 to 3+ times | Report only (with count) |
+| Image alt contains keyphrase | Report only |
+| Internal/external links | Report only (with count) |
+| Article length ≥ 300 words | Report only (with count) |
