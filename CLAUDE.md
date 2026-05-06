@@ -36,7 +36,7 @@ focus_keyword: "main keyword"
 ---
 ```
 
-**Required fields:** `title`, `slug`, `authors`, `categories`
+**Required fields:** `title`, `slug`, `authors`, `categories`, `meta_description`, `focus_keyword`
 
 `authors` is a list of author slugs from `authors.yml`. The first slug is the primary author shown in the byline; any additional slugs are co-authors. If this is your first post, add yourself to `authors.yml` with your name, slug, email, and bio before publishing.
 
@@ -47,9 +47,6 @@ authors:
   - primary-author-slug
   - second-author-slug
 ```
-
-**Optional fields:** `meta_description`, `focus_keyword`
-
 
 The publish script matches posts to WordPress by `slug`, so do not change the slug of a live post. Renaming it orphans the existing WordPress post and creates a new draft under the new slug.
 

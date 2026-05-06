@@ -5,6 +5,8 @@ authors:
 - adam-lewis
 categories:
 - Engineering
+meta_description: "When does a Claude Code skill stop being enough? See why credential security pushes real workflows toward proper agent architectures."
+focus_keyword: "claude code skill"
 wordpress_url: https://openteams.com/from-skill-to-agent/
 wordpress_id: 22323
 last_synced: '2026-04-21T21:06:40Z'

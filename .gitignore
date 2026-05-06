@@ -6,3 +6,4 @@ __pycache__/
 .playwright-mcp
 .claude/commands
 .preview/
+wp-mu-plugins/
