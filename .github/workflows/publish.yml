@@ -86,11 +86,10 @@ jobs:
       needs.detect.outputs.post-files != '' &&
       (needs.sync-authors.result == 'success' || needs.sync-authors.result == 'skipped')
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.AUTOCOMMIT_TOKEN }}
 
       - uses: astral-sh/setup-uv@v4
 
@@ -110,14 +109,14 @@ jobs:
             uv run scripts/wordpress/publish.py --status publish "$file"
           done <<< "${{ needs.detect.outputs.post-files }}"
 
-      - name: Open metadata PR
-        uses: peter-evans/create-pull-request@v7
-        with:
-          branch: auto/wordpress-metadata-${{ github.run_id }}
-          base: main
-          add-paths: posts/**
-          commit-message: "chore(publish): record wordpress_id/url"
-          title: "chore(publish): record wordpress_id/url"
-          body: |
-            Automated metadata write-back from publish workflow [run ${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
-          delete-branch: true
+      - name: Commit frontmatter updates
+        run: |
+          if [ -n "$(git status --porcelain posts/)" ]; then
+            git config user.name "khuyentran1401"
+            git config user.email "49108771+khuyentran1401@users.noreply.github.com"
+            git add posts/
+            git commit -m "chore(publish): record wordpress_id/url [skip ci]"
+            git push
+          else
+            echo "No frontmatter changes to commit."
+          fi
