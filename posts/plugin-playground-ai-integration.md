@@ -1,12 +1,14 @@
 ---
-title: "Plugin Playground AI Integration for Faster Plugin Prototyping"
+title: Plugin Playground AI Integration for Faster Plugin Prototyping
 slug: plugin-playground-ai-integration
 authors:
-  - anuj-kumar-singh
+- anuj-kumar-singh
 categories:
-  - Engineering
-meta_description: "Learn how we integrated AI into Plugin Playground to help you create, edit, test, package, and share JupyterLab plugins faster in JupyterLite and Binder."
-focus_keyword: "plugin playground ai integration"
+- Engineering
+meta_description: Learn how we integrated AI into Plugin Playground to help you create, edit, test, package, and share JupyterLab plugins faster in JupyterLite and Binder.
+focus_keyword: plugin playground ai integration
+wordpress_id: 22368
+wordpress_url: https://openteams.com/plugin-playground-ai-integration/
 ---
 
 Building a JupyterLab plugin usually starts with small experiments - you test your ideas, change a few lines, reload, and repeat. Learn how we integrated AI into the Playground AI to help with this process.
@@ -46,8 +48,6 @@ You can describe a feature in plain language and ask AI to draft a plugin skelet
 
 Instead of starting from a blank file, you start from a working draft and iterate.
 
-![AI chat guidance alongside generated plugin code and a running snippet panel](images/plugin-playground-ai-integration/ai-conversation-plugin-running.png)
-
 ### 2) Refine code while you build
 
 As you edit, AI can help with:
@@ -85,8 +85,6 @@ These actions include:
 
 These actions support both authoring and operational tasks across the workflow.
 
-![Plugin Playground launcher tile showing Build with AI](images/plugin-playground-ai-integration/launcher-plugin-playground-tile.png)
-
 ### 5) Insert command calls during editing
 
 The command insertion modes are available while editing:
@@ -95,8 +93,6 @@ The command insertion modes are available while editing:
 - `Prompt AI to insert` for context-aware placement
 
 This helps place command calls quickly in the right context.
-
-![Command insertion menu showing Prompt AI to insert](images/plugin-playground-ai-integration/insert-with-ai-dropdown.png)
 
 ## How We Built It
 
