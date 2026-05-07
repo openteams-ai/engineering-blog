@@ -181,4 +181,4 @@ For a deeper look at the architecture, check out the [pixi conda-pypi docs](http
 - **Project**: 25 direct dependencies (PyTorch, Lightning, timm, transformers, albumentations, OpenCV, etc.) expanding to ~200 transitive packages
 - **Source code**: [brandonrc/python-package-manager-benchmark](https://github.com/brandonrc/python-package-manager-benchmark)
 
-All benchmark code is open-source. Clone the repo, install the tools you want to test, and run `python benchmark/runner.py`.
+All benchmark code is open source. Clone the repo, install the tools you want to test, and run `python benchmark/runner.py`.
