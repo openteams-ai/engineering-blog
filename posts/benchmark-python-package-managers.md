@@ -1,12 +1,14 @@
 ---
-title: "We Benchmarked 6 Python Package Managers on a Real ML Project. Here's What We Found."
+title: We Benchmarked 6 Python Package Managers on a Real ML Project. Here's What We Found.
 slug: benchmark-python-package-managers
 authors:
-  - brandon-geraci
+- brandon-geraci
 categories:
-  - Engineering
-meta_description: "Head-to-head benchmark of pixi, uv, conda, mamba, pip, and poetry on a real ML/AI project with 25+ mixed conda-forge and PyPI dependencies."
-focus_keyword: "pixi benchmark python package manager"
+- Engineering
+meta_description: Head-to-head benchmark of pixi, uv, conda, mamba, pip, and poetry on a real ML/AI project with 25+ mixed conda-forge and PyPI dependencies.
+focus_keyword: pixi benchmark python package manager
+wordpress_id: 22338
+wordpress_url: https://openteams.com/benchmark-python-package-managers/
 ---
 
 If you work on ML/AI projects with Python, you've felt the pain: conda takes forever to solve, pip can't install CUDA-linked packages from conda-forge, and poetry doesn't know what a conda channel is. You end up with a `Makefile` full of workarounds and a `README` that starts with "first, install miniconda, then..."
