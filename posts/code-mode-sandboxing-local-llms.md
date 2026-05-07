@@ -1,13 +1,15 @@
 ---
-title: "Sandboxing Code Mode for Local LLM Agents"
+title: Sandboxing Code Mode for Local LLM Agents
 slug: code-mode-sandboxing-local-llms
 authors:
-  - nick-byrne
-  - khuyen-tran
+- nick-byrne
+- khuyen-tran
 categories:
-  - Engineering
-meta_description: "Code mode can make local LLM agents more practical, but executing model-written code brings sandboxing back into the architecture."
-focus_keyword: "code mode sandboxing"
+- Engineering
+meta_description: Code mode can make local LLM agents more practical, but executing model-written code brings sandboxing back into the architecture.
+focus_keyword: code mode sandboxing
+wordpress_id: 24557
+wordpress_url: https://openteams.com/code-mode-sandboxing-local-llms/
 ---
 
 While exploring designs for running an LLM inside a desktop application, I ended up digging into where sandboxing matters in agent systems.

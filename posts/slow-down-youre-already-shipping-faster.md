@@ -1,12 +1,14 @@
 ---
-title: "Slow Down — Simple Lessons for Guiding AI and Shipping Better Code"
+title: Slow Down — Simple Lessons for Guiding AI and Shipping Better Code
 slug: slow-down-ship-better-code
 authors:
-  - johnny-bouder
+- johnny-bouder
 categories:
-  - Engineering
-meta_description: "Practical lessons for shipping better code, staying in control, keeping your skills sharp, and getting real value from AI coding tools without losing yourself in the hype."
-focus_keyword: "AI coding lessons"
+- Engineering
+meta_description: Practical lessons for shipping better code, staying in control, keeping your skills sharp, and getting real value from AI coding tools without losing yourself in the hype.
+focus_keyword: AI coding lessons
+wordpress_id: 22348
+wordpress_url: https://openteams.com/slow-down-ship-better-code/
 ---
 
 # Slow Down — Simple Lessons for Guiding AI and Shipping Better Code
