@@ -111,28 +111,13 @@ jobs:
           done <<< "${{ needs.detect.outputs.post-files }}"
 
       - name: Open metadata PR
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [ -z "$(git status --porcelain posts/)" ]; then
-            echo "No frontmatter changes to commit."
-            exit 0
-          fi
-
-          branch="auto/wordpress-metadata-${{ github.run_id }}"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b "$branch"
-          git add posts/
-          git commit -m "chore(publish): record wordpress_id/url"
-          git push -u origin "$branch"
-
-          changed=$(git diff --name-only origin/main..HEAD -- posts/ | sed 's|^|- |')
-          gh pr create \
-            --base main \
-            --head "$branch" \
-            --title "chore(publish): record wordpress_id/url" \
-            --body "Automated metadata write-back from publish workflow [run ${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
-
-          Files updated:
-          $changed"
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: auto/wordpress-metadata-${{ github.run_id }}
+          base: main
+          add-paths: posts/**
+          commit-message: "chore(publish): record wordpress_id/url"
+          title: "chore(publish): record wordpress_id/url"
+          body: |
+            Automated metadata write-back from publish workflow [run ${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+          delete-branch: true
