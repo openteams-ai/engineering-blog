@@ -29,6 +29,8 @@ from wordpress_utils import (
     verify_authentication,
     prepare_seo_meta_fields,
     upload_and_replace_article_images,
+    update_qmd_metadata,
+    build_published_url,
 )
 
 REQUEST_TIMEOUT = 30
@@ -126,8 +128,6 @@ def _build_wp_payload(post_data: Dict, context: Dict, *, include_create_fields: 
         "title": post_data["title"],
         "content": context["html_content"],
         "author": context["author_id"],
-        "comment_status": "closed",
-        "ping_status": "closed",
     }
 
     if include_create_fields:
@@ -147,13 +147,6 @@ def _build_wp_payload(post_data: Dict, context: Dict, *, include_create_fields: 
         payload["ppma_author"] = context["ppma_author_ids"]
 
     return payload
-
-
-def _build_published_url(wp_api_url: str, wp_post: Dict, post_data: Dict) -> str:
-    """Construct the final published URL from the API base and post slug."""
-    base_domain = wp_api_url.replace("/wp-json/wp/v2", "")
-    slug = wp_post.get("slug") or post_data.get("slug") or ""
-    return f"{base_domain}/{slug}/" if slug else base_domain
 
 
 def _send_wp_request(method: str, url: str, headers: Dict, payload: Dict) -> Optional[requests.Response]:
@@ -194,14 +187,14 @@ def sync_post(
     wp_token: str,
     wp_api_url: str,
     username: str,
-) -> bool:
-    """Update an existing WordPress post."""
+) -> Optional[Dict]:
+    """Update an existing WordPress post and return the API response."""
     post_id = post_data["wordpress_id"]
 
     context = _prepare_wp_context(post_data, wp_token, wp_api_url, username)
     if not context:
         print("❌ Authentication failed")
-        return False
+        return None
 
     payload = _build_wp_payload(post_data, context, include_create_fields=False)
     response = _send_wp_request("PUT", f"{wp_api_url}/posts/{post_id}", context["headers"], payload)
@@ -209,8 +202,16 @@ def sync_post(
     if response:
         result = response.json()
         print(f"✅ Updated WordPress post {post_id}: {result.get('link', 'Unknown')}")
-        return True
-    return False
+        return result
+    return None
+
+
+def _record_wp_identifiers(file_path: str, post_data: Dict, wp_id: int, wp_url: str) -> None:
+    """Write wordpress_id/url back to frontmatter when missing or out-of-date."""
+    if post_data.get("wordpress_id") == wp_id and post_data.get("wordpress_url") == wp_url:
+        return
+    if update_qmd_metadata(file_path, {"wordpress_id": wp_id, "wordpress_url": wp_url}):
+        print(f"📝 Updated frontmatter in {file_path}")
 
 
 def _validate_and_prepare(
@@ -244,15 +245,22 @@ def _validate_and_prepare(
 
 
 def _sync_existing_post(
-    post_data: Dict, wp_token: str, wp_api_url: str, username: str
+    file_path: str, post_data: Dict, wp_token: str, wp_api_url: str, username: str
 ) -> bool:
     """Sync updates to an existing WordPress post."""
     print(f"Mode: sync (wordpress_id: {post_data['wordpress_id']})")
-    return sync_post(post_data, wp_token, wp_api_url, username)
+    wp_post = sync_post(post_data, wp_token, wp_api_url, username)
+    if not wp_post:
+        return False
+
+    slug = wp_post.get("slug") or post_data.get("slug") or ""
+    final_url = build_published_url(wp_api_url, slug)
+    _record_wp_identifiers(file_path, post_data, wp_post["id"], final_url)
+    return True
 
 
 def _create_new_post(
-    post_data: Dict, wp_api_url: str, wp_token: str, username: str
+    file_path: str, post_data: Dict, wp_api_url: str, wp_token: str, username: str
 ) -> bool:
     """Create a new WordPress draft post."""
     print("Mode: create (new draft)")
@@ -261,9 +269,11 @@ def _create_new_post(
         print("  ❌ Failed to create WordPress post")
         return False
 
-    final_url = _build_published_url(wp_api_url, wp_post, post_data)
+    slug = wp_post.get("slug") or post_data.get("slug") or ""
+    final_url = build_published_url(wp_api_url, slug)
     print(f"Draft URL: {wp_post['link']}")
     print(f"Published URL: {final_url}")
+    _record_wp_identifiers(file_path, post_data, wp_post["id"], final_url)
     _notify_slack_new_post(post_data, final_url)
     return True
 
@@ -291,8 +301,8 @@ def process_file(
     )
     if existing_id:
         post_data["wordpress_id"] = existing_id
-        return _sync_existing_post(post_data, wp_token, wp_api_url, username)
-    return _create_new_post(post_data, wp_api_url, wp_token, username)
+        return _sync_existing_post(file_path, post_data, wp_token, wp_api_url, username)
+    return _create_new_post(file_path, post_data, wp_api_url, wp_token, username)
 
 
 def main():

@@ -53,12 +53,16 @@ class PostMetadata(BaseModel):
     slug: Optional[str] = None
     authors: List[str] = Field(default_factory=list)
     wordpress_id: Optional[int] = None
+    wordpress_url: Optional[str] = None
     categories: List[str] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
-    meta_description: str
-    focus_keyword: str
+    meta_description: Optional[str] = None
+    focus_keyword: Optional[str] = None
 
-    @field_validator("title", "slug", mode="before")
+    @field_validator(
+        "title", "slug", "wordpress_url", "meta_description", "focus_keyword",
+        mode="before"
+    )
     @classmethod
     def ensure_optional_str(cls, v: Any):
         return v if isinstance(v, str) else None
@@ -112,6 +116,7 @@ def extract_post_data(file_path: str) -> Dict:
         "tags": validated_meta.tags,
         "slug": validated_meta.slug,
         "wordpress_id": validated_meta.wordpress_id,
+        "wordpress_url": validated_meta.wordpress_url,
         "meta_description": validated_meta.meta_description,
         "focus_keyword": validated_meta.focus_keyword,
     }
@@ -618,7 +623,9 @@ def update_qmd_metadata(
     for field, value in metadata_updates.items():
         meta[field] = value
 
-    updated_yaml = yaml.safe_dump(meta, sort_keys=False)
+    updated_yaml = yaml.safe_dump(
+        meta, sort_keys=False, allow_unicode=True, width=10000
+    )
     new_content = f"---\n{updated_yaml}---{after_yaml}"
 
     with open(file_path, "w", encoding="utf-8") as f:
@@ -645,6 +652,12 @@ def has_wordpress_id(file_path: str) -> bool:
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
     return bool(re.search(r"^wordpress_id:", content, re.MULTILINE))
+
+
+def build_published_url(wp_api_url: str, slug: str) -> str:
+    """Construct the public post URL from the API base and slug."""
+    base_domain = wp_api_url.replace("/wp-json/wp/v2", "")
+    return f"{base_domain}/{slug}/" if slug else base_domain
 
 
 def upload_image_to_wordpress(
