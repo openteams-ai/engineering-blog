@@ -11,7 +11,7 @@ focus_keyword: "pixi benchmark python package manager"
 
 If you work on ML/AI projects with Python, you've felt the pain: conda takes forever to solve, pip can't install CUDA-linked packages from conda-forge, and poetry doesn't know what a conda channel is. You end up with a `Makefile` full of workarounds and a `README` that starts with "first, install miniconda, then..."
 
-We wanted to know: **how much faster could this be?** So we built a real ML project with 25+ dependencies split across conda-forge and PyPI, then benchmarked six package managers head to head.
+We wanted to know: **how much faster could this be?** So we built a real ML project with 25+ dependencies split across conda-forge and PyPI, then benchmarked six package managers head-to-head.
 
 ## The Setup
 
