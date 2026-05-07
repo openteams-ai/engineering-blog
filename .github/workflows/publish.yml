@@ -86,6 +86,8 @@ jobs:
       needs.detect.outputs.post-files != '' &&
       (needs.sync-authors.result == 'success' || needs.sync-authors.result == 'skipped')
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -106,3 +108,15 @@ jobs:
             echo "Publishing: $file"
             uv run scripts/wordpress/publish.py --status publish "$file"
           done <<< "${{ needs.detect.outputs.post-files }}"
+
+      - name: Commit frontmatter updates
+        run: |
+          if [ -n "$(git status --porcelain posts/)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add posts/
+            git commit -m "chore(publish): record wordpress_id/url [skip ci]"
+            git push
+          else
+            echo "No frontmatter changes to commit."
+          fi
