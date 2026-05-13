@@ -7,6 +7,7 @@ categories:
   - Engineering
 meta_description: "We tested Docling, Marker, and LlamaParse on the same multi-table PDF. Here is what each tool got right, where each one breaks, and how to pick."
 focus_keyword: "docling vs marker vs llamaparse"
+canonical_url: "https://codecut.ai/docling-vs-marker-vs-llamaparse/"
 ---
 
 ## Introduction
