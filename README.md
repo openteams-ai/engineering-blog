@@ -1,6 +1,6 @@
 # Engineering Blog
 
-Source repository for engineering blog posts published on [openteams.com/blog](https://openteams.com/blog) under the **Engineering** category.
+Source repository for engineering blog posts published on [openteams.com/engineering-blog](https://openteams.com/engineering-blog/).
 
 ## Overview
 
