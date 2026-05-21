@@ -128,6 +128,8 @@ def _build_wp_payload(post_data: Dict, context: Dict, *, include_create_fields: 
         "title": post_data["title"],
         "content": context["html_content"],
         "author": context["author_id"],
+        "comment_status": "closed",
+        "ping_status": "closed",
     }
 
     if include_create_fields:
