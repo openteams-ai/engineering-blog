@@ -13,6 +13,10 @@ Recently Animesh Jain from Meta published a [blogpost](https://docs.pytorch.org/
 
 ## Background
 
+### TorchDynamo
+
+TorchDynamo (or simply Dynamo) is the JIT compiler that PyTorch uses to make PyTorch programs faster. Dynamo hooks into the eval frame API ([PEP 523](https://peps.python.org/pep-0523/)) to intercept the Python bytecode before it runs and symbolically trace it to an intermediate representation called *FX Graph*. It is worth mentioning that Dynamo is not a general-purpose Python implementation. It is designed to optimize a very specific class of programs and it works quite well for that purpose.
+
 ### `PyTypeObject` and tp slots
 
 Every Python object has a type, and every type is represented internally by a `PyTypeObject`. For instance, the `int` and `str` types below are represented by `PyTypeObject` instances:
@@ -45,9 +49,6 @@ One such example of a `binaryfunc` is the `nb_or` field, which is the function u
 
 The name can be a bit misleading, because the `tp_as_number` slot is not just for numeric types (`int`, `float`, etc), but also for other types that support binary and unary operations. For example, set intersection `set1 & set2` is implemented by the [`nb_and`](https://github.com/python/cpython/blob/13d8f452a11dc58690cb7aba0cad39bcca18f465/Objects/setobject.c#L2437) slot. Dict merge `dict1 | dict2` is implemented by [`nb_or`](https://github.com/python/cpython/blob/13d8f452a11dc58690cb7aba0cad39bcca18f465/Objects/dictobject.c#L4776), among others.
 
-### TorchDynamo
-
-TorchDynamo (or simply Dynamo) is the JIT compiler that PyTorch uses to make PyTorch programs faster. Dynamo hooks into the eval frame API ([PEP 523](https://peps.python.org/pep-0523/)) to intercept the Python bytecode before it runs and symbolically trace it to an intermediate representation called *FX Graph*. It is worth mentioning that Dynamo is not a general-purpose Python implementation. It is designed to optimize a very specific class of programs and it works quite well for that purpose.
 
 ## Motivation
 
@@ -57,7 +58,7 @@ Dynamo was originally designed to cover a subset of Python programs that matter 
 
 *Dynamo's ad-hoc impl. of `dict.__or__` before the slot-based rewrite*
 
-This snippet of code almost certainly misses some corner cases that are not caught by the test suite. It also shows we are trying to mimic parts of the dispatch logic that CPython gets for free but in a completely ad-hoc way.
+The image above shows the previous impl. of `dict.__or__` in Dynamo. It tries to do many things at once: inspect the type of `other` for subclasses, check for the presence of `__ror__` and so on. This snippet almost certainly misses some corner cases that are not caught by the test suite. It also shows we are trying to mimic parts of the dispatch logic that CPython gets for free but in a completely ad-hoc way.
 
 Over time, some of the core logic became less about well-defined rules and more about accumulating special cases. When Dynamo discovered a new gap with CPython, we would often patch that gap directly. This was pragmatic, and I have written my fair share of this kind of code, but it made the codebase much harder to reason about.
 
@@ -65,7 +66,9 @@ The `tp_*` slot work is an attempt to replace some of the ad-hoc logic with a mo
 
 ## The dispatch algorithm
 
-For a single binary operation `left | right`, it is natural to think CPython simply calls `left.__or__(right)`. This is almost right, but there is a catch: in some cases, the right-hand side gets the first chance to handle the operation. CPython's dispatch algorithm is roughly:
+For a single binary operation `left | right`, it is natural to think CPython simply calls `left.__or__(right)`. This is almost right, but there is a catch: in some cases, the right-hand side gets the first chance to handle the operation.
+
+Internally, binary operations are implemented as `PyNumber_*` functions in [abstract.c](https://github.com/python/cpython/blob/13d8f452a11dc58690cb7aba0cad39bcca18f465/Objects/abstract.c), which get called when the [`BINARY_OP`](https://docs.python.org/3/library/dis.html#opcode-BINARY_OP) opcode is executed. The dispatch is generally handled by the `binary_op1` function, which roughly follows the algorithm below:
 
 1. Look up the slot for `left`.
 2. Look up the slot for `right`.
@@ -78,7 +81,7 @@ This is essentially the algorithm implemented by [`binary_op1`](https://github.c
 
 ### The `SLOT1BIN` macro
 
-`SLOT1BIN` is the glue that allows dunder methods to participate in the binary protocol. The `binary_op1` function operates on C slots, but Python defined classes have dunder methods instead. The `SLOT1BIN` / `SLOT1BINFULL` macros are responsible for generating wrapper functions to bridge the gap between the slots and the dunder methods.
+`SLOT1BIN` is the glue that allows user-defined types to participate in the binary protocol. Builtin types like `int`, `dict`, and `set` define their slots directly in C, but Python-defined classes expose dunder methods instead. The `SLOT1BIN` / `SLOT1BINFULL` macros are responsible for generating wrapper functions to bridge the gap between the slots and the dunder methods.
 
 ```python
 class A:
@@ -125,7 +128,7 @@ I suggest reading the [implementation](https://github.com/python/cpython/blob/13
 
 ## The new `dict.__or__` implementation
 
-Recall that `tp_as_number` points to a `PyNumberMethods` struct, and `nb_or` is the entry in that struct used by the `|` operator. With the new slot-based implementation, the `dict.nb_or` slot becomes a straight translation of the CPython implementation to Python:
+Recall that `tp_as_number` points to a `PyNumberMethods` struct, and `nb_or` is the entry in that struct used by the `|` operator. The `nb_` prefix is the naming convention for the category of "number methods". With the new slot-based implementation, the `dict.nb_or` slot becomes a straight translation of the CPython implementation to Python:
 
 ```c
 static PyObject *
