@@ -74,4 +74,4 @@ One of us put the long view about as well as it can be put: it's a little scary,
 
 *This piece grew out of an internal engineering discussion. Thanks to the team for an unusually good argument.*
 
-*Special thanks to the engineers whose arguments shaped this piece: Yukio Siraichi, Benjamin Glass, Drew Hubley, Hameer Abbasi, Pearu Peterson, Erik Postma, and Andrew James.*
+*Special thanks to the engineers whose arguments shaped this piece: Yukio Siraichi ([@ysiraichi](https://github.com/ysiraichi)), Benjamin Glass ([@benjaminglass1](https://github.com/benjaminglass1)), Drew Hubley ([@spectre-ns](https://github.com/spectre-ns)), Hameer Abbasi ([@hameerabbasi](https://github.com/hameerabbasi)), Pearu Peterson ([@pearu](https://github.com/pearu)), Erik Postma ([@postmath](https://github.com/postmath)), and Andrew James ([@amjames](https://github.com/amjames)).*
