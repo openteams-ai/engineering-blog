@@ -1,0 +1,3 @@
+[submodule "themes/darby"]
+	path = themes/darby
+	url = https://github.com/aktech/darby

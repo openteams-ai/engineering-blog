@@ -7,3 +7,8 @@ __pycache__/
 .claude/commands
 .preview/
 wp-mu-plugins/
+# Hugo
+public/
+resources/_gen/
+.hugo_build.lock
+static/assistant-index.json

@@ -1,0 +1,49 @@
+{{ define "main" }}
+{{/* Home = the blog feed. Mirrors darby's blog/list.html, adapted to source
+     posts from the blog section (home is not the blog section page) and to
+     resolve each cover from the post's own bundle. */}}
+{{ $posts := where .Site.RegularPages "Section" "blog" }}
+{{ $view := .Site.Params.blogView | default "list" }}{{ if ne $view "cards" }}{{ $view = "list" }}{{ end }}
+<div class="post-layout post-index-layout" data-post-view="{{ $view }}">
+  <article class="doc post post-index">
+    <header class="post-header">
+      <div class="blog-head">
+        <h1>{{ .Title }}</h1>
+        <div class="view-toggle" data-blog-view role="group" aria-label="Choose layout">
+          <button type="button" class="view-btn{{ if eq $view "list" }} is-active{{ end }}" data-view-set="list" aria-label="List view" title="List view">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          </button>
+          <button type="button" class="view-btn{{ if eq $view "cards" }} is-active{{ end }}" data-view-set="cards" aria-label="Cards view" title="Cards view">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </button>
+        </div>
+      </div>
+      {{ with .Content }}<div class="blog-intro">{{ . }}</div>{{ end }}
+    </header>
+    <ul class="post-list">
+      {{ range $posts.ByDate.Reverse }}
+      {{ $p := . }}
+      {{ $angle := add 110 (mod (hash.FNV32a .Title) 60) }}
+      {{ $shift := sub (mod (hash.FNV32a (printf "%s-shade" .Title)) 90) 45 }}
+      {{/* Per-post cover image (front matter `image`/`cover`): bundle resource,
+           static path, or full URL. Shown as the card cover. */}}
+      {{ $cover := .Params.image | default .Params.cover }}
+      {{ $coverURL := "" }}
+      {{ with $cover }}
+        {{ $res := $p.Resources.GetMatch . }}
+        {{ if $res }}{{ $coverURL = $res.RelPermalink }}{{ else if hasPrefix . "http" }}{{ $coverURL = . }}{{ else }}{{ $coverURL = . | relURL }}{{ end }}
+      {{ end }}
+      <li class="post-list-item">
+        <a class="post-cover{{ if $coverURL }} has-image{{ end }}" href="{{ .RelPermalink }}" aria-hidden="true" tabindex="-1" style="--cover-angle: {{ $angle }}deg; --cover-shift: {{ $shift }};{{ with $coverURL }}--cover-bg: url('{{ . }}');{{ end }}"></a>
+        <h2 class="post-list-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+        {{ partial "post-meta.html" . }}
+        {{/* Preview from the prose paragraphs (skips headings/anchors so no
+             stray "#"), entities decoded, enough text to fill the 3-line clamp. */}}
+        {{ $text := delimit (findRE `(?s)<p>.*?</p>` .Content) " " | plainify | htmlUnescape }}
+        {{ with $text }}<p class="post-summary">{{ . | truncate 340 }}</p>{{ else }}{{ with $.Summary }}<p class="post-summary">{{ . }}</p>{{ end }}{{ end }}
+      </li>
+      {{ end }}
+    </ul>
+  </article>
+</div>
+{{ end }}

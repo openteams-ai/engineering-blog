@@ -1,0 +1,224 @@
+baseURL = "https://openteams.com/engineering-blog/"
+languageCode = "en-us"
+title = "OpenTeams Engineering Blog"
+
+# Darby theme, vendored as a pinned git submodule under themes/darby. Submodule
+# (not Hugo Module) on purpose: the published Go module zip strips
+# assets/js/vendor/, which would drop the bundled fuse/mermaid libs.
+theme = "darby"
+
+[params]
+  # OpenTeams brand blue, rgb(77, 117, 254).
+  accent = "#4D75FE"
+  accentDark = "#4D75FE"
+  # Solid navy navbar (matches openteams.com). The bar becomes a dark surface
+  # so links/icons/logo stay legible in both light and dark themes.
+  topbarBg = "#000e3b"
+  # Dark-mode page background: deep navy instead of pure black, to harmonize
+  # with the navy navbar (raised surfaces/borders are derived from this).
+  bgDark = "#00081f"
+  repo = "https://github.com/openteams-ai/engineering-blog"
+  logo = "/openteams-logo-light.svg"
+  logoDark = "/openteams-logo-dark.svg"
+  logoOnly = true
+  logoHeight = "2.4rem"
+  # Right-sidebar (table of contents) in Merriweather, matching the post body serif.
+  tocFont = "Merriweather, Georgia, serif"
+  favicon = "/favicon.svg"
+  # Social-share card for non-article pages (home/sections). og:image must be
+  # a raster; blog posts get an auto-generated branded PNG from darby.
+  ogImage = "og-home.png"
+  twitter = "openteamsinc"
+
+  # Top-bar mega menu, mirroring the openteams.com navigation.
+  [[params.navLinks]]
+    name = "Solutions"
+    [[params.navLinks.columns]]
+      title = "Platform"
+      [[params.navLinks.columns.links]]
+        name = "Our Capabilities"
+        url = "https://openteams.com/capabilities/"
+        icon = "compass"
+        desc = "Rooted in open source expertise"
+      [[params.navLinks.columns.links]]
+        name = "Nebari"
+        url = "https://openteams.com/nebari/"
+        icon = "blocks"
+        desc = "Build your private Intelligence Hub"
+    [[params.navLinks.columns]]
+      title = "Industry & Science"
+      [[params.navLinks.columns.links]]
+        name = "Biotech"
+        url = "https://openteams.com/the-lung-that-failed-and-what-it-taught-us-about-ai/"
+        icon = "graduation-cap"
+        desc = "AI powering life sciences"
+      [[params.navLinks.columns.links]]
+        name = "Defense"
+        url = "https://openteams.com/open-source-isnt-the-real-risk-in-national-defense/"
+        icon = "life-buoy"
+        desc = "Secure AI for defense"
+      [[params.navLinks.columns.links]]
+        name = "Aerospace"
+        url = "https://openteams.com/what-nasa-did-that-every-tech-leader-should-steal/"
+        icon = "rocket"
+        desc = "AI built for aerospace"
+      [[params.navLinks.columns.links]]
+        name = "Energy"
+        url = "https://openteams.com/they-didnt-want-a-vendor-they-wanted-ownership/"
+        icon = "zap"
+        desc = "Optimizing energy with AI"
+    [[params.navLinks.columns]]
+      title = "Strategy & Intelligence"
+      [[params.navLinks.columns.links]]
+        name = "Artificial Intelligence"
+        url = "https://openteams.com/the-democratization-of-ai-has-already-happened/"
+        icon = "sparkles"
+        desc = "Real-world AI in action"
+      [[params.navLinks.columns.links]]
+        name = "Strategic Intelligence"
+        url = "https://openteams.com/how-a-fast-growing-ai-company-rebuilt-from-the-stack-up/"
+        icon = "map"
+        desc = "Intelligence for strategic decisions"
+      [[params.navLinks.columns.links]]
+        name = "Advertising"
+        url = "https://openteams.com/ai-logo-detection-ad-analytics/"
+        icon = "palette"
+        desc = "AI-driven campaign performance"
+      [[params.navLinks.columns.links]]
+        name = "Investment Management"
+        url = "https://openteams.com/inside-a-1t-firms-fight-to-build-real-ai-infrastructure/"
+        icon = "layers"
+        desc = "Smarter data-driven decisions"
+
+  [[params.navLinks]]
+    name = "Resources"
+    [[params.navLinks.columns]]
+      title = "Resources"
+      [[params.navLinks.columns.links]]
+        name = "OpenTeams Blog"
+        url = "https://openteams.com/blog/"
+        icon = "newspaper"
+      [[params.navLinks.columns.links]]
+        name = "Engineering Blog"
+        url = "https://openteams.com/engineering-blog/"
+        icon = "terminal"
+      [[params.navLinks.columns.links]]
+        name = "Case Studies"
+        url = "https://openteams.com/case-studies/"
+        icon = "file-text"
+
+  [[params.navLinks]]
+    name = "Company"
+    [[params.navLinks.columns]]
+      title = "Company"
+      [[params.navLinks.columns.links]]
+        name = "About Us"
+        url = "https://openteams.com/about-us/"
+        icon = "users"
+      [[params.navLinks.columns.links]]
+        name = "Press Room"
+        url = "https://openteams.com/press/"
+        icon = "book-open"
+      [[params.navLinks.columns.links]]
+        name = "Careers"
+        url = "https://openteams.com/careers/"
+        icon = "graduation-cap"
+
+  # Plain link (no columns) -> top-bar link, mirroring the "Contact Us" CTA
+  # in the official engineering-blog header.
+  [[params.navLinks]]
+    name = "Contact Us"
+    url = "https://openteams.com/contact-us/"
+
+  [params.search]
+    enable = true
+    backend = "fuse"
+
+  # Ask AI: client-side Q&A over the blog. Runs fully in the browser
+  # (no server, no API key). Index is built from rendered HTML; see README.
+  [params.assistant]
+    enable = true
+    backend = "browser"
+    indexPath = "assistant-index.json"
+    suggestions = [
+      "Which Python package manager is fastest?",
+      "How do I sandbox a local LLM agent?",
+      "Docling vs Marker vs LlamaParse: which is best for tables?",
+    ]
+
+  [[params.social]]
+    name = "github"
+    url = "https://github.com/openteams-ai"
+  [[params.social]]
+    name = "linkedin"
+    url = "https://www.linkedin.com/company/openteams"
+  [[params.social]]
+    name = "x"
+    url = "https://x.com/openteamsinc"
+  [[params.social]]
+    name = "youtube"
+    url = "https://www.youtube.com/@openteams"
+
+  [params.footer]
+    copyright = "© OpenTeams® 2026 All Rights Reserved."
+    hidePoweredBy = true
+
+    [[params.footer.columns]]
+      title = "OpenTeams"
+      [[params.footer.columns.links]]
+        name = "About"
+        url = "https://openteams.com/about-us/"
+      [[params.footer.columns.links]]
+        name = "Case Studies"
+        url = "https://openteams.com/case-studies/"
+      [[params.footer.columns.links]]
+        name = "Press"
+        url = "https://openteams.com/press/"
+      [[params.footer.columns.links]]
+        name = "Contact"
+        url = "https://openteams.com/contact-us/"
+    [[params.footer.columns]]
+      title = "Resources"
+      [[params.footer.columns.links]]
+        name = "Engineering Blog"
+        url = "/"
+      [[params.footer.columns.links]]
+        name = "OpenTeams Blog"
+        url = "https://openteams.com/blog/"
+      [[params.footer.columns.links]]
+        name = "Communities"
+        url = "https://openteams.com/openteams-communities/"
+      [[params.footer.columns.links]]
+        name = "GitHub"
+        url = "https://github.com/openteams-ai"
+    [[params.footer.columns]]
+      title = "Legal"
+      [[params.footer.columns.links]]
+        name = "Privacy"
+        url = "https://openteams.com/privacy-policy/"
+      [[params.footer.columns.links]]
+        name = "Terms"
+        url = "https://openteams.com/terms-of-service/"
+      [[params.footer.columns.links]]
+        name = "Code of Conduct"
+        url = "https://openteams.com/code-of-conduct/"
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
+
+# Hugo does not merge a theme's [markup] config into a consuming site
+# (the markup key is _merge: none), so this mirrors darby's reference block.
+[markup]
+  [markup.highlight]
+    noClasses = false
+    lineNos = false
+    codeFences = true
+    guessSyntax = true
+  [markup.goldmark.parser.attribute]
+    block = true
+    title = true
+  [markup.goldmark.renderer]
+    unsafe = true
+  [markup.tableOfContents]
+    startLevel = 2
+    endLevel = 3
