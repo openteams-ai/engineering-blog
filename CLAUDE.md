@@ -21,6 +21,23 @@ The rendered HTML is written to `.preview/<slug>.html` (gitignored) and opened i
 
 The preview uses the same markdown pipeline as publishing, so what you see is faithful to the WordPress content area. It does not reproduce the OpenTeams theme chrome (author box, navigation, featured-image hero layout, brand fonts).
 
+## Check
+
+Validate a post against everything the publish step requires *before* opening a PR. Catches missing or invalid frontmatter, authors not in `authors.yml`, broken image links, and SEO issues locally, instead of after merge when the publish workflow runs. No WordPress credentials are required.
+
+```bash
+uv run scripts/wordpress/check.py posts/your-article.md
+```
+
+Pass `--all` to check every post, or `--strict` to treat warnings as failures. Claude Code users can run `/check-post posts/your-article.md` instead.
+
+The checker reports two severities:
+
+- **Errors** block publishing: missing required frontmatter, an invalid `slug`, an author not in `authors.yml`, or a referenced image that does not exist on disk. The command exits non-zero when any error is found.
+- **Warnings** are SEO and convention issues: `meta_description` length outside 120-160 characters, the `focus_keyword` missing from the title or slug, a `slug` that does not match the filename, images outside `images/<slug>/`, or empty image alt text.
+
+The same checks run on every pull request via the `check-posts` GitHub Actions workflow, so fixing them locally first avoids a failed CI run.
+
 ## Frontmatter
 
 ```yaml
