@@ -15,7 +15,7 @@ It is a horse, not a train. A train follows the same track every day. A horse ne
 
 So you do not drive it. You ride it. And before you trust where it took you, you go check.
 
-There is a build behind that claim, not a metaphor floating on its own. In about a week, riding this way turned a single large strategy meeting video into a customer-reviewed React landing page, two traceable requirements documents, a footnoted credibility document, and a published site. Every public claim got checked before it left the building. Here is how that worked, and what I would steal from it.
+There is a build behind that claim, not a metaphor floating on its own. In about a week, riding this way turned a single large strategy meeting video into a customer-reviewed React landing page, two traceable requirements documents, a footnoted credibility document, and [a published site](https://openteams.com/python-security-remediation/). Every public claim got checked before it left the building. Here is how that worked, and what I would steal from it.
 
 ## A Horse, Not a Train
 
@@ -47,7 +47,7 @@ Early on, the wandering is the asset. Because the model does not repeat itself, 
 
 The first prototype was beautiful, and it over-claimed. It leaned on language we could not back up, and the accuracy needed work. The second was a tighter, more focused framing, a real step up. The third was a larger leap, a broader strategic reframing, and that one became the site the customer reviewed.
 
-The jump to the third was not a whim. It was a requirement. It traces straight back to our CTO in the strategy meeting, making the case that the framing should lead with where the work is going, not where it came from. That direction, captured as a requirement and tied to a timestamp, drove the headline of the final design.
+The jump to the third was not a whim. It was a requirement. It traces straight back to our CTO in the strategy meeting, making the case that the framing should lead with where the work is going, not where it came from. That direction, captured as a requirement and tied to a timestamp, drove the headline of the final design. That headline ended up leading with "Security for the AI stack," the forward-looking framing the requirement asked for.
 
 I was not the one steering the look of any of this. The last front-end design I did before this was MySpace. For those of you old enough to remember MySpace, that was it. I do not really know front-end design. I trust `Claude` to do it, I guide it, and I ride it a little.
 
@@ -98,6 +98,8 @@ Christopher Farrow watched the conflict markers and saw something I had not phra
 Johnny also asked the question everyone running a pipeline this size eventually asks: did I keep running out of tokens? Constantly. I have a personal `Claude` account that I use for anything public-facing that does not touch sensitive data, and I keep sensitive work on a separate internal account. Even so, I was maxing it out, especially after a model update that nuked my tokens faster than I had planned for. (It is a good update. It is also hungry.)
 
 And the document is not a static source of truth. Because there are multiple meetings, it is a living one, updated after each meeting by an automation I run on my own machine. The record stays current, which is the only way the requirement IDs stay accurate as the opportunity moves.
+
+Riding this way means you end up somewhere real. The site that week produced is live: [Security for the AI stack](https://openteams.com/python-security-remediation/), and every public claim on it went through the loop above before it shipped.
 
 ## Three Things to Steal
 
