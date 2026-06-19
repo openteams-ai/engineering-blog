@@ -58,7 +58,7 @@ Dynamo was originally designed to cover a subset of Python programs that matter 
 
 *Dynamo's ad-hoc impl. of `dict.__or__` before the slot-based rewrite*
 
-The image above shows the previous impl. of `dict.__or__` in Dynamo. It tries to do many things at once: inspect the type of `other` for subclasses, check for the presence of `__ror__` and so on. This snippet almost certainly misses some corner cases that are not caught by the test suite. It also shows we are trying to mimic parts of the dispatch logic that CPython gets for free but in a completely ad-hoc way.
+The image above shows the previous implementation of `dict.__or__` in Dynamo. It tries to do many things at once: inspect the type of `other` for subclasses, check for the presence of `__ror__` and so on. This snippet almost certainly misses some corner cases that are not caught by the test suite. It also shows we are trying to mimic parts of the dispatch logic that CPython gets for free but in a completely ad-hoc way.
 
 Over time, some of the core logic became less about well-defined rules and more about accumulating special cases. When Dynamo discovered a new gap with CPython, we would often patch that gap directly. This was pragmatic, and I have written my fair share of this kind of code, but it made the codebase much harder to reason about.
 
@@ -160,6 +160,7 @@ def nb_or_impl(
     other: VariableTracker,
     reverse: bool = False,
 ) -> VariableTracker:
+    self_, other_ = (other, self) if reverse else (self, other)
     if pydict_check(self_) and pydict_check(other_):
         new = self_.call_method(tx, "copy", [], {})
         new.call_method(tx, "update", [other_], {})
@@ -169,7 +170,7 @@ def nb_or_impl(
 
 *Dynamo impl. of dict `nb_or` ([source](https://github.com/pytorch/pytorch/blob/862cb8fb254273306ab4fe1e465d5b06d04a48c1/torch/_dynamo/variables/dicts.py#L729-L741))*
 
-Both the `binary_op1`, `SLOT1BIN` and `nb_or` were added to PyTorch in the pull request [#181326](https://github.com/pytorch/pytorch/pull/181326) as part of the effort to support not just `nb_or` but the `tp_as_number` slot in general.
+The `binary_op1`, `SLOT1BIN` and `nb_or` were added to PyTorch in the pull request [#181326](https://github.com/pytorch/pytorch/pull/181326) as part of the effort to support not just `nb_or` but the `tp_as_number` slot in general.
 
 The slot-based implementation is useful for a few things:
 
@@ -177,11 +178,11 @@ The slot-based implementation is useful for a few things:
 * The translation from C to Python can be partially done by an LLM
 * One could validate the implementation using the CPython tests
 
-We can leverage the recent developments in LLMs to help with the transition. The generated code still needs to be reviewed and tested, but it can significantly reduce the cost of implementing some of this work.
+The generated code still needs to be reviewed and tested, but it can significantly speed up porting the remaining slots. 
 
 ## Leveraging the CPython test suite
 
-CPython has a test suite containing more than 750 test files that span from I/O to the standard library, representing more than 30 years of development effort in implementing the Python interpreter.
+We use the CPython tests to validate the slots implementation. CPython has a test suite containing more than 750 test files that span from I/O to the standard library, representing more than 30 years of development effort in implementing the Python interpreter.
 
 Last year I started an effort to port a subset of those tests to Dynamo. PyTorch currently runs 4,729 tests which are spread across 45 test files. It is a small subset, but it covers many of the core behaviors that Dynamo needs to model: builtin types, data structures, exceptions, and math operations.
 
@@ -191,7 +192,7 @@ For more information, check out the dashboard I maintain on [Streamlit](https://
 
 The port of `binary_op1` / `SLOT1BIN` to Dynamo was implemented in the pull request [\#181326](https://github.com/pytorch/pytorch/pull/181326). This work was part of the effort to add `nb_or` as the first `tp_as_number` slot supported by Dynamo.
 
-This work aligns with the vision described in Animesh's blogpost: to move from an implementation that works by accident to a model that we can reason about and validate against CPython source code and tests.
+This work aligns with the vision described in Animesh's blogpost: to move from an implementation that works by accident to a model that we can reason about and validate against CPython source code and tests. The next steps involve porting the remaining slots in `PyTypeObject` and expanding the test coverage to ensure we are correctly modeling CPython's behavior.
 
 ## References
 
