@@ -21,6 +21,22 @@ The rendered HTML is written to `.preview/<slug>.html` (gitignored) and opened i
 
 The preview uses the same markdown pipeline as publishing, so what you see is faithful to the WordPress content area. It does not reproduce the OpenTeams theme chrome (author box, navigation, featured-image hero layout, brand fonts).
 
+## Fact-check
+
+If you use Claude Code, verify a post's factual claims against authoritative web sources before publishing:
+
+```text
+/fact-check posts/your-article.md            # print a report
+/fact-check posts/your-article.md --comment  # also post the report to the PR
+/fact-check posts/your-article.md --fix      # offer high-confidence corrections
+```
+
+It extracts concrete, checkable claims (statistics, version numbers, benchmark results, dates, tool capabilities) and verifies each with web search, reporting what is confirmed, contradicted, outdated, or unverifiable. Opinions, predictions, and your own original measurements are not flagged.
+
+With `--fix`, high-confidence corrections for contradicted or outdated facts are delivered as GitHub-style `suggestion` blocks — as inline review comments on the PR (one-click "Commit suggestion"), or as a numbered list locally that you approve one at a time. Nothing is ever edited silently, so you can ignore any correction where you have information the public record doesn't.
+
+This is **advisory**: it never blocks a merge and never overrules you. It complements structural validation rather than replacing human review.
+
 ## Frontmatter
 
 ```yaml
