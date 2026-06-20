@@ -33,10 +33,10 @@ Pass `--all` to check every post, or `--strict` to treat warnings as failures. C
 
 The checker reports two severities:
 
-- **Errors** block publishing: missing required frontmatter, an invalid `slug`, an author not in `authors.yml`, or a referenced image that does not exist on disk. The command exits non-zero when any error is found.
-- **Warnings** are SEO and convention issues: `meta_description` length outside 120-160 characters, the `focus_keyword` missing from the title or slug, a `slug` that does not match the filename, images outside `images/<slug>/`, or empty image alt text.
+- **Errors** block publishing: a missing `title`, `slug`, `meta_description`, or `focus_keyword`; an invalid `slug`; or a referenced image that does not exist on disk. The command exits non-zero when any error is found.
+- **Warnings** are SEO and convention issues that publish tolerates: a missing `authors` or `categories` (publish falls back to a default), an author not listed in `authors.yml`, `meta_description` length outside 120-160 characters, the `focus_keyword` missing from the title or slug, a `slug` that does not match the filename, images outside `images/<slug>/`, or empty image alt text.
 
-The same checks run on every pull request via the `check-posts` GitHub Actions workflow, so fixing them locally first avoids a failed CI run.
+The same checks run on every pull request via the `check-posts` GitHub Actions workflow. CI runs without `--strict`, so only errors fail a PR; warnings are advisory. Fixing them locally first avoids a failed CI run.
 
 ## Frontmatter
 

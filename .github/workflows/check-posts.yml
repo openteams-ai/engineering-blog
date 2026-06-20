@@ -34,5 +34,7 @@ jobs:
           fi
           echo "Checking:"
           echo "$FILES"
+          # No --strict: only errors fail the PR; SEO/convention warnings are
+          # advisory and must not block a merge.
           # shellcheck disable=SC2086
           uv run scripts/wordpress/check.py $FILES

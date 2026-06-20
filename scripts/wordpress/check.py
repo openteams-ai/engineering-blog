@@ -15,7 +15,8 @@ Usage:
     uv run scripts/wordpress/check.py --all             # check every post
 
 Exit code is 0 when all checked posts pass (warnings allowed), 1 when any
-post has an error. Pass --strict to also fail on warnings (used in CI).
+post has an error. CI runs without --strict, so SEO/convention warnings do
+not block a PR; pass --strict locally to also fail on warnings.
 """
 
 import argparse
@@ -29,14 +30,23 @@ import yaml
 
 from wordpress_utils import is_valid_slug
 
-# Required frontmatter fields, per CLAUDE.md and the PostMetadata model.
-REQUIRED_FIELDS = (
+# Fields publish.py genuinely requires: PostMetadata declares
+# meta_description and focus_keyword with no default, so a missing one makes
+# extract_post_data raise. title and slug have no usable publish-side fallback
+# (slug is how posts are matched to WordPress), so treat them as blocking too.
+BLOCKING_FIELDS = (
     "title",
     "slug",
-    "authors",
-    "categories",
     "meta_description",
     "focus_keyword",
+)
+
+# Required by CLAUDE.md convention, but NOT publish-blocking: publish falls
+# back to the authenticated user when `authors` is empty, and injects the
+# "Engineering" category when `categories` is empty. Flag as warnings.
+CONVENTION_FIELDS = (
+    "authors",
+    "categories",
 )
 
 # WordPress auto-adds "Engineering"; meta_description SEO sweet spot.
@@ -108,11 +118,22 @@ def check_post(path, author_slugs):
         rep.error(fm_error)
         return rep
 
-    # Required fields present and non-empty.
-    for field in REQUIRED_FIELDS:
+    def _is_empty(field):
         value = meta.get(field)
-        if value is None or (isinstance(value, (str, list)) and len(value) == 0):
+        return value is None or (isinstance(value, (str, list)) and len(value) == 0)
+
+    # Publish-blocking fields: missing one breaks the publish step.
+    for field in BLOCKING_FIELDS:
+        if _is_empty(field):
             rep.error(f"missing required field: {field}")
+
+    # Convention fields: publish has a fallback, so flag but don't block.
+    for field in CONVENTION_FIELDS:
+        if _is_empty(field):
+            rep.warn(
+                f"missing '{field}' (required by convention; publish falls back "
+                "to a default, but set it explicitly)"
+            )
 
     slug = meta.get("slug")
     if isinstance(slug, str) and slug:
@@ -130,16 +151,19 @@ def check_post(path, author_slugs):
                 "(harmless once published, but confusing)"
             )
 
-    # Authors must exist in authors.yml, or publish can't find the WP user.
+    # Publish resolves authors against existing WordPress users, not
+    # authors.yml — so this is a proxy check, not the source of truth. Still
+    # worth surfacing: authors.yml is what `sync_authors.py` pushes to WP, so a
+    # slug missing here likely won't resolve on the site. Warning, not error.
     authors = _as_list(meta.get("authors"))
     if author_slugs is None:
         rep.warn("authors.yml not found; skipped author validation")
     else:
         for a in authors:
             if a not in author_slugs:
-                rep.error(
-                    f"author '{a}' is not in authors.yml "
-                    "(add yourself there before publishing)"
+                rep.warn(
+                    f"author '{a}' is not in authors.yml; add it and run "
+                    "sync_authors.py so it resolves to a WordPress user"
                 )
 
     # meta_description length: SEO guidance, not fatal to publish.
