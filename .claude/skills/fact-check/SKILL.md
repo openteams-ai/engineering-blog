@@ -171,26 +171,40 @@ ignore each independently.
 
 1. Resolve the post's line numbers in the file's current (RIGHT) version — the
    suggestion replaces exactly the line range it is anchored to.
-2. Build the review payload — one comment per correction. The `body` holds the
-   finding, the source, and the suggested text:
+2. Build the review as a **JSON file** and POST it with `--input`. Do not pass
+   the comments as repeated `-f 'comments[][…]'` form fields: `gh api` form
+   syntax cannot express an array of objects, so it can't tell where one
+   comment ends and the next begins — it appears to work for a single
+   correction and silently breaks with two or more. JSON makes the `comments`
+   array explicit and keeps each multi-line `body` (newlines and the
+   ` ```suggestion ` fence) safely inside the file instead of on the shell
+   command line.
 
-   ````bash
-   gh api -X POST repos/{owner}/{repo}/pulls/<number>/reviews \
-     -f event=COMMENT \
-     -f body="🔎 Fact-check suggestions — advisory. Commit any that are correct; ignore any where you have better information." \
-     -f 'comments[][path]=posts/your-article.md' \
-     -F 'comments[][line]=42' \
-     -f 'comments[][side]=RIGHT' \
-     -f 'comments[][body]=Released in 2024, not 2023 ([source](https://…)).
+   Write `review.json` — one object per correction in `comments`. Each `body`
+   holds the finding, the source, and a fenced `suggestion` block with the
+   replacement text (use `\n` for newlines within the JSON string):
 
-   ```suggestion
-   Python 3.13 was released in 2024 and introduced experimental free-threading.
-   ```'
-   ````
+   ```json
+   {
+     "event": "COMMENT",
+     "body": "🔎 Fact-check suggestions — advisory. Commit any that are correct; ignore any where you have better information.",
+     "comments": [
+       {
+         "path": "posts/your-article.md",
+         "line": 42,
+         "side": "RIGHT",
+         "body": "Released in 2024, not 2023 ([source](https://…)).\n\n```suggestion\nPython 3.13 was released in 2024 and introduced experimental free-threading.\n```"
+       }
+     ]
+   }
+   ```
 
-   For a multi-line span, add `comments[][start_line]` with the first line and
-   put the last line in `comments[][line]`. Repeat the `comments[][…]` group
-   for each correction.
+   For a multi-line span, add `"start_line"` (first line) alongside `"line"`
+   (last line) in that comment object. Then post it:
+
+   ```bash
+   gh api -X POST repos/{owner}/{repo}/pulls/<number>/reviews --input review.json
+   ```
 3. If any correction's lines fall outside the PR diff (e.g. an unchanged line),
    it can't be a line-anchored suggestion — list those in the `--comment`
    summary under "Corrections that need a manual edit" instead.
