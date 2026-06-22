@@ -1,12 +1,14 @@
 ---
-title: "The tp_as_number Slot and Binary Operation Dispatch in CPython"
+title: The tp_as_number Slot and Binary Operation Dispatch in CPython
 slug: tp-as-number-slot-and-binary-dispatch
 authors:
-  - guilherme-leobas
+- guilherme-leobas
 categories:
-  - Engineering
-meta_description: "How CPython dispatches binary operations via tp_as_number slots, and how TorchDynamo mirrors that model to improve correctness and reduce ad-hoc special cases."
-focus_keyword: "cpython binary operation dispatch"
+- Engineering
+meta_description: How CPython dispatches binary operations via tp_as_number slots, and how TorchDynamo mirrors that model to improve correctness and reduce ad-hoc special cases.
+focus_keyword: cpython binary operation dispatch
+wordpress_id: 31431
+wordpress_url: https://openteams.com/tp-as-number-slot-and-binary-dispatch/
 ---
 
 Recently Animesh Jain from Meta published a [blogpost](https://docs.pytorch.org/devlogs/dynamo/2026-05-13-agent-friendly-dynamo/) about the work we are doing in Dynamo. The gist of it is that we are refactoring Dynamo's object model to mirror CPython [PyTypeObject slots](https://docs.python.org/3/c-api/typeobj.html#tp-slots). Given that, I thought it would be interesting to write a follow-up post about one small corner of that work: the `tp_as_number` slot, and how binary operations are dispatched in CPython.
