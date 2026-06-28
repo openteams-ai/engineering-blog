@@ -53,9 +53,15 @@ authors:
     bio: Senior Software Engineer
     avatar_url: https://avatars.githubusercontent.com/u/55434794?v=4
 
+  - name: Guilherme Leobas
+    slug: guilherme-leobas
+    email: gleobas@openteams.com
+    bio: >-
+      Senior Software Engineer at OpenTeams. Works on PyTorch compiler and Numba.
+    avatar_url: https://avatars.githubusercontent.com/u/2712115?v=4
+
   - name: Amelia (Mia) Thurdekoos
     slug: amelia-thurdekoos
     email: athurdekoos@openteams.com
     bio: Technical Program Manager at OpenTeams.
     avatar_url: https://avatars.githubusercontent.com/u/223740535?v=4
-

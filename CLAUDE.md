@@ -8,6 +8,7 @@ Full reference for contributors writing engineering blog posts.
 2. Write your content in standard markdown.
 3. Add YAML frontmatter at the top of the file (see [Frontmatter](#frontmatter) below).
 4. *Optional:* If you use Claude Code, run `/seo-meta-description posts/your-article.md` to auto-generate title, slug, focus keyword, and meta description.
+5. *Optional:* Run `/create-posts-from-article posts/your-article.md` to draft the accompanying LinkedIn post. It writes three options to `social/your-article.md`. Pick one, edit it, and post it manually after the article goes live.
 
 ## Preview
 
