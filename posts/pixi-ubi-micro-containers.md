@@ -191,7 +191,7 @@ daily. The deltas between bases are the durable part, not the absolute numbers.
 | minimal | 666 MB | 112 |
 | micro   | **511 MB** | **22** |
 
-Most of micro's 511 MB is the environment: roughly 466 MB of conda packages plus
+Most of micro's 511 MB is the environment: roughly 401 MB of conda packages plus
 the ~65 MB pixi binary, identical on every image. Only about 45 MB is the micro
 OS, against roughly 337 MB on full. So the base swap saves a fixed ~290 MB of
 operating system. That is about a third of the image here, but the fraction
@@ -233,9 +233,15 @@ matches against them, so the 356 → 16 drop is entirely the shrinking base. But
 "zero" there means "no known advisory," not "audited": conda-forge coverage in
 vulnerability databases is thin, and Grype does not catalog the conda packages at
 all (it only flags the bundled CPython). The environment is a real, separate
-surface these tools see only partially. The one Trivy HIGH on the full base shows
-what the base costs you: `gdb-gdbserver` (CVE-2026-6846, no fix), a debugger with
-no business in production, gone the moment you move to micro. Micro's remaining 16
+surface these tools see only partially. The one Trivy HIGH on the full base is a
+good example of why you read where a finding lives rather than the count:
+`gdb-gdbserver` (CVE-2026-6846, no fix). The underlying flaw is a heap overflow in
+binutils' libbfd, hit when linking a malformed XCOFF object and requiring user
+interaction; it rides along on gdb only because gdb bundles libbfd. Red Hat's own
+security data marks `gdb` *unaffected* on RHEL 9 (only `mingw-binutils` is flagged),
+so this is most likely a no-fix scanner finding that Red Hat itself disputes, on a
+debugger that has no business in production anyway. Either way it is gone the moment
+you move to micro. Micro's remaining 16
 are all no-fix advisories in glibc and friends (see "Patching the micro base"), so
 they are the floor for this base, not a backlog you can burn down.
 
