@@ -60,3 +60,9 @@ authors:
       Software engineer at OpenTeams. Writes about AI workflows and verifying
       what AI produces. github.com/athurdekoos
 
+  - name: Guilherme Leobas
+    slug: guilherme-leobas
+    email: gleobas@openteams.com
+    bio: >-
+      Senior Software Engineer at OpenTeams. Works on PyTorch compiler and Numba.
+    avatar_url: https://avatars.githubusercontent.com/u/2712115?v=4
