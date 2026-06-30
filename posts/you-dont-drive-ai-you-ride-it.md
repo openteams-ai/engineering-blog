@@ -25,7 +25,7 @@ You don't drive AI. It is not deterministic. It is stochastic, probabilistic. Wh
 
 That property is a feature and a risk at once, and the whole method comes out of refusing to pick just one. Free variation is exactly what you want when you are exploring. Ask for a website three times and you get three genuinely different websites to choose between. Free variation is exactly what you do not want when the output is a factual claim that a customer will read.
 
-So the split is not a problem to solve. It is the hinge. Use the randomness where it helps. Bolt deterministic checks on where it hurts. Every claim that becomes public gets adversarial verification, `[[CONFIRM]]` markers, footnotes, and git history.
+So the split is not a problem to solve. It is the hinge. Use the randomness where it helps. Bolt deterministic checks on where it hurts. Every claim that becomes public gets adversarial verification, `[[CONFIRM]]` markers, footnotes, and git history. A `[[CONFIRM]]` marker is an inline flag dropped on any claim that hasn't been verified yet, so it can't ship until someone checks it against a source.
 
 Keep both halves of that in view. The rest of this follows from taking each one seriously.
 
