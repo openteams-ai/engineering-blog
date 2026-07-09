@@ -1,12 +1,14 @@
 ---
-title: "You Don't Drive AI. You Ride It."
+title: You Don't Drive AI. You Ride It.
 slug: you-dont-drive-ai-you-ride-it
 authors:
-  - amelia-thurdekoos
+- amelia-thurdekoos
 categories:
-  - Engineering
-meta_description: "AI is stochastic, not deterministic. You don't drive it, you ride it: make documents the memory, use the variation to prototype, and verify every public claim."
-focus_keyword: "riding AI"
+- Engineering
+meta_description: 'AI is stochastic, not deterministic. You don''t drive it, you ride it: make documents the memory, use the variation to prototype, and verify every public claim.'
+focus_keyword: riding AI
+wordpress_id: 33839
+wordpress_url: https://openteams.com/you-dont-drive-ai-you-ride-it/
 ---
 
 Most people try to operate AI the way they operate software. They issue a command, expect the same output every time, and get annoyed when the thing wanders off. That model is wrong, and the wrongness is not a detail. It is the whole reason this is hard.
