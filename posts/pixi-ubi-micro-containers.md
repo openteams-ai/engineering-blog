@@ -1,12 +1,14 @@
 ---
-title: "pixi on UBI-micro: A Safer, Smaller Multi-Stage Container Build"
+title: 'pixi on UBI-micro: A Safer, Smaller Multi-Stage Container Build'
 slug: pixi-ubi-micro-containers
 authors:
-  - brandon-geraci
+- brandon-geraci
 categories:
-  - Engineering
-meta_description: "How a UBI-micro multi-stage build shrinks a pixi container's attack surface and CVE count, with side-by-side Trivy and Grype scans on UBI full, minimal, and micro. "
-focus_keyword: "pixi container"
+- Engineering
+meta_description: 'How a UBI-micro multi-stage build shrinks a pixi container''s attack surface and CVE count, with side-by-side Trivy and Grype scans on UBI full, minimal, and micro. '
+focus_keyword: pixi container
+wordpress_id: 35062
+wordpress_url: https://openteams.com/pixi-ubi-micro-containers/
 ---
 
 [pixi](https://pixi.sh) has become our default way to lock and reproduce
