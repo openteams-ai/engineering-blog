@@ -5,7 +5,7 @@ authors:
   - brandon-geraci
 categories:
   - Engineering
-meta_description: "How a UBI-micro multi-stage build shrinks a pixi container's attack surface and CVE count, with side-by-side Trivy and Grype scans on UBI full, minimal, and micro."
+meta_description: "How a UBI-micro multi-stage build shrinks a pixi container's attack surface and CVE count, with side-by-side Trivy and Grype scans on UBI full, minimal, and micro. "
 focus_keyword: "pixi container"
 ---
 
