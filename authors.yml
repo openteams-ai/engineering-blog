@@ -65,3 +65,8 @@ authors:
     bio: >-
       Senior Software Engineer at OpenTeams. Works on PyTorch compiler and Numba.
     avatar_url: https://avatars.githubusercontent.com/u/2712115?v=4
+
+  - name: Amit Kumar
+    slug: amit-kumar
+    email: akumar@openteams.com
+    bio: Staff Software Engineer at OpenTeams.
