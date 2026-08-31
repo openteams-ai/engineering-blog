@@ -33,17 +33,17 @@ In the first plot we see the offering, as of August 31 2026, with the most intel
 
 A good rule of thumb for reading the intelligence axis: a one-point difference is unlikely to be noticeable by most, while a 5-point gap is substantial. It's important to point out that an intelligence score of 50, which is the rock bottom in this first plot, is roughly what the smartest model in the world could deliver in February 2026 (Opus 4.6).
 
-![Intelligence vs. Cost per Task (High Intelligence)](images/intelligence-vs-cost/high_intelligence.png)
+<a href="images/intelligence-vs-cost/high_intelligence.svg"><img src="images/intelligence-vs-cost/high_intelligence.svg" alt="Intelligence vs. Cost per Task (High Intelligence)"></a>
 
 The green area at the bottom left is where models become _extremely_ cheap. Let's zoom into it and extend the intelligence plot a bit lower, down to what can run today on a smartphone.
 
 Some models are marked with a ⚡ symbol. It means that the cost was calculated as the electricity to run the model locally (details on the calculation below), since the model is so small that it makes no sense to serve it from a datacenter. When comparing local models against each other, it also offers a scale of how long each model takes to complete tasks.
 
-![Intelligence vs. Cost per Task (Low Cost)](images/intelligence-vs-cost/low_cost.png)
+<a href="images/intelligence-vs-cost/low_cost.svg"><img src="images/intelligence-vs-cost/low_cost.svg" alt="Intelligence vs. Cost per Task (Low Cost)"></a>
 
 Finally, let's merge the two plots together to better visualize the diminishing returns in performance/cost. Again, the area that's common to all plots is highlighted in green:
 
-![Intelligence vs. Cost per Task (All Models)](images/intelligence-vs-cost/all_models.png)
+<a href="images/intelligence-vs-cost/all_models.svg"><img src="images/intelligence-vs-cost/all_models.svg" alt="Intelligence vs. Cost per Task (All Models)"></a>
 
 ## All the differences between AA's plot and mine
 
