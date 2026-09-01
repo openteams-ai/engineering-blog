@@ -746,10 +746,6 @@ def upload_image_to_wordpress(
 
 ABSOLUTE_SRC_PREFIXES = ("http://", "https://", "data:", "//")
 
-# Kept in step with the uploader: a suffix recognised here but not uploadable
-# would be rewritten into a URL that was never created.
-LOCAL_IMAGE_SUFFIXES = tuple(UPLOADABLE_CONTENT_TYPES)
-
 # Every way an image can be referenced in a post. Ordered alternatives, so one
 # pass handles all three without overlapping matches:
 #   1. markdown image   ![alt](src)
@@ -792,7 +788,7 @@ def upload_and_replace_article_images(
         """Return the WordPress URL for a local image reference, else None."""
         if src.startswith(ABSOLUTE_SRC_PREFIXES):
             return None
-        if Path(src).suffix.lower() not in LOCAL_IMAGE_SUFFIXES:
+        if Path(src).suffix.lower() not in UPLOADABLE_CONTENT_TYPES:
             return None
         if src in resolved:
             return resolved[src]
