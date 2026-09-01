@@ -34,6 +34,7 @@ from wordpress_utils import (
     DEFAULT_TIMEOUT,
     extract_post_data,
     get_auth_headers,
+    get_user_id,
 )
 
 SHADOW_SLUG_SUFFIX = "-preview-pr"
@@ -183,8 +184,38 @@ def skip_reason(
     return None
 
 
-def write_shadow_post(file_path: str, slug: str, pr_number: int) -> Path:
-    """Write a throwaway copy of the post under a preview-only slug.
+def unknown_author(post_data: Dict, auth: WordPressAuth) -> Optional[str]:
+    """Return the post's author when WordPress has never heard of them.
+
+    publish.py refuses to create a post whose author does not resolve, and
+    sync_authors.py only runs on merge, so a first-time contributor's very
+    first PR could never be previewed. Naming them here lets the caller
+    preview under the API user instead; the byline corrects itself on merge.
+    """
+    authors = post_data.get("authors") or []
+    if not authors:
+        return None
+    if get_user_id(authors[0], auth.token, auth.api_url, auth.username):
+        return None
+    return authors[0]
+
+
+def preview_overrides(
+    post_data: Dict, pr_number: Optional[int], shadow: bool, fallback_author: str
+) -> Dict:
+    """Frontmatter changes this preview needs, empty when it needs none."""
+    overrides: Dict = {}
+    if shadow:
+        slug = post_data["slug"]
+        overrides["slug"] = f"{slug}{SHADOW_SLUG_SUFFIX}{pr_number}"
+        overrides["title"] = f"[PR #{pr_number} preview] {post_data.get('title') or slug}"
+    if fallback_author:
+        overrides["authors"] = [fallback_author]
+    return overrides
+
+
+def write_preview_copy(file_path: str, overrides: Dict, tag: str) -> Path:
+    """Write a throwaway copy of the post with frontmatter overrides applied.
 
     The copy sits in the same directory as the original so relative image
     paths still resolve, and drops wordpress_id/url so it can never resolve
@@ -195,34 +226,33 @@ def write_shadow_post(file_path: str, slug: str, pr_number: int) -> Path:
     meta = yaml.safe_load(parts[1]) or {}
     body = parts[2]
 
-    meta["slug"] = f"{slug}{SHADOW_SLUG_SUFFIX}{pr_number}"
-    meta["title"] = f"[PR #{pr_number} preview] {meta.get('title') or slug}"
+    meta.update(overrides)
     meta.pop("wordpress_id", None)
     meta.pop("wordpress_url", None)
 
-    shadow = original.with_name(f".preview-pr{pr_number}-{original.name}")
-    shadow.write_text(
+    copy = original.with_name(f".preview-{tag}-{original.name}")
+    copy.write_text(
         "---\n"
         + yaml.safe_dump(meta, sort_keys=False, allow_unicode=True)
         + "---"
         + body,
         encoding="utf-8",
     )
-    return shadow
+    return copy
 
 
 @contextmanager
 def publish_target(
-    file_path: str, slug: str, pr_number: Optional[int], shadow: bool
+    file_path: str, slug: str, overrides: Dict, tag: str
 ) -> Iterator[Tuple[str, str]]:
-    """Yield the (path, slug) to publish, removing a shadow copy afterwards."""
-    if not shadow:
+    """Yield the (path, slug) to publish, removing any temporary copy after."""
+    if not overrides:
         yield file_path, slug
         return
 
-    copy = write_shadow_post(file_path, slug, pr_number)
+    copy = write_preview_copy(file_path, overrides, tag)
     try:
-        yield str(copy), f"{slug}{SHADOW_SLUG_SUFFIX}{pr_number}"
+        yield str(copy), overrides.get("slug", slug)
     finally:
         copy.unlink(missing_ok=True)
 
@@ -259,6 +289,7 @@ def preview_file(
         "public": False,
         "shadow": False,
         "expires": "",
+        "author_fallback": "",
         "reason": "",
     }
 
@@ -274,7 +305,18 @@ def preview_file(
         return {**result, "state": "skipped", "reason": reason}
 
     shadow = is_live(existing)
-    with publish_target(file_path, slug, pr_number, shadow) as (target, target_slug):
+    # The name WordPress does not know, reported in the PR comment; the copy
+    # is authored by the API user instead, which is the one account certain
+    # to exist.
+    missing_author = unknown_author(post_data, auth) or ""
+    overrides = preview_overrides(
+        post_data, pr_number, shadow, auth.username if missing_author else ""
+    )
+
+    with publish_target(file_path, slug, overrides, f"pr{pr_number}") as (
+        target,
+        target_slug,
+    ):
         created = create_draft(target, target_slug, auth)
 
     if not created:
@@ -285,6 +327,7 @@ def preview_file(
         **describe_preview(created["id"], auth),
         "state": "ok",
         "shadow": shadow,
+        "author_fallback": missing_author,
     }
 
 
