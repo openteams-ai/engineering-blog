@@ -80,6 +80,8 @@ Place images in `posts/images/<post-slug>/` and reference them with relative pat
 ![diagram](images/building-ml-pipelines/architecture.png)
 ```
 
+**Supported formats:** `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`.
+
 Images are automatically uploaded to WordPress when the post is published.
 
 Commits that only change files under `posts/images/<slug>/` (without touching the `.md`/`.qmd`) also trigger a republish of `posts/<slug>.md` or `posts/<slug>.qmd`. If no matching post file exists for the slug, the image change is skipped.
