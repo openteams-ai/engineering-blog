@@ -29,7 +29,7 @@ The third and final issue is that local models — those that can fit on consume
 
 All intelligence index scores are from ArtificialAnalysis. All points are benchmarked at maximum thinking effort where not explicitly stated otherwise. All cost scores are from ArtificialAnalysis too, except where noted below.
 
-In the first plot we see the offering, as of August 31 2026, with the most intelligent (and expensive) models.
+In the first plot we see the offering, as of September 1 2026, with the most intelligent (and expensive) models.
 
 A good rule of thumb for reading the intelligence axis: a one-point difference is unlikely to be noticeable by most, while a 5-point gap is substantial. It's important to point out that an intelligence score of 50, which is the rock bottom in this first plot, is roughly what the smartest model in the world could deliver in February 2026 (Opus 4.6).
 
