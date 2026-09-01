@@ -305,8 +305,13 @@ def preview_file(
         return {**result, "state": "skipped", "reason": reason}
 
     shadow = is_live(existing)
+    # The name WordPress does not know, reported in the PR comment; the copy
+    # is authored by the API user instead, which is the one account certain
+    # to exist.
     missing_author = unknown_author(post_data, auth) or ""
-    overrides = preview_overrides(post_data, pr_number, shadow, missing_author)
+    overrides = preview_overrides(
+        post_data, pr_number, shadow, auth.username if missing_author else ""
+    )
 
     with publish_target(file_path, slug, overrides, f"pr{pr_number}") as (
         target,
