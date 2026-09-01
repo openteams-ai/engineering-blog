@@ -31,6 +31,7 @@ from wordpress_utils import (
     upload_and_replace_article_images,
     update_qmd_metadata,
     build_published_url,
+    ImageUploadError,
 )
 
 REQUEST_TIMEOUT = 30
@@ -235,9 +236,14 @@ def _validate_and_prepare(
         print("❌ Missing title")
         return None
 
-    post_data["content"] = upload_and_replace_article_images(
-        post_data["content"], file_path, wp_token, wp_api_url, username
-    )
+    try:
+        post_data["content"] = upload_and_replace_article_images(
+            post_data["content"], file_path, wp_token, wp_api_url, username
+        )
+    except ImageUploadError as error:
+        print(f"  ❌ {error}")
+        print("     Publishing anyway would leave a broken image on the live site.")
+        return None
     authors = post_data.get("authors") or []
     post_data["_author_username"] = authors[0] if authors else username
     post_data["categories"] = _ensure_required_categories(

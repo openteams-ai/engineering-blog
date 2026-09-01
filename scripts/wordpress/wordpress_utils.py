@@ -665,6 +665,24 @@ def build_published_url(wp_api_url: str, slug: str) -> str:
     return f"{base_domain}/{slug}/" if slug else base_domain
 
 
+UPLOADABLE_CONTENT_TYPES = {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+}
+
+
+class ImageUploadError(Exception):
+    """An image referenced by a post could not be put on WordPress.
+
+    Raised rather than warned about, because the alternative is publishing a
+    post whose image paths stay relative, 404 on the live site, and leave the
+    build green.
+    """
+
+
 def upload_image_to_wordpress(
     file_path: str | Path,
     wp_token: str,
@@ -691,17 +709,17 @@ def upload_image_to_wordpress(
     except requests.exceptions.RequestException:
         pass
 
-    # Upload the image
-    content_types = {
-        ".png": "image/png",
-        ".jpg": "image/jpeg",
-        ".jpeg": "image/jpeg",
-        ".gif": "image/gif",
-        ".webp": "image/webp",
-    }
-    content_type = content_types.get(
-        file_path.suffix.lower(), "application/octet-stream"
-    )
+    # Formats that actually reach the media library. SVG is deliberately
+    # absent: ModSecurity sits in front of WordPress on this host and rejects
+    # every SVG upload to the REST API with a 406, before PHP runs. Listing it
+    # here would suggest a support that does not exist.
+    content_type = UPLOADABLE_CONTENT_TYPES.get(file_path.suffix.lower())
+    if not content_type:
+        print(
+            f"  Cannot upload {filename}: {file_path.suffix} is not an uploadable "
+            f"image format. Supported: {', '.join(sorted(UPLOADABLE_CONTENT_TYPES))}."
+        )
+        return None
 
     upload_headers = get_auth_headers(username, wp_token)
     upload_headers["Content-Disposition"] = f'attachment; filename="{filename}"'
@@ -728,9 +746,9 @@ def upload_image_to_wordpress(
 
 ABSOLUTE_SRC_PREFIXES = ("http://", "https://", "data:", "//")
 
-# Note: SVG images are blocked by ModSecurity (the WAF in front of the host), which
-# answers to every /wp-json/wp/v2/media upload of an SVG with HTTP 406.
-LOCAL_IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".gif", ".webp")
+# Kept in step with the uploader: a suffix recognised here but not uploadable
+# would be rewritten into a URL that was never created.
+LOCAL_IMAGE_SUFFIXES = tuple(UPLOADABLE_CONTENT_TYPES)
 
 # Every way an image can be referenced in a post. Ordered alternatives, so one
 # pass handles all three without overlapping matches:
@@ -763,6 +781,9 @@ def upload_and_replace_article_images(
     Handles markdown images, raw ``<img src>`` tags, and ``<a href>`` links that
     point at a local image. Anything already absolute, or that is not a local
     image file, is left untouched. Each source path is uploaded only once.
+
+    Raises ImageUploadError if any image cannot be uploaded. Continuing would
+    leave the path relative, which 404s once the post is live.
     """
     file_dir = Path(file_path).parent
     resolved: Dict[str, str] = {}
@@ -778,12 +799,11 @@ def upload_and_replace_article_images(
 
         local_path = file_dir / src
         if not local_path.exists():
-            print(f"  Warning: image not found: {local_path}")
-            return None
+            raise ImageUploadError(f"image not found: {local_path}")
 
         media = upload_image_to_wordpress(local_path, wp_token, wp_api_url, username)
         if not media:
-            return None
+            raise ImageUploadError(f"could not upload {src}")
 
         wp_url = media["source_url"]
         print(f"  Image: {src} -> {wp_url}")
