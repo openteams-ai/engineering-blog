@@ -665,6 +665,24 @@ def build_published_url(wp_api_url: str, slug: str) -> str:
     return f"{base_domain}/{slug}/" if slug else base_domain
 
 
+UPLOADABLE_CONTENT_TYPES = {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+}
+
+
+class ImageUploadError(Exception):
+    """An image referenced by a post could not be put on WordPress.
+
+    Raised rather than warned about, because the alternative is publishing a
+    post whose image paths stay relative, 404 on the live site, and leave the
+    build green.
+    """
+
+
 def upload_image_to_wordpress(
     file_path: str | Path,
     wp_token: str,
@@ -691,18 +709,17 @@ def upload_image_to_wordpress(
     except requests.exceptions.RequestException:
         pass
 
-    # Upload the image
-    content_types = {
-        ".png": "image/png",
-        ".jpg": "image/jpeg",
-        ".jpeg": "image/jpeg",
-        ".gif": "image/gif",
-        ".webp": "image/webp",
-        ".svg": "image/svg+xml",
-    }
-    content_type = content_types.get(
-        file_path.suffix.lower(), "application/octet-stream"
-    )
+    # Formats that actually reach the media library. SVG is deliberately
+    # absent: ModSecurity sits in front of WordPress on this host and rejects
+    # every SVG upload to the REST API with a 406, before PHP runs. Listing it
+    # here would suggest a support that does not exist.
+    content_type = UPLOADABLE_CONTENT_TYPES.get(file_path.suffix.lower())
+    if not content_type:
+        print(
+            f"  Cannot upload {filename}: {file_path.suffix} is not an uploadable "
+            f"image format. Supported: {', '.join(sorted(UPLOADABLE_CONTENT_TYPES))}."
+        )
+        return None
 
     upload_headers = get_auth_headers(username, wp_token)
     upload_headers["Content-Disposition"] = f'attachment; filename="{filename}"'
@@ -734,7 +751,11 @@ def upload_and_replace_article_images(
     wp_api_url: str,
     username: str,
 ) -> str:
-    """Find relative images in markdown, upload to WordPress, and replace paths."""
+    """Find relative images in markdown, upload to WordPress, and replace paths.
+
+    Raises ImageUploadError if any image cannot be uploaded. Continuing would
+    leave the path relative, which 404s once the post is live.
+    """
     file_dir = Path(file_path).parent
 
     def replace_match(match):
@@ -743,15 +764,17 @@ def upload_and_replace_article_images(
         src = match.group(2)
         if src.startswith(("http://", "https://", "data:", "//")):
             return full_match
+
         local_path = file_dir / src
         if not local_path.exists():
-            print(f"  Warning: image not found: {local_path}")
-            return full_match
+            raise ImageUploadError(f"image not found: {local_path}")
+
         media = upload_image_to_wordpress(local_path, wp_token, wp_api_url, username)
-        if media:
-            wp_url = media["source_url"]
-            print(f"  Image: {src} -> {wp_url}")
-            return f"![{alt}]({wp_url})"
-        return full_match
+        if not media:
+            raise ImageUploadError(f"could not upload {src}")
+
+        wp_url = media["source_url"]
+        print(f"  Image: {src} -> {wp_url}")
+        return f"![{alt}]({wp_url})"
 
     return re.sub(r"!\[([^\]]*)\]\(([^)]+)\)", replace_match, content)
