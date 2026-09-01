@@ -698,7 +698,6 @@ def upload_image_to_wordpress(
         ".jpeg": "image/jpeg",
         ".gif": "image/gif",
         ".webp": "image/webp",
-        ".svg": "image/svg+xml",
     }
     content_type = content_types.get(
         file_path.suffix.lower(), "application/octet-stream"
@@ -729,7 +728,9 @@ def upload_image_to_wordpress(
 
 ABSOLUTE_SRC_PREFIXES = ("http://", "https://", "data:", "//")
 
-LOCAL_IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif", ".svg")
+# Note: SVG images are blocked by ModSecurity (the WAF in front of the host), which
+# answers to every /wp-json/wp/v2/media upload of an SVG with HTTP 406.
+LOCAL_IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".gif", ".webp")
 
 # Every way an image can be referenced in a post. Ordered alternatives, so one
 # pass handles all three without overlapping matches:
