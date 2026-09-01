@@ -1,0 +1,141 @@
+name: WordPress Draft Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    paths:
+      - 'posts/**'
+
+# One preview per PR. A new push supersedes the run still in flight.
+concurrency:
+  group: preview-draft-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  detect:
+    # Forked PRs do not receive repository secrets, so the WordPress
+    # credentials would be empty and every run would fail. Every PR in this
+    # repo has come from a branch so far; this guard keeps it that way rather
+    # than reaching for pull_request_target, which would run branch code with
+    # secrets attached.
+    if: >-
+      github.event.action != 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    outputs:
+      post-files: ${{ steps.detect.outputs.post-files }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed posts
+        id: detect
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          {
+            echo "post-files<<EOF"
+            scripts/detect_changed_posts.sh "$BASE_SHA"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+  preview:
+    needs: detect
+    if: needs.detect.outputs.post-files != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Publish drafts
+        env:
+          WP_TOKEN: ${{ secrets.WP_TOKEN }}
+          WP_API_URL: ${{ secrets.WP_API_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          # Via env, not inline. These are post paths from the branch, and an
+          # inline ${{ }} is pasted in as text before bash parses the script,
+          # so a filename containing a quote could break out of the string.
+          POST_FILES: ${{ needs.detect.outputs.post-files }}
+        run: |
+          : > results.jsonl
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            echo "::group::Preview $file"
+            uv run scripts/wordpress/preview_draft.py "$file" \
+              --pr "$PR_NUMBER" \
+              --result-file results.jsonl
+            echo "::endgroup::"
+          done <<< "$POST_FILES"
+
+      - name: Build comment body
+        run: |
+          uv run scripts/wordpress/build_preview_comment.py results.jsonl > comment.md
+          cat comment.md
+
+      # Reuses one comment per PR so repeated pushes do not pile up. Pinned to
+      # a commit SHA rather than a tag: tags are mutable, and rewriting them is
+      # how the tj-actions/changed-files supply-chain attack reached runners.
+      - name: Post or update the PR comment
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
+        with:
+          header: wp-draft-preview
+          path: comment.md
+
+  cleanup:
+    # Drafts this PR created have no reason to outlive it. Shadow copies always
+    # go. A merged PR keeps its post's own draft, since publish.py is about to
+    # turn that very record into the live article.
+    if: >-
+      github.event.action == 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The PR ref, not the merge commit, so the diff below sees the branch
+          # as it stood. It resolves even after the branch is deleted.
+          ref: refs/pull/${{ github.event.pull_request.number }}/head
+          fetch-depth: 0
+
+      - name: Detect the posts this PR touched
+        id: detect
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          {
+            echo "post-files<<EOF"
+            scripts/detect_changed_posts.sh "$BASE_SHA"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Trash preview drafts
+        env:
+          WP_TOKEN: ${{ secrets.WP_TOKEN }}
+          WP_API_URL: ${{ secrets.WP_API_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          MERGED: ${{ github.event.pull_request.merged }}
+          POST_FILES: ${{ steps.detect.outputs.post-files }}
+        run: |
+          MERGED_FLAG=""
+          [ "$MERGED" = "true" ] && MERGED_FLAG="--merged"
+
+          # Post paths are slug-derived, so they never contain whitespace.
+          # shellcheck disable=SC2086
+          uv run scripts/wordpress/cleanup_preview_drafts.py \
+            --pr "$PR_NUMBER" $MERGED_FLAG $POST_FILES

@@ -12,7 +12,11 @@ Full reference for contributors writing engineering blog posts.
 
 ## Preview
 
-Render a post locally before pushing to see how code blocks, Mermaid diagrams, tables, and the Quarto/Prism directives will look. No WordPress credentials are required.
+Two levels, in increasing fidelity.
+
+### Local preview
+
+Render a post locally to check code blocks, Mermaid diagrams, tables, and the Quarto/Prism directives. No WordPress credentials are required.
 
 ```bash
 uv run scripts/wordpress/preview.py posts/your-article.md
@@ -20,7 +24,17 @@ uv run scripts/wordpress/preview.py posts/your-article.md
 
 The rendered HTML is written to `.preview/<slug>.html` (gitignored) and opened in your default browser. Pass `--no-open` to write the file and print its path without opening a browser.
 
-The preview uses the same markdown pipeline as publishing, so what you see is faithful to the WordPress content area. It does not reproduce the OpenTeams theme chrome (author box, navigation, featured-image hero layout, brand fonts).
+**Accurate:** anything the markdown pipeline produces, since it is the same pipeline publishing uses. Code blocks and Prism directives, Mermaid diagrams, tables, image placement.
+
+**Absent:** anything the theme supplies. Author box, navigation, featured-image hero, brand fonts, content column width, and the Elementor lightbox that gives click-to-zoom. Use the PR draft preview below for those.
+
+### Draft preview on your PR
+
+Open a pull request. CI publishes each changed post as a WordPress draft and comments the preview link on the PR, refreshing that comment on every push.
+
+This renders in the real theme, so it is the only way to verify theme behaviour: lightbox zoom, brand fonts, content column width, and whether images survived the upload.
+
+**Preview links expire within a week.** The PR comment states the exact date each one is good until, and always holds the current link. Pushing anything to the PR reissues them.
 
 ## Frontmatter
 
