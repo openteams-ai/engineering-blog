@@ -80,6 +80,10 @@ Place images in `posts/images/<post-slug>/` and reference them with relative pat
 ![diagram](images/building-ml-pipelines/architecture.png)
 ```
 
+**Supported formats:** `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`.
+
+**SVG does not work.** ModSecurity, the web firewall in front of WordPress, rejects every SVG upload to the REST API with a 406 before WordPress sees it. Export charts and diagrams as PNG instead. Referencing an SVG fails the publish rather than shipping a broken image, and any image that cannot be uploaded fails the same way.
+
 Images are automatically uploaded to WordPress when the post is published.
 
 Commits that only change files under `posts/images/<slug>/` (without touching the `.md`/`.qmd`) also trigger a republish of `posts/<slug>.md` or `posts/<slug>.qmd`. If no matching post file exists for the slug, the image change is skipped.
