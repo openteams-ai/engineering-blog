@@ -21,6 +21,12 @@ SHADOW_NOTE = (
     "untouched, and the duplicate is trashed when this PR closes."
 )
 
+AUTHOR_NOTE_TEMPLATE = (
+    "The byline is wrong on {who}, because {names} {verb} not a WordPress user "
+    "yet. Authors are created when `authors.yml` reaches main, so this "
+    "corrects itself on merge. Everything else renders normally."
+)
+
 THEME_NOTE = (
     "These render in the live theme, so the Elementor lightbox, brand fonts, "
     "and content column all behave as they will on publish."
@@ -46,6 +52,20 @@ def preview_table(previews: List[Dict]) -> List[str]:
         note = " (shadow copy)" if result.get("shadow") else ""
         rows.append(f"| `{result['file']}`{note} | [Open preview]({result['url']}) |")
     return rows
+
+
+def author_note(previews: List[Dict]) -> str:
+    """Warn about substituted bylines, or return an empty string."""
+    affected = [r for r in previews if r.get("author_fallback")]
+    if not affected:
+        return ""
+
+    names = sorted({r["author_fallback"] for r in affected})
+    return AUTHOR_NOTE_TEMPLATE.format(
+        who="this preview" if len(affected) == 1 else "some of these previews",
+        names=", ".join(f"`{name}`" for name in names),
+        verb="is" if len(names) == 1 else "are",
+    )
 
 
 def access_note(previews: List[Dict]) -> str:
@@ -78,6 +98,9 @@ def render(results: List[Dict]) -> str:
             blocks.append(SHADOW_NOTE)
         blocks.append(THEME_NOTE)
         blocks.append(access_note(previews))
+        byline = author_note(previews)
+        if byline:
+            blocks.append(byline)
 
     for result in problems:
         label = "Skipped" if result["state"] == "skipped" else "Failed"
