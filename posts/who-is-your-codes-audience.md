@@ -13,6 +13,7 @@ focus_keyword: "code's audience"
 
 *From the OpenTeams engineering team*
 
+
 A team meeting got hijacked the other week. The plan was to talk about a dispatcher. Instead, one of our engineers set that aside and asked a question that turned out to be the most contentious thing anyone had put to the group in a long while: now that AI writes so much of our code, does readability still matter?
 
 The honest answer the room converged on is *yes*, but the interesting part wasn't the verdict. It was the reasoning underneath it, and where people disagreed. What follows is our attempt to write that reasoning down, because the question isn't going away and the easy answers are wrong in both directions.
