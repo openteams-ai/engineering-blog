@@ -138,6 +138,12 @@ def _build_wp_payload(post_data: Dict, context: Dict, *, include_create_fields: 
         payload["status"] = post_data.get("status") or post_data.get("_default_status", "draft")
     elif post_data.get("status"):
         payload["status"] = post_data["status"]
+    elif post_data.get("_default_status") == "publish":
+        # An explicit `--status publish` run means "make this live", including
+        # when the post already exists as a draft because the PR preview
+        # created it. Without this, a previewed post syncs its content on
+        # merge but silently stays a draft.
+        payload["status"] = "publish"
 
     if context["taxonomy_ids"]["category_ids"]:
         payload["categories"] = context["taxonomy_ids"]["category_ids"]
