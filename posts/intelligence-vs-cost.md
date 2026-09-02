@@ -1,12 +1,14 @@
 ---
-title: "LLMs: Intelligence vs. cost"
+title: 'LLMs: Intelligence vs. cost'
 slug: intelligence-vs-cost
 authors:
 - guido-imperiale
 categories:
 - Engineering
-meta_description: "LLM intelligence vs cost: logarithmic scales in plots hide the cost chasm between frontier and cheap models; actual OpenRouter prices alter the Pareto frontier."
-focus_keyword: "LLM intelligence vs cost"
+meta_description: 'LLM intelligence vs cost: logarithmic scales in plots hide the cost chasm between frontier and cheap models; actual OpenRouter prices alter the Pareto frontier.'
+focus_keyword: LLM intelligence vs cost
+wordpress_id: 37652
+wordpress_url: https://openteams.com/intelligence-vs-cost/
 ---
 
 [ArtificialAnalysis](https://artificialanalysis.ai) is a website that benchmarks the intelligence of various LLM models. They publish a headline _Intelligence Index_, which is calculated as the mean output of the curated selection of benchmarks they run on each model. It's a decent finger-in-the-air measure of how smart a model is overall.
