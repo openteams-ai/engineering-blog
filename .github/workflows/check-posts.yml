@@ -1,0 +1,40 @@
+name: Check posts
+
+# Pre-flight validation: runs the same checks publish.py relies on, but on
+# the PR — so broken frontmatter, unknown authors, or dead image links fail
+# here instead of after merge when the publish workflow runs.
+
+on:
+  pull_request:
+    paths:
+      - 'posts/**'
+      - 'authors.yml'
+      - 'scripts/wordpress/**'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # need the base branch to diff changed posts
+
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Check changed posts
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          FILES=$(git diff --name-only --diff-filter=AM "$BASE" HEAD -- 'posts/*.md' 'posts/*.qmd')
+          if [ -z "$FILES" ]; then
+            echo "No post files changed; nothing to check."
+            exit 0
+          fi
+          echo "Checking:"
+          echo "$FILES"
+          # No --strict: only errors fail the PR; SEO/convention warnings are
+          # advisory and must not block a merge.
+          # shellcheck disable=SC2086
+          uv run scripts/wordpress/check.py $FILES

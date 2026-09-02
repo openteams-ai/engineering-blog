@@ -36,6 +36,23 @@ This renders in the real theme, so it is the only way to verify theme behaviour:
 
 **Preview links expire within a week.** The PR comment states the exact date each one is good until, and always holds the current link. Pushing anything to the PR reissues them.
 
+## Check
+
+Validate a post against everything the publish step requires *before* opening a PR. Catches missing or invalid frontmatter, authors not in `authors.yml`, broken image links, and SEO issues locally, instead of after merge when the publish workflow runs. No WordPress credentials are required.
+
+```bash
+uv run scripts/wordpress/check.py posts/your-article.md
+```
+
+Pass `--all` to check every post, or `--strict` to treat warnings as failures. Claude Code users can run `/check-post posts/your-article.md` instead.
+
+The checker reports two severities:
+
+- **Errors** block publishing: a missing `title`, `slug`, `meta_description`, or `focus_keyword`; an invalid `slug`; or a referenced image that does not exist on disk. The command exits non-zero when any error is found.
+- **Warnings** are SEO and convention issues that publish tolerates: a missing `authors` or `categories` (publish falls back to a default), an author not listed in `authors.yml`, `meta_description` length outside 120-160 characters, the `focus_keyword` missing from the title or slug, a `slug` that does not match the filename, images outside `images/<slug>/`, or empty image alt text.
+
+The same checks run on every pull request via the `check-posts` GitHub Actions workflow. CI runs without `--strict`, so only errors fail a PR; warnings are advisory. Fixing them locally first avoids a failed CI run.
+
 ## Frontmatter
 
 ```yaml
