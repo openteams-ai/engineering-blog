@@ -103,9 +103,18 @@ def _prepare_wp_context(post_data: Dict, wp_token: str, wp_api_url: str, usernam
     # Resolve all authors against PublishPress Authors. Returns None when
     # the plugin is not installed; in that case the post falls back to
     # the standard single-author WP behavior via author_id.
+    authors = post_data.get("authors") or []
     ppma_author_ids = get_ppma_author_term_ids(
-        post_data.get("authors") or [], wp_token, wp_api_url, username
+        authors, wp_token, wp_api_url, username
     )
+
+    # PublishPress renders the byline, and an update that omits ppma_author
+    # leaves whatever the post already had. Silently keeping a previous
+    # author's name is worse than refusing to publish.
+    if authors and ppma_author_ids == []:
+        print(f"  ❌ No PublishPress author term for: {', '.join(authors)}")
+        print("     Run sync_authors.py so the byline resolves.")
+        return None
 
     return {
         "headers": headers,
