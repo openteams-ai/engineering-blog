@@ -744,6 +744,27 @@ def upload_image_to_wordpress(
         return None
 
 
+ABSOLUTE_SRC_PREFIXES = ("http://", "https://", "data:", "//")
+
+# Every way an image can be referenced in a post. Ordered alternatives, so one
+# pass handles all three without overlapping matches:
+#   1. markdown image   ![alt](src)
+#   2. HTML image       <img ... src="src">
+#   3. HTML link        <a ... href="src">
+#
+# (3) exists so an image can be wrapped in an anchor: the theme's lightbox opens
+# any <a href> that points at an image file, which gives click-to-zoom. Markdown
+# link syntax around an image is not enough, because this function only rewrote
+# the inner ![...]() and left the outer href relative.
+IMAGE_REF_PATTERN = re.compile(
+    r"!\[(?P<md_alt>[^\]]*)\]\((?P<md_src>[^)]+)\)"
+    r"|(?P<img_prefix><img\b[^>]*?\bsrc=(?P<img_quote>[\"']))"
+    r"(?P<img_src>[^\"']+)(?P=img_quote)"
+    r"|(?P<a_prefix><a\b[^>]*?\bhref=(?P<a_quote>[\"']))"
+    r"(?P<a_src>[^\"']+)(?P=a_quote)"
+)
+
+
 def upload_and_replace_article_images(
     content: str,
     file_path: str,
@@ -753,17 +774,24 @@ def upload_and_replace_article_images(
 ) -> str:
     """Find relative images in markdown, upload to WordPress, and replace paths.
 
+    Handles markdown images, raw ``<img src>`` tags, and ``<a href>`` links that
+    point at a local image. Anything already absolute, or that is not a local
+    image file, is left untouched. Each source path is uploaded only once.
+
     Raises ImageUploadError if any image cannot be uploaded. Continuing would
     leave the path relative, which 404s once the post is live.
     """
     file_dir = Path(file_path).parent
+    resolved: Dict[str, str] = {}
 
-    def replace_match(match):
-        full_match = match.group(0)
-        alt = match.group(1)
-        src = match.group(2)
-        if src.startswith(("http://", "https://", "data:", "//")):
-            return full_match
+    def resolve(src: str) -> Optional[str]:
+        """Return the WordPress URL for a local image reference, else None."""
+        if src.startswith(ABSOLUTE_SRC_PREFIXES):
+            return None
+        if Path(src).suffix.lower() not in UPLOADABLE_CONTENT_TYPES:
+            return None
+        if src in resolved:
+            return resolved[src]
 
         local_path = file_dir / src
         if not local_path.exists():
@@ -775,6 +803,25 @@ def upload_and_replace_article_images(
 
         wp_url = media["source_url"]
         print(f"  Image: {src} -> {wp_url}")
-        return f"![{alt}]({wp_url})"
+        resolved[src] = wp_url
+        return wp_url
 
-    return re.sub(r"!\[([^\]]*)\]\(([^)]+)\)", replace_match, content)
+    def replace_match(match) -> str:
+        if match.group("md_src") is not None:
+            wp_url = resolve(match.group("md_src"))
+            if wp_url is None:
+                return match.group(0)
+            return f"![{match.group('md_alt')}]({wp_url})"
+
+        if match.group("img_src") is not None:
+            wp_url = resolve(match.group("img_src"))
+            if wp_url is None:
+                return match.group(0)
+            return f"{match.group('img_prefix')}{wp_url}{match.group('img_quote')}"
+
+        wp_url = resolve(match.group("a_src"))
+        if wp_url is None:
+            return match.group(0)
+        return f"{match.group('a_prefix')}{wp_url}{match.group('a_quote')}"
+
+    return IMAGE_REF_PATTERN.sub(replace_match, content)

@@ -87,7 +87,11 @@ th, td {{ border: 1px solid #e4e4e4; padding: 0.5rem; text-align: left; }}
 
 
 def rewrite_image_srcs(html: str, base_dir: Path) -> str:
-    """Point relative <img src> paths at local files via file:// URLs."""
+    """Point relative <img src> and <a href> paths at local files via file:// URLs.
+
+    Rewriting <a href> as well as <img src> keeps click-to-zoom working in the
+    local preview, since images wrapped in an anchor link to the image itself.
+    """
     def replace(match):
         prefix, src, suffix = match.group(1), match.group(2), match.group(3)
         if src.startswith(("http://", "https://", "data:", "//", "file:")):
@@ -97,7 +101,8 @@ def rewrite_image_srcs(html: str, base_dir: Path) -> str:
             return match.group(0)
         return f"{prefix}{local.as_uri()}{suffix}"
 
-    return re.sub(r'(<img[^>]+src=["\'])([^"\']+)(["\'])', replace, html)
+    html = re.sub(r'(<img[^>]+src=["\'])([^"\']+)(["\'])', replace, html)
+    return re.sub(r'(<a[^>]+href=["\'])([^"\']+)(["\'])', replace, html)
 
 
 def render_hero(featured: str, base_dir: Path) -> str:
