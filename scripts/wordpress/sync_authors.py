@@ -313,6 +313,67 @@ def sync_avatar(
     return True
 
 
+def get_existing_author_terms(headers: Dict, wp_api_url: str) -> Dict[str, int]:
+    """Fetch all PublishPress Authors terms, indexed by slug."""
+    terms: Dict[str, int] = {}
+    page = 1
+
+    while True:
+        resp = requests.get(
+            f"{wp_api_url}/ppma_author",
+            headers=headers,
+            params={"per_page": 100, "page": page, "_fields": "id,slug"},
+            timeout=DEFAULT_TIMEOUT,
+        )
+        if resp.status_code != 200:
+            break
+
+        batch = resp.json()
+        if not batch:
+            break
+
+        for term in batch:
+            terms[term["slug"]] = term["id"]
+
+        if len(batch) < 100:
+            break
+        page += 1
+
+    return terms
+
+
+def create_author_term(
+    author: Dict, headers: Dict, wp_api_url: str, dry_run: bool
+) -> Optional[int]:
+    """Create the PublishPress Authors term that renders an author's byline.
+
+    Creating the WordPress user is not enough: PublishPress keeps its own
+    taxonomy, and a post whose author has no term falls back to whatever
+    byline the post already carried. Matching the term slug to the user slug
+    is what links the two, so the avatar and bio come across automatically.
+    """
+    if dry_run:
+        print(f"  [DRY RUN] Would create author term: {author['slug']}")
+        return None
+
+    resp = requests.post(
+        f"{wp_api_url}/ppma_author",
+        headers={**headers, "Content-Type": "application/json"},
+        json={"name": author["name"], "slug": author["slug"]},
+        timeout=DEFAULT_TIMEOUT,
+    )
+    if resp.status_code in (200, 201):
+        term_id = resp.json()["id"]
+        print(f"  Created author term: {author['name']} ({author['slug']})")
+        return term_id
+
+    print(
+        f"  Failed to create author term for {author['name']}: "
+        f"{resp.status_code} {resp.text[:120]}"
+    )
+    return None
+
+
 def sync_authors(dry_run: bool = False) -> None:
     """Sync all authors from YAML to WordPress."""
     wp_token = os.environ.get("WP_TOKEN")
@@ -335,7 +396,8 @@ def sync_authors(dry_run: bool = False) -> None:
         print("(dry run — no changes will be made)\n")
 
     existing = get_existing_users(headers, wp_api_url)
-    created, updated, avatars_set = 0, 0, 0
+    existing_terms = get_existing_author_terms(headers, wp_api_url)
+    created, updated, avatars_set, terms_created = 0, 0, 0, 0
 
     for author in authors:
         slug = author["slug"]
@@ -351,8 +413,13 @@ def sync_authors(dry_run: bool = False) -> None:
         if user_id and sync_avatar(author, user_id, headers, wp_api_url, dry_run):
             avatars_set += 1
 
+        if slug not in existing_terms:
+            if create_author_term(author, headers, wp_api_url, dry_run):
+                terms_created += 1
+
     print(f"\nDone: {created} created, {updated} updated, "
           f"{avatars_set} avatar(s) set, "
+          f"{terms_created} author term(s) created, "
           f"{len(authors) - created - updated} unchanged")
 
 
