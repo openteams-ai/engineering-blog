@@ -245,6 +245,13 @@ def _validate_and_prepare(
         print("❌ Missing title")
         return None
 
+    # Without this the post would publish under whoever owns the CI
+    # credentials, which is nobody's intent and gives no error.
+    if not (post_data.get("authors") or []):
+        print("❌ Missing authors")
+        print("   Add an `authors:` list to the frontmatter naming who wrote this.")
+        return None
+
     try:
         post_data["content"] = upload_and_replace_article_images(
             post_data["content"], file_path, wp_token, wp_api_url, username
