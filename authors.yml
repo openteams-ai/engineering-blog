@@ -62,6 +62,11 @@ authors:
   - name: Guilherme Leobas
     slug: guilherme-leobas
     email: gleobas@openteams.com
-    bio: >-
-      Senior Software Engineer at OpenTeams. Works on PyTorch compiler and Numba.
+    bio: Senior Software Engineer at OpenTeams. Works on PyTorch compiler and Numba.
     avatar_url: https://avatars.githubusercontent.com/u/2712115?v=4
+
+  - name: Guido Imperiale
+    slug: guido-imperiale
+    email: gimperiale@openteams.com
+    bio: Staff Software Engineer at OpenTeams. Dask maintainer.
+    avatar_url: https://avatars.githubusercontent.com/u/6213168?v=4

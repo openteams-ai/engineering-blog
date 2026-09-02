@@ -559,6 +559,42 @@ _MARKDOWN_EXTENSIONS = [
 ]
 
 
+# Extensions the theme's lightbox recognises. It opens any link whose href
+# ends in one of these, which is what turns an anchor into click-to-zoom.
+_LIGHTBOX_EXTENSIONS = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif")
+
+# An <img>, optionally already wrapped in an opening <a>.
+_MAYBE_LINKED_IMG = re.compile(r"(<a\b[^>]*>\s*)?(<img\b[^>]*?>)", re.IGNORECASE)
+_IMG_SRC = re.compile(r'\bsrc=["\']([^"\']+)["\']', re.IGNORECASE)
+
+
+def _link_images_for_lightbox(html: str) -> str:
+    """Wrap each content image in a link to itself, giving click-to-zoom.
+
+    Authors write a plain `![alt](chart.png)` and get a zoomable image, which
+    matters for dense charts whose labels are unreadable at article width.
+    Images the author already wrapped in an anchor are left alone.
+    """
+
+    def wrap(match: "re.Match") -> str:
+        already_linked, img = match.group(1), match.group(2)
+        if already_linked:
+            return match.group(0)
+
+        src = _IMG_SRC.search(img)
+        if not src:
+            return img
+
+        # Skip anything the lightbox would not open anyway, such as a data URI.
+        path = src.group(1).split("?")[0].lower()
+        if not path.endswith(_LIGHTBOX_EXTENSIONS):
+            return img
+
+        return f'<a href="{src.group(1)}">{img}</a>'
+
+    return _MAYBE_LINKED_IMG.sub(wrap, html)
+
+
 def convert_markdown_to_html(
     markdown_content: str, post_data: Optional[Dict] = None
 ) -> str:
@@ -570,6 +606,7 @@ def convert_markdown_to_html(
 
     html = _restore_mermaid_blocks(html, mermaid_blocks)
     html, languages, has_hl, has_cmd = _enhance_code_blocks_for_prism(html)
+    html = _link_images_for_lightbox(html)
 
     # Wrap tables in scrollable containers
     html = re.sub(
@@ -665,6 +702,24 @@ def build_published_url(wp_api_url: str, slug: str) -> str:
     return f"{base_domain}/{slug}/" if slug else base_domain
 
 
+UPLOADABLE_CONTENT_TYPES = {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+}
+
+
+class ImageUploadError(Exception):
+    """An image referenced by a post could not be put on WordPress.
+
+    Raised rather than warned about, because the alternative is publishing a
+    post whose image paths stay relative, 404 on the live site, and leave the
+    build green.
+    """
+
+
 def upload_image_to_wordpress(
     file_path: str | Path,
     wp_token: str,
@@ -691,18 +746,17 @@ def upload_image_to_wordpress(
     except requests.exceptions.RequestException:
         pass
 
-    # Upload the image
-    content_types = {
-        ".png": "image/png",
-        ".jpg": "image/jpeg",
-        ".jpeg": "image/jpeg",
-        ".gif": "image/gif",
-        ".webp": "image/webp",
-        ".svg": "image/svg+xml",
-    }
-    content_type = content_types.get(
-        file_path.suffix.lower(), "application/octet-stream"
-    )
+    # Formats that actually reach the media library. SVG is deliberately
+    # absent: ModSecurity sits in front of WordPress on this host and rejects
+    # every SVG upload to the REST API with a 406, before PHP runs. Listing it
+    # here would suggest a support that does not exist.
+    content_type = UPLOADABLE_CONTENT_TYPES.get(file_path.suffix.lower())
+    if not content_type:
+        print(
+            f"  Cannot upload {filename}: {file_path.suffix} is not an uploadable "
+            f"image format. Supported: {', '.join(sorted(UPLOADABLE_CONTENT_TYPES))}."
+        )
+        return None
 
     upload_headers = get_auth_headers(username, wp_token)
     upload_headers["Content-Disposition"] = f'attachment; filename="{filename}"'
@@ -727,6 +781,27 @@ def upload_image_to_wordpress(
         return None
 
 
+ABSOLUTE_SRC_PREFIXES = ("http://", "https://", "data:", "//")
+
+# Every way an image can be referenced in a post. Ordered alternatives, so one
+# pass handles all three without overlapping matches:
+#   1. markdown image   ![alt](src)
+#   2. HTML image       <img ... src="src">
+#   3. HTML link        <a ... href="src">
+#
+# (3) exists so an image can be wrapped in an anchor: the theme's lightbox opens
+# any <a href> that points at an image file, which gives click-to-zoom. Markdown
+# link syntax around an image is not enough, because this function only rewrote
+# the inner ![...]() and left the outer href relative.
+IMAGE_REF_PATTERN = re.compile(
+    r"!\[(?P<md_alt>[^\]]*)\]\((?P<md_src>[^)]+)\)"
+    r"|(?P<img_prefix><img\b[^>]*?\bsrc=(?P<img_quote>[\"']))"
+    r"(?P<img_src>[^\"']+)(?P=img_quote)"
+    r"|(?P<a_prefix><a\b[^>]*?\bhref=(?P<a_quote>[\"']))"
+    r"(?P<a_src>[^\"']+)(?P=a_quote)"
+)
+
+
 def upload_and_replace_article_images(
     content: str,
     file_path: str,
@@ -734,24 +809,56 @@ def upload_and_replace_article_images(
     wp_api_url: str,
     username: str,
 ) -> str:
-    """Find relative images in markdown, upload to WordPress, and replace paths."""
-    file_dir = Path(file_path).parent
+    """Find relative images in markdown, upload to WordPress, and replace paths.
 
-    def replace_match(match):
-        full_match = match.group(0)
-        alt = match.group(1)
-        src = match.group(2)
-        if src.startswith(("http://", "https://", "data:", "//")):
-            return full_match
+    Handles markdown images, raw ``<img src>`` tags, and ``<a href>`` links that
+    point at a local image. Anything already absolute, or that is not a local
+    image file, is left untouched. Each source path is uploaded only once.
+
+    Raises ImageUploadError if any image cannot be uploaded. Continuing would
+    leave the path relative, which 404s once the post is live.
+    """
+    file_dir = Path(file_path).parent
+    resolved: Dict[str, str] = {}
+
+    def resolve(src: str) -> Optional[str]:
+        """Return the WordPress URL for a local image reference, else None."""
+        if src.startswith(ABSOLUTE_SRC_PREFIXES):
+            return None
+        if Path(src).suffix.lower() not in UPLOADABLE_CONTENT_TYPES:
+            return None
+        if src in resolved:
+            return resolved[src]
+
         local_path = file_dir / src
         if not local_path.exists():
-            print(f"  Warning: image not found: {local_path}")
-            return full_match
-        media = upload_image_to_wordpress(local_path, wp_token, wp_api_url, username)
-        if media:
-            wp_url = media["source_url"]
-            print(f"  Image: {src} -> {wp_url}")
-            return f"![{alt}]({wp_url})"
-        return full_match
+            raise ImageUploadError(f"image not found: {local_path}")
 
-    return re.sub(r"!\[([^\]]*)\]\(([^)]+)\)", replace_match, content)
+        media = upload_image_to_wordpress(local_path, wp_token, wp_api_url, username)
+        if not media:
+            raise ImageUploadError(f"could not upload {src}")
+
+        wp_url = media["source_url"]
+        print(f"  Image: {src} -> {wp_url}")
+        resolved[src] = wp_url
+        return wp_url
+
+    def replace_match(match) -> str:
+        if match.group("md_src") is not None:
+            wp_url = resolve(match.group("md_src"))
+            if wp_url is None:
+                return match.group(0)
+            return f"![{match.group('md_alt')}]({wp_url})"
+
+        if match.group("img_src") is not None:
+            wp_url = resolve(match.group("img_src"))
+            if wp_url is None:
+                return match.group(0)
+            return f"{match.group('img_prefix')}{wp_url}{match.group('img_quote')}"
+
+        wp_url = resolve(match.group("a_src"))
+        if wp_url is None:
+            return match.group(0)
+        return f"{match.group('a_prefix')}{wp_url}{match.group('a_quote')}"
+
+    return IMAGE_REF_PATTERN.sub(replace_match, content)

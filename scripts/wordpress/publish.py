@@ -31,6 +31,7 @@ from wordpress_utils import (
     upload_and_replace_article_images,
     update_qmd_metadata,
     build_published_url,
+    ImageUploadError,
 )
 
 REQUEST_TIMEOUT = 30
@@ -102,9 +103,18 @@ def _prepare_wp_context(post_data: Dict, wp_token: str, wp_api_url: str, usernam
     # Resolve all authors against PublishPress Authors. Returns None when
     # the plugin is not installed; in that case the post falls back to
     # the standard single-author WP behavior via author_id.
+    authors = post_data.get("authors") or []
     ppma_author_ids = get_ppma_author_term_ids(
-        post_data.get("authors") or [], wp_token, wp_api_url, username
+        authors, wp_token, wp_api_url, username
     )
+
+    # PublishPress renders the byline, and an update that omits ppma_author
+    # leaves whatever the post already had. Silently keeping a previous
+    # author's name is worse than refusing to publish.
+    if authors and ppma_author_ids == []:
+        print(f"  ❌ No PublishPress author term for: {', '.join(authors)}")
+        print("     Run sync_authors.py so the byline resolves.")
+        return None
 
     return {
         "headers": headers,
@@ -235,9 +245,21 @@ def _validate_and_prepare(
         print("❌ Missing title")
         return None
 
-    post_data["content"] = upload_and_replace_article_images(
-        post_data["content"], file_path, wp_token, wp_api_url, username
-    )
+    # Without this the post would publish under whoever owns the CI
+    # credentials, which is nobody's intent and gives no error.
+    if not (post_data.get("authors") or []):
+        print("❌ Missing authors")
+        print("   Add an `authors:` list to the frontmatter naming who wrote this.")
+        return None
+
+    try:
+        post_data["content"] = upload_and_replace_article_images(
+            post_data["content"], file_path, wp_token, wp_api_url, username
+        )
+    except ImageUploadError as error:
+        print(f"  ❌ {error}")
+        print("     Publishing anyway would leave a broken image on the live site.")
+        return None
     authors = post_data.get("authors") or []
     post_data["_author_username"] = authors[0] if authors else username
     post_data["categories"] = _ensure_required_categories(

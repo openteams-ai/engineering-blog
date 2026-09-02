@@ -74,17 +74,26 @@ The publish script matches posts to WordPress by `slug`, so do not change the sl
 
 ## Images
 
-Place images in `posts/images/<post-slug>/` and reference them with relative paths:
+Place images in `posts/images/<post-slug>/` and reference them with relative paths.
+
+### Syntax
 
 ```markdown
 ![diagram](images/building-ml-pipelines/architecture.png)
 ```
 
-Images are automatically uploaded to WordPress when the post is published.
+- Supported formats: `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`
+- To make an image open a page instead of zooming, wrap it in a markdown link:
 
-Commits that only change files under `posts/images/<slug>/` (without touching the `.md`/`.qmd`) also trigger a republish of `posts/<slug>.md` or `posts/<slug>.qmd`. If no matching post file exists for the slug, the image change is skipped.
+  ```markdown
+  [![Chart description](images/my-post/chart.png)](https://example.com)
+  ```
 
-**Refreshing an existing image:** uploads are deduplicated by filename. If you edit an image's bytes but keep the same filename, WordPress will keep serving the old copy. To force a refresh, rename the file (e.g., `hero.png` to `hero-v2.png`) and update references, or delete the existing media from WordPress admin before republishing.
+### What publishing does with them
+
+- Uploads each image to WordPress and rewrites the path.
+- Wraps each image in a link to itself, so readers can click it open at full size.
+- Matches uploads by filename. **Editing an image that is already published? Give it a new filename** (`hero.png` to `hero-v2.png`) and update the reference.
 
 ## Markdown Syntax Reference
 

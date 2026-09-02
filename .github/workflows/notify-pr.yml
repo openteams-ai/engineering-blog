@@ -3,12 +3,40 @@ name: Notify Slack on new PR
 on:
   pull_request:
     types: [opened]
+    # The channel exists to announce posts. Without this every workflow and
+    # script change lands there too, which trains people to ignore it.
+    paths:
+      - 'posts/**'
 
 jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # The paths filter above lets through any PR touching posts/, which
+      # includes edits to articles that are already published. The channel
+      # announces new writing, so look for a post file that was ADDED
+      # (--diff-filter=A) and stay quiet when the PR only modifies one.
+      - name: Is this a new post?
+        id: check
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          ADDED=$(git diff --name-only --diff-filter=A "$BASE_SHA" HEAD -- \
+            'posts/*.md' 'posts/*.qmd')
+          if [ -n "$ADDED" ]; then
+            echo "Announcing:"; echo "$ADDED"
+            echo "new-post=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Only edits to existing posts; staying quiet."
+            echo "new-post=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Send Slack notification
+        if: steps.check.outputs.new-post == 'true'
         env:
           SLACK_PR_WEBHOOK: ${{ secrets.SLACK_PR_WEBHOOK }}
           PR_TITLE: ${{ github.event.pull_request.title }}
