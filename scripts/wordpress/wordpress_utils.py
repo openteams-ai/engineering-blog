@@ -559,6 +559,42 @@ _MARKDOWN_EXTENSIONS = [
 ]
 
 
+# Extensions the theme's lightbox recognises. It opens any link whose href
+# ends in one of these, which is what turns an anchor into click-to-zoom.
+_LIGHTBOX_EXTENSIONS = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif")
+
+# An <img>, optionally already wrapped in an opening <a>.
+_MAYBE_LINKED_IMG = re.compile(r"(<a\b[^>]*>\s*)?(<img\b[^>]*?>)", re.IGNORECASE)
+_IMG_SRC = re.compile(r'\bsrc=["\']([^"\']+)["\']', re.IGNORECASE)
+
+
+def _link_images_for_lightbox(html: str) -> str:
+    """Wrap each content image in a link to itself, giving click-to-zoom.
+
+    Authors write a plain `![alt](chart.png)` and get a zoomable image, which
+    matters for dense charts whose labels are unreadable at article width.
+    Images the author already wrapped in an anchor are left alone.
+    """
+
+    def wrap(match: "re.Match") -> str:
+        already_linked, img = match.group(1), match.group(2)
+        if already_linked:
+            return match.group(0)
+
+        src = _IMG_SRC.search(img)
+        if not src:
+            return img
+
+        # Skip anything the lightbox would not open anyway, such as a data URI.
+        path = src.group(1).split("?")[0].lower()
+        if not path.endswith(_LIGHTBOX_EXTENSIONS):
+            return img
+
+        return f'<a href="{src.group(1)}">{img}</a>'
+
+    return _MAYBE_LINKED_IMG.sub(wrap, html)
+
+
 def convert_markdown_to_html(
     markdown_content: str, post_data: Optional[Dict] = None
 ) -> str:
@@ -570,6 +606,7 @@ def convert_markdown_to_html(
 
     html = _restore_mermaid_blocks(html, mermaid_blocks)
     html, languages, has_hl, has_cmd = _enhance_code_blocks_for_prism(html)
+    html = _link_images_for_lightbox(html)
 
     # Wrap tables in scrollable containers
     html = re.sub(
