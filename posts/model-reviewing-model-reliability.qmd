@@ -1,0 +1,364 @@
+---
+title: "Every Model I Tested Got a Third of Its Review Removals Wrong"
+slug: model-reviewing-model-reliability
+author: Khuyen Tran
+categories:
+- Engineering
+tags:
+- llm-evaluation
+- hallucination-detection
+- ollama
+- meeting-summarization
+- local-llm
+meta_description: "Evaluate LLM reviewer models on meeting summaries, measuring both unsupported claims caught and supported claims wrongly deleted before shipping review stages."
+focus_keyword: "LLM reviewer model"
+---
+
+I have a meeting summarizer. Reading its output next to the transcript, some of it is plainly wrong: decisions the meeting never made, sitting in the list beside the real ones.
+
+Here is one example. The transcript ends like this:
+
+```text
+Speaker 0: There's a motion of seconds are public comment on this item saying none
+           please cast your votes.
+```
+
+The vote is called. No result is ever recorded.
+
+The summary said:
+
+```text
+Decisions
+- The council voted to oppose Proposition Six.
+```
+
+A reader who was not at the meeting cannot tell that line from a real one without opening the transcript. In most products, nobody opens the transcript.
+
+So I added the standard fix: a reviewer model. It reads the transcript and the summary together, then removes anything the transcript does not support.
+
+I expected that to be the easy part. Reviewing should be easier than writing. The transcript is right there in the prompt. If the first model made something up, the second model should cut it.
+
+That is not what happened.
+
+## What Is a Reviewer Model?
+
+A reviewer model is one extra call after generation:
+
+```python
+draft = llm(f"Summarize this transcript:\n{transcript}")
+final = llm(
+    "Review this summary against the transcript. Remove anything unsupported.\n"
+    f"Transcript:\n{transcript}\n\nSummary:\n{draft}"
+)
+```
+
+The pattern is attractive because it is cheap to add. You keep the same summarizer, add one more model call, and ship the edited summary instead of the draft.
+
+The problem is that the edited summary only shows what survived. It does not show what the reviewer removed, whether those removals were correct, or what a different reviewer would have done.
+
+If the output reads tighter, the reviewer looks useful. But a reviewer can look useful by deleting real claims along with false ones.
+
+## What Success Should Mean
+
+For this job, a reviewer needs two properties:
+
+- **Complete**: Of the claims the transcript does not support, how many does it remove?
+- **Accurate**: Of the claims it removes, how many deserved to be removed?
+
+The first number is recall. The second number is precision.
+
+A reviewer needs both. High recall alone is what you get from deleting freely. High precision alone is what you get from deleting almost nothing.
+
+For a reviewer I would trust in production, I wanted a simple bar: catch most unsupported claims and remove no supported claims. On this small corpus, that means catching roughly 80% or more of the bad claims without taking good content with them.
+
+## Setup
+
+I tested the reviewer stage on 9 council meeting transcripts from [MeetingBank](https://huggingface.co/datasets/lytang/MeetingBank-transcript). The summaries came from `qwen3:8b`, and each summary had at least one claim the transcript did not support.
+
+Across those summaries, I scored 35 claims:
+
+- 23 claims were supported by the transcript.
+- 12 claims were unsupported.
+- Open questions were not scored, because a question cannot be supported or contradicted.
+
+Every claim was labeled by reading the transcript before consulting the reviewer output.
+
+A claim counted as **supported** only if the transcript stated it or a participant said it. A risk counted as supported only if someone at the meeting raised that risk. A consequence the model worked out on its own counted as unsupported, however reasonable it sounded.
+
+I tested four reviewers:
+
+| Reviewer | What it is | What it returns |
+| --- | --- | --- |
+| `qwen3:8b` | The summarizer reviewing its own work | A corrected summary |
+| `llama3.1:8b` | A different model, same size | A corrected summary |
+| `qwen2.5:14b` | A different model, nearly twice the size | A corrected summary |
+| `bespoke-minicheck:7b` | A model trained to judge whether a document supports a claim | Yes or No, one call per claim |
+
+All models ran through Ollama with `temperature=0`, `seed=0`, and `num_ctx=16384`. The run used one seed on a MacBook Pro M5 Pro with 64 GB of memory on September 10, 2026.
+
+The sample is small, so the exact percentages are not the point. The useful signal is the shape of the mistakes: the general reviewers did not just miss unsupported claims. They also removed claims the transcript supported.
+
+## How I Tested It
+
+The key scoring problem is that the reviewers do not all return the same kind of object.
+
+The three general models return rewritten summaries. `bespoke-minicheck:7b` returns a support judgment for one claim at a time.
+
+To compare them fairly, I measured **claim survival** the same way for every reviewer. After a reviewer returns its output, point a checker at the reviewed text and ask whether the original claim is still asserted:
+
+```{python}
+import httpx
+
+
+def still_asserted(reviewed_summary: str, claim: str) -> bool:
+    reply = httpx.post(
+        "http://localhost:11434/api/generate",
+        json={
+            "model": "bespoke-minicheck:7b",
+            "prompt": f"Document: {reviewed_summary}\nClaim: {claim}",
+            "stream": False,
+            "options": {"temperature": 0, "num_predict": 2},
+        },
+        timeout=600,
+    )
+    reply.raise_for_status()
+    return reply.json()["response"].strip().lower().startswith("yes")
+```
+
+*This article uses `httpx` v0.28.1 and `pydantic` v2.12.5.*
+
+Run that function over the claims labeled unsupported, and you get recall: how many bad claims disappeared.
+
+Run it over the claims labeled supported, and you get the cost: how many good claims disappeared.
+
+Both numbers come from the same measurement.
+
+## Results
+
+First, look only at how much each general reviewer removed:
+
+```text
+qwen3:8b      removed  5 of 35 claims
+qwen2.5:14b   removed  8 of 35 claims
+llama3.1:8b  removed 16 of 35 claims
+```
+
+If you ranked reviewers by unsupported claims caught, `llama3.1:8b` would win by a mile. It caught 9 of the 12 unsupported claims.
+
+But it also threw away 7 claims the transcript supported.
+
+Here is the full table:
+
+| Reviewer | Removals | Correct removals | Precision | Recall, of 12 |
+| --- | ---: | ---: | ---: | ---: |
+| `qwen3:8b` on its own summary | 5 | 3 | 60% | 25% |
+| `qwen2.5:14b` | 8 | 6 | 75% | 50% |
+| `llama3.1:8b` | 16 | 9 | 56% | 75% |
+| `bespoke-minicheck:7b` | 10 | 10 | 100% | 83% |
+
+The three general reviewers removed different amounts, but none was reliable per deletion. Between a quarter and nearly half of what each one removed was content the transcript supported.
+
+The only reviewer that scored well on both axes was the one trained for the judgment. `bespoke-minicheck:7b` removed 10 claims, and all 10 were unsupported.
+
+### More Deletion Looked Like Better Recall
+
+For the general models, catch rate followed deletion volume exactly:
+
+```text
+qwen3:8b      5 removals  ->  3 caught   60% precision
+qwen2.5:14b   8 removals  ->  6 caught   75% precision
+llama3.1:8b  16 removals  ->  9 caught   56% precision
+```
+
+That is the failure mode. If you score only recall, the most aggressive reviewer looks best. But its high recall came with a 30% loss of real content: 7 of 23 supported claims were removed.
+
+In a bake-off scored on catch rate, `llama3.1:8b` wins. In a product, it is the reviewer I would least want to delete automatically.
+
+### The Verdicts Were Model-Dependent
+
+The three general reviewers did not agree on which unsupported claims to remove:
+
+| Caught by | Claims |
+| --- | ---: |
+| All 3 general reviewers | 2 |
+| Exactly 2 general reviewers | 4 |
+| Exactly 1 general reviewer | 4 |
+| None of the general reviewers | 2 |
+
+All four claims caught by exactly one general reviewer belonged to `llama3.1:8b` alone. The self-reviewer, `qwen3:8b`, found nothing unique; its three catches were a subset of what the other models caught.
+
+That means your pipeline's verdict depends heavily on which model you happen to drop into the review slot.
+
+### The Easy Cases Had Missing Topics
+
+The two claims every general reviewer caught were claims whose subject was mostly absent from the transcript:
+
+```text
+"The council approved a memorandum of understanding with SEIU"
+```
+
+The meeting was about gas rates. SEIU was read into the record once, never voted on.
+
+```text
+"There is a potential for increased costs if the revised fee structure..."
+```
+
+The meeting did not discuss increased costs.
+
+These are easy removals. The reviewer can catch them by noticing that the topic is not in the meeting.
+
+### The Hard Cases Had All the Right Words
+
+The two claims no general reviewer caught were both in draft `171`:
+
+```text
+"The council voted to oppose Proposition Six"
+```
+
+The council, the motion, opposition, and Proposition Six all appear in the transcript. The missing part is the outcome: the transcript calls the vote but never records the result.
+
+The second surviving claim was harder:
+
+```text
+"Opposing Proposition Six could result in the loss of significant state funding"
+```
+
+Every entity and number appears in the transcript. The causal direction is wrong.
+
+Catching these claims requires tracking what was proposed, what concluded, and which way the cause runs. There is no missing topic to notice, so a reviewer that leans on overlap has little to flag.
+
+## What To Change in Your System
+
+### Flag Instead of Delete
+
+If you use a general reviewer, have it flag claims instead of deleting them.
+
+A third of what the general reviewers deleted was content the transcript supported. Flagging keeps that content recoverable. Deletion does not.
+
+But flagging only helps if recall is high enough. Otherwise the human reads a short list and assumes the rest was checked.
+
+On this corpus:
+
+| Flagger | Human reads | Problems caught | Slips through unread |
+| --- | ---: | ---: | ---: |
+| `qwen3:8b` self-review | 5 of 35, 14% | 3 of 12, 25% | 9 of 12 |
+| `qwen2.5:14b` | 8 of 35, 23% | 6 of 12, 50% | 6 of 12 |
+| `llama3.1:8b` | 16 of 35, 46% | 9 of 12, 75% | 3 of 12 |
+| `bespoke-minicheck:7b` | 10 of 35, 29% | 10 of 12, 83% | 2 of 12 |
+| Read everything | 35 of 35, 100% | 12 of 12, 100% | 0 |
+
+With self-review, the reviewer flags only 5 claims, so the human reads little. But 9 of the 12 unsupported claims still slip through unread.
+
+### Move Support Judgment to a Model Trained for It
+
+Keep the general model for writing. Move the support judgment to a model trained to judge whether a document supports a claim.
+
+In this run, `bespoke-minicheck:7b` was the only reviewer that removed nothing it should have kept. It also caught 10 of the 12 unsupported claims.
+
+That does not make it universally safe. The sample has only 23 supported claims, so one false alarm would move its precision from 100% to 91%. It also judged one claim at a time, while the general reviewers rewrote whole summaries.
+
+But that framing is the point. A support decision is a different task from rewriting prose. Treat it as its own task.
+
+### Require Agreement Only If You Can Afford the Missed Claims
+
+Another tempting fix is to use several reviewers and delete only when they agree.
+
+Measured on the three general reviewers, the tradeoff was severe:
+
+| Rule | Caught | Wrongly removed | Precision |
+| --- | ---: | ---: | ---: |
+| Any 1 of 3 flags it | 10 of 12 | 7 of 23 | 59% |
+| 2 of 3 agree | 6 of 12 | 4 of 23 | 60% |
+| All 3 agree | 2 of 12 | 0 of 23 | 100% |
+
+Unanimity was the only clean rule, and it caught only 2 of 12 unsupported claims.
+
+Majority voting did not combine three weak reviewers into a strong judge. It cost three calls and landed in the same precision band as a single general model.
+
+### Log Every Removal
+
+If your reviewer deletes claims, log each deletion next to the original claim.
+
+A deletion you cannot see is a deletion you cannot recover when it turns out to have been correct.
+
+At minimum, store:
+
+```text
+claim_id
+original_claim
+reviewer_decision
+reviewer_model
+source_document_id
+reviewed_summary_id
+```
+
+That log lets you sample removals later and measure whether the reviewer is deleting true content.
+
+### Keep the Source Reachable
+
+Keep the transcript or source document reachable from the final output.
+
+The invented vote survived every general reviewer because the transcript looked close enough: all the entities were present, and only the outcome was missing.
+
+A link to the source beside the summary is the only fallback that survived every failure in this study.
+
+## Should You Add a Reviewer?
+
+Add a reviewer only after you decide which mistake costs more.
+
+If a surviving false claim is worse than a lost true claim, an aggressive reviewer may be worth it. `llama3.1:8b` caught 9 of 12 unsupported claims, but it also removed 7 supported claims.
+
+If losing true content is worse, a timid reviewer may be less damaging. `qwen3:8b` removed only 5 claims, but it caught only 3 of 12 unsupported ones.
+
+If you need both high recall and low false removal, do not treat a general reviewer as a check. On this corpus, the only model that cleared both bars was trained for document-support judgment.
+
+The practical version is simple: label 30 to 50 claims from your own data, run the reviewers you are considering, and score both sides. Without that, you are picking a deletion appetite, not a reliability layer.
+
+## Running the Code Yourself
+
+The companion files are in `notebooks/model-reviewing-model-reliability/` in the source article workspace. The folder includes the transcripts, labeled claims, reviewer outputs, and the JSON file behind every number above.
+
+Pull the models:
+
+```bash
+ollama pull qwen3:8b && ollama pull llama3.1:8b && ollama pull qwen2.5:14b
+ollama pull bespoke-minicheck:7b
+```
+
+Run the pipeline from the companion folder:
+
+```bash
+cd notebooks/model-reviewing-model-reliability
+
+uv run scripts/natural.py .
+uv run scripts/crossmodel.py
+uv run scripts/agree.py
+```
+
+The commands produce:
+
+| File | What it holds |
+| --- | --- |
+| `claims.json` | One row per claim, with the first checker verdict and self-review survival |
+| `perclaim.json` | Adds the hand label and `qwen3:8b` per-claim verdict |
+| `crossmodel.json` | The `llama3.1:8b` and `qwen2.5:14b` reviewer outputs |
+| `reviewers.json` | One row per claim with all four reviewer verdicts |
+| `unsupported.json` | The 12 hand-labeled unsupported claims and why each is unsupported |
+
+The important file is `reviewers.json`. It is the source of the removal counts, precision, recall, agreement table, and false-removal counts.
+
+## Key Takeaways
+
+- Three general models given the same reviewing job removed 5, 8, and 16 claims out of 35.
+- Their precision did not improve with deletion volume: 60%, 75%, and 56%.
+- The reviewer that caught the most unsupported claims also discarded 7 of 23 supported claims.
+- The only clean reviewer in this run was trained for document-support judgment.
+- A reviewer stage is not a reliability layer until you score both what it removes and what it wrongly removes.
+
+## References
+
+- **[Self-Refine: Iterative Refinement with Self-Feedback](https://arxiv.org/abs/2303.17651)** (Madaan et al., 2023): Shows that iterative self-feedback can improve model outputs across several tasks, the positive result behind many review-and-revise workflows.
+- **[Large Language Models Cannot Self-Correct Reasoning Yet](https://arxiv.org/abs/2310.01798)** (Huang et al., 2024): Reports that self-correction can fail or degrade performance in reasoning tasks, motivating direct measurement instead of assuming review helps.
+- **[MiniCheck: Efficient Fact-Checking of LLMs on Grounding Documents](https://arxiv.org/abs/2404.10774)** (Tang et al., 2024): Introduces small models for checking whether generated claims are grounded in source documents.
+- **[MeetingBank transcript dataset](https://huggingface.co/datasets/lytang/MeetingBank-transcript)** (Hu et al., 2023): Source of the council meeting transcripts used in this experiment; the Hugging Face dataset card lists the license as CC-BY-NC-SA 4.0.
+- **[LLM Summarizers Skip the Identification Step](https://towardsdatascience.com/llm-summarizers-skip-the-identification-step/)** (William Gieng, 2026): The clipping that motivated this experiment's question about whether a reviewer stage actually removes unsupported summary claims.
