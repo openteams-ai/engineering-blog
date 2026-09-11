@@ -22,6 +22,8 @@ Render a post locally to check code blocks, Mermaid diagrams, tables, and the Qu
 uv run scripts/wordpress/preview.py posts/your-article.md
 ```
 
+This watches the file and reloads the browser on every save. Press Ctrl+C to stop, or pass `--no-watch` to render once and exit.
+
 The rendered HTML is written to `.preview/<slug>.html` (gitignored) and opened in your default browser. Pass `--no-open` to write the file and print its path without opening a browser.
 
 **Accurate:** anything the markdown pipeline produces, since it is the same pipeline publishing uses. Code blocks and Prism directives, Mermaid diagrams, tables, image placement.
