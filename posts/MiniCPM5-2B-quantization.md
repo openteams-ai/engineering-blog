@@ -9,12 +9,12 @@ meta_description: 'MiniCPM5-2B quantization report: the best GGUF weights and K/
 focus_keyword: MiniCPM5-2B quantization
 ---
 
-[MiniCPM5-2B](https://huggingface.co/openbmb/MiniCPM5-2B) is a SOTA model for severely memory-constrained devices. I've tested several GGUF collections from HuggingFace, together with the available quantization options for KV cache, to define the frontier of the best quality/size ratios for the model.
+[MiniCPM5-2B](https://huggingface.co/openbmb/MiniCPM5-2B) is a SOTA large language model for severely memory-constrained devices. I've tested several GGUF collections from HuggingFace, together with the available quantization options for KV cache, to define the frontier of the best quality/size ratios for the model.
 
 The below measures show:
 
 - Mean KLD, for the sake of anchoring to a familiar measure. Note that I'm using a linear scale for the Y axis to highlight the quality cliff.
-- Same Sampled Token, from [Quesma's brilliant blog post](https://quesma.com/blog/qwen-quantization-quality/), which is the probability that the model will produce the same token as the baseline when running at temperature=1. This differs from Top-1, which instead runs at temperature=0. It shows the sharpest cliff behaviour among all synthetic measures and highlights outliers that are normally invisible on the Mean KLD report. In Quesma's blog, it is the synthetic measure whose shape most resembles the degradation actually measured by benchmarks (AIME).
+- Same Sampled Token, a.k.a. collision cross-entropy, from [Quesma's brilliant blog post](https://quesma.com/blog/qwen-quantization-quality/), which is the probability that the model will produce the same token as the baseline when running at temperature=1. This differs from Top-1, which instead runs at temperature=0. Same Sampled Token shows the sharpest cliff behaviour among all synthetic measures and highlights outliers that are normally invisible on the Mean KLD report. In Quesma's blog, it is the synthetic measure whose shape most resembles the degradation actually measured by benchmarks.
 
 ## Weights quantization
 
@@ -23,17 +23,14 @@ I've tested the most popular GGUF collections on HuggingFace for the model:
 - [openbmb/MiniCPM5-2B-GGUF](https://huggingface.co/openbmb/MiniCPM5-2B-GGUF)
 - [bartowski/MiniCPM5-2B-GGUF](https://huggingface.co/bartowski/MiniCPM5-2B-GGUF)
 - [NANI-Nithin/MiniCPM5-2B-GGUF](https://huggingface.co/NANI-Nithin/MiniCPM5-2B-GGUF)
-- [mradermacher/MiniCPM5-2B-i1-GGUF](https://huggingface.co/mradermacher/MiniCPM5-2B-i1-GGUF)
 - [Abiray/MiniCPM5-2B-heretic-abliterated-GGUF](https://huggingface.co/Abiray/MiniCPM5-2B-heretic-abliterated-GGUF)
 
 ### Highlights
 
-- **bartowski** is the safe default;
-- **NANI-Nithin** allows shedding some extra weight in some cases;
+- **bartowski** is the safe default, while **NANI-Nithin** allows shedding some extra weight in some cases;
 - **Abiray**'s abliteration carries a small cost in quality;
-- **mradermacher** and **openbmb** should be avoided as they offer worse performance at all tested size points;
 - **Q6_K** is indistinguishable from the F16 baseline;
-- **IQ4_XS** shows measurable degradation and is the last useable quant before the Q3 region, which severely harms quality.
+- **IQ4_XS** shows measurable degradation and is the last useable quant before the cliff drop into the Q3 region.
 
 In the plots below, the X axis shows the total memory usage for weights + 128k unquantized K/V cache (f16/f16). DSpark drafter and scratch buffers are not included.
 
@@ -46,14 +43,14 @@ In the plots below, the X axis shows the total memory usage for weights + 128k u
 - On stock llama.cpp, `bartowski/MiniCPM5-2B-GGUF:Q6_K` with **q8_0/q8_0** KV cache is indistinguishable from the unquantized model; **q8_0/q5_0** is also almost lossless;
 - **q5_0/q5_0** KV cache lets you shed some weight for a small cost. Drop the K/V cache to q5_0/q5_0 first before increasing the quantization of the weights;
 - **q5_0/q4_0** shows contained degradation;
-- **q4_0/q4_0** is still useable - barely. If it's the only one that fits, you should really consider switching to BeeLlama (read below). Again, you should drop KV cache to q4_0/q4_0 before dropping weights to Q4.
+- **q4_0/q4_0** is still useable - barely. If it's the only one that fits, you should consider switching to BeeLlama (read below). Again, you should drop KV cache to q4_0/q4_0 before dropping weights to Q4.
 
 ![Stock K/V quants](images/MiniCPM5-2B-quantization/03_sst_stock_quants.png)
 
 ## BeeLlama.cpp K/V quants
 
 - **q6_0/q6_0** is almost lossless and slightly smaller than q8_0/q5_0; **q5_0/q3_0** is strictly better than q4_0/q4_0 for the same size; **q4_0/q3_0** is still useable.
-- An exact tail as small as the last 128 tokens drastically uplifts the highest quants, while it has a more modest benefit for larger ones. Whether this uplift actually reflects on real-life performance has yet to be proven. True performance is bounded between the best-case scenario, marked on the plot for t=128, and the worst-case scenario where old tokens are extremely important, which will perform in line with the point for the same quant without tail.
+- An exact tail as small as the last 128 tokens drastically uplifts the highest quants, while it has a more modest benefit for larger ones. Whether this uplift actually reflects on real-life performance has yet to be proven. True performance is bounded between the best-case scenario, marked on the plot for t128, and the worst-case scenario where old tokens are extremely important, which will perform in line with the point for the same quant without tail.
 - Increasing the exact tail from 128 to 1024 tokens has a modest cost in size and equally modest performance improvement on the plot. However, it should make the worst-case scenario described above less likely to happen, so it is recommended.
 
 ![BeeLlama.cpp K/V quants](images/MiniCPM5-2B-quantization/04_sst_beellama.png)
@@ -81,7 +78,7 @@ BeeLlama.cpp:
 
 The below .ini files can be loaded with `llama-server --models-preset models.ini`.
 
-No-compromises setup, indistinguishable in quality from the original model, occupying 7.1 GiB VRAM on CUDA, including drafter and scratch buffers:
+No-compromises setup, indistinguishable in quality from the original model. It occupies 7.1 GiB VRAM on CUDA, including drafter and scratch buffers:
 
 ```ini
 [*]
