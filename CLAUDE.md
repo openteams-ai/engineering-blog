@@ -2,10 +2,6 @@
 
 Full reference for contributors writing engineering blog posts.
 
-## Style Preferences
-
-- Avoid using the word "prose" in article drafts and edit suggestions.
-
 ## Creating a Post
 
 1. Create a `.md` or `.qmd` file under `posts/` (e.g., `posts/building-ml-pipelines.md`).
