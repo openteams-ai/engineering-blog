@@ -1,6 +1,6 @@
 ---
-title: "Every Model I Tested Got a Third of Its Review Removals Wrong"
-slug: model-reviewing-model-reliability
+title: "I Asked LLMs to Review Another LLM. They Still Got It Wrong"
+slug: llm-review-reliability
 author: Khuyen Tran
 categories:
 - Engineering
@@ -10,8 +10,8 @@ tags:
 - ollama
 - meeting-summarization
 - local-llm
-meta_description: "Evaluate LLM reviewer models on meeting summaries, measuring both unsupported claims caught and supported claims wrongly deleted before shipping review stages."
-focus_keyword: "LLM reviewer model"
+meta_description: "I tested four LLM reviewer models on 35 meeting-summary claims. The one that caught the most bad claims also deleted the most true ones."
+focus_keyword: "LLM review"
 ---
 
 Have you ever asked one model to summarize something, then used another model to check whether the summary was trustworthy?
