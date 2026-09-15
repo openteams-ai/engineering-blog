@@ -34,9 +34,9 @@ I've tested the most popular GGUF collections on HuggingFace for the model:
 
 In the plots below, the X axis shows the total memory usage for weights + 128k unquantized K/V cache (f16/f16). DSpark drafter and scratch buffers are not included.
 
-![Mean KLD (weights only)](images/MiniCPM5-2B-quantization/01_mean_KLD_f16.png)
+![Mean KLD (weights only)](images/MiniCPM5-2B-quantization/01_mean_KLD_f16_v2.png)
 
-![Same Sampled Token (weights only)](images/MiniCPM5-2B-quantization/02_sst_f16.png)
+![Same Sampled Token (weights only)](images/MiniCPM5-2B-quantization/02_sst_f16_v2.png)
 
 ## Stock K/V quants
 
@@ -45,7 +45,7 @@ In the plots below, the X axis shows the total memory usage for weights + 128k u
 - **q5_0/q4_0** shows contained degradation;
 - **q4_0/q4_0** is still useable - barely. If it's the only one that fits, you should consider switching to BeeLlama (read below). Again, you should drop KV cache to q4_0/q4_0 before dropping weights to Q4.
 
-![Stock K/V quants](images/MiniCPM5-2B-quantization/03_sst_stock_quants.png)
+![Stock K/V quants](images/MiniCPM5-2B-quantization/03_sst_stock_quants_v2.png)
 
 ## BeeLlama.cpp K/V quants
 
@@ -53,14 +53,14 @@ In the plots below, the X axis shows the total memory usage for weights + 128k u
 - An exact tail as small as the last 128 tokens drastically uplifts the highest quants, while it has a more modest benefit for larger ones. Whether this uplift actually reflects on real-life performance has yet to be proven. True performance is bounded between the best-case scenario, marked on the plot for t128, and the worst-case scenario where old tokens are extremely important, which will perform in line with the point for the same quant without tail.
 - Increasing the exact tail from 128 to 1024 tokens has a modest cost in size and equally modest performance improvement on the plot. However, it should make the worst-case scenario described above less likely to happen, so it is recommended.
 
-![BeeLlama.cpp K/V quants](images/MiniCPM5-2B-quantization/04_sst_beellama.png)
+![BeeLlama.cpp K/V quants](images/MiniCPM5-2B-quantization/04_sst_beellama_v2.png)
 
 - **q3_0/q3_0** and **kvarn3** sit on the quality/size frontier in these plots - but only thanks to the uplift from the exact tail; their worst-case scenario is catastrophic. They are **not** recommended.
 - KVarN offers very little benefit in terms of quality/size compared to the equivalent traditional quants with the same exact tail. Note that KVarN has a minimum implicit exact tail of 128 tokens, so e.g. kvarn4's like-for-like comparison is q4_0/q4_0 with `kv-tail-tokens=128`. On CUDA, KVarN K/V cache was observed to be ~20% slower than traditional quants.
 
 The plot below shows how the gap between best and worst case widens as the quantization increases:
 
-![Q3 quality collapse](images/MiniCPM5-2B-quantization/05_q3_collapse.png)
+![Q3 quality collapse](images/MiniCPM5-2B-quantization/05_q3_collapse_v2.png)
 
 ## Abliteration
 
@@ -68,11 +68,11 @@ The plot below shows how the gap between best and worst case widens as the quant
 
 Frontier abliterated weights + K/V cache combos on stock llama.cpp:
 
-![Abliterated stock K/V quants](images/MiniCPM5-2B-quantization/06_sst_abliterated_stock_quants.png)
+![Abliterated stock K/V quants](images/MiniCPM5-2B-quantization/06_sst_abliterated_stock_quants_v2.png)
 
 BeeLlama.cpp:
 
-![Abliterated BeeLlama.cpp K/V quants](images/MiniCPM5-2B-quantization/07_sst_abliterated_beellama.png)
+![Abliterated BeeLlama.cpp K/V quants](images/MiniCPM5-2B-quantization/07_sst_abliterated_beellama_v2.png)
 
 ## Presets
 
