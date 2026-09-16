@@ -172,7 +172,7 @@ Do different reviewer models catch the same unsupported claims? The grid below s
 
 Only 2 unsupported claims were caught by every general reviewer, and 2 were missed by every reviewer. The other 8 depended on which model I used.
 
-That means the reviewer stage **was not stable**. Swapping the reviewer changed which unsupported claims removed.
+That means the reviewer stage **was not stable**. Swapping the reviewer changed which unsupported claims were removed.
 
 ## What To Do Instead
 
