@@ -174,7 +174,7 @@ That makes `qwen3.8:27b-mlx` the best general reviewer in this test. It caught 1
 
 Do different reviewer models catch the same unsupported claims? Not really. The grid below shows which reviewer removed which claim.
 
-![Grid of 12 unsupported claims across five reviewer models, with a filled dot where the reviewer removed that claim. Only claims C6 and C9 were caught by every reviewer, and C11 was caught by none. Each stronger model catches close to a superset of the weaker one. Row totals are 3 for qwen3:8b, 6 for qwen2.5:14b, 9 for llama3.1:8b, and 10 for both qwen3.8:27b-mlx and qwen3:30b-a3b, whose rows are identical.](images/llm-review-reliability/which-reviewer-caught-which-claim.png)
+![Grid of 12 unsupported claims across five reviewer models, with a filled dot where the reviewer removed that claim. Only claims C6 and C9 were caught by every reviewer, and C11 was caught by none. Each stronger model catches close to a superset of the weaker one. Row totals are 3 for qwen3:8b, 6 for qwen2.5:14b, 9 for llama3.1:8b, and 10 for both qwen3.8:27b-mlx and qwen3:30b-a3b, whose rows are identical.](images/llm-review-reliability/which-reviewer-caught-which-claim-v2.png)
 
 Only 2 of the 12 unsupported claims were caught by every reviewer. One claim was missed by every reviewer.
 
