@@ -85,7 +85,7 @@ To evaluate the reviewer models, I measured two things:
 - **Recall**: How many unsupported claims did the reviewer catch?
 - **Precision**: How many removed claims were actually unsupported?
 
-![Confusion table for a reviewer scoring 30 claims, 10 unsupported and 20 supported. It removes 12 claims: 8 correctly and 4 wrongly, leaving 2 unsupported claims in place and 16 supported ones. Recall reads across the unsupported row, 8 of 10 or 80%. Precision reads down the removed column, 8 of 12 or 67%. Both fractions share the same numerator of 8.](images/model-reviewing-model-reliability/recall-vs-precision.png)
+![Confusion table for a reviewer scoring 30 claims, 10 unsupported and 20 supported. It removes 12 claims: 8 correctly and 4 wrongly, leaving 2 unsupported claims in place and 16 supported ones. Recall reads across the unsupported row, 8 of 10 or 80%. Precision reads down the removed column, 8 of 12 or 67%. Both fractions share the same numerator of 8.](images/llm-review-reliability/recall-vs-precision.png)
 
 I care about both because they catch different failures:
 
@@ -168,7 +168,7 @@ So which model should you pick? It would depend on what you care about most:
 
 Do different reviewer models catch the same unsupported claims? The grid below shows that they do not.
 
-![Grid of 12 unsupported claims across three reviewer models, with a filled dot where the reviewer removed that claim. Columns are sorted by how many reviewers caught each claim. Only claims C6 and C9 were caught by all three. Four claims were caught by two reviewers, four by one, and C11 and C12 by none. Row totals are 3 for qwen3:8b, 6 for qwen2.5:14b, and 9 for llama3.1:8b.](images/model-reviewing-model-reliability/which-reviewer-caught-which-claim.png)
+![Grid of 12 unsupported claims across three reviewer models, with a filled dot where the reviewer removed that claim. Columns are sorted by how many reviewers caught each claim. Only claims C6 and C9 were caught by all three. Four claims were caught by two reviewers, four by one, and C11 and C12 by none. Row totals are 3 for qwen3:8b, 6 for qwen2.5:14b, and 9 for llama3.1:8b.](images/llm-review-reliability/which-reviewer-caught-which-claim.png)
 
 Only 2 unsupported claims were caught by every general reviewer, and 2 were missed by every reviewer. The other 8 depended on which model I used.
 
@@ -187,7 +187,7 @@ Compared with the general reviewers, `bespoke-minicheck:7b` changed both the inp
 - Input: It saw **one claim at a time**, not the full summary.
 - Output: It returned **a support label**, not a rewritten summary.
 
-![Side-by-side comparison of what each reviewer is asked. Both receive the same input, the full transcript. The general reviewer then receives a draft summary containing several claims and is asked to rewrite it and remove unsupported claims, returning a new summary. bespoke-minicheck:7b instead receives a single claim, "The council voted to oppose Proposition Six.", and is asked whether the transcript supports it, returning supported or unsupported.](images/model-reviewing-model-reliability/general-vs-minicheck-task.png)
+![Side-by-side comparison of what each reviewer is asked. Both receive the same input, the full transcript. The general reviewer then receives a draft summary containing several claims and is asked to rewrite it and remove unsupported claims, returning a new summary. bespoke-minicheck:7b instead receives a single claim, "The council voted to oppose Proposition Six.", and is asked whether the transcript supports it, returning supported or unsupported.](images/llm-review-reliability/general-vs-minicheck-task.png)
 
 In this run, `bespoke-minicheck:7b` caught 10 of the 12 unsupported claims and removed 0 supported claims.
 
