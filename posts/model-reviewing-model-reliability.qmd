@@ -1,7 +1,8 @@
 ---
 title: "I Asked LLMs to Review Another LLM. They Still Got It Wrong"
 slug: llm-review-reliability
-author: Khuyen Tran
+authors:
+- khuyen-tran
 categories:
 - Engineering
 tags:
