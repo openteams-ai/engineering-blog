@@ -11,7 +11,7 @@ tags:
 - ollama
 - meeting-summarization
 - local-llm
-meta_description: "I tested four LLM reviewer models on 35 meeting-summary claims. The one that caught the most bad claims also deleted the most true ones."
+meta_description: "I tested LLM reviewer models on meeting summaries to see when they catch hallucinations, when they delete true claims, and how to choose one."
 focus_keyword: "LLM review"
 ---
 
@@ -29,10 +29,9 @@ This article walks through what I found.
 
 Here is the short version:
 
-- The general reviewer models **missed many unsupported claims**. `qwen3:8b` caught 3 of 12, `qwen2.5:14b` caught 6 of 12, and `llama3.1:8b` caught 9 of 12.
-- **Bigger did not mean better**. `qwen2.5:14b` is almost twice the size of `llama3.1:8b`, but caught fewer unsupported claims.
-- **Catching more bad claims came with a cost**. `llama3.1:8b` caught the most unsupported claims, but also removed 7 of 23 supported claims.
-- The best result came from **switching to a model trained for document-support judgment**. `bespoke-minicheck:7b` caught 10 of 12 unsupported claims and removed 0 supported claims.
+- **A reviewer is not automatically a safety layer.** `qwen3:8b` caught 3 of 12, `qwen2.5:14b` caught 6 of 12, and `llama3.1:8b` caught 9 of 12.
+- **More catches did not always mean a better reviewer.** `qwen3:30b-a3b` caught more unsupported claims than `qwen2.5:14b` (10 of 12 vs. 6 of 12), but it also removed more supported claims (10 of 23 vs. 2 of 23).
+- **A model trained for support judgment worked best.** `bespoke-minicheck:7b` matched the strongest general reviewers on unsupported claims, removed no true claims, while running faster.
 
 ## What Is a Reviewer Model?
 
@@ -105,15 +104,17 @@ I read the transcripts and labeled each claim as supported or unsupported. In to
 - 23 supported claims
 - 12 unsupported claims
 
-I tested three general-purpose reviewer models that match the choices an engineer would likely try first: use the same model as the summarizer, use another model of similar size, or use a larger model.
+I tested five general-purpose reviewer models to cover a variety of options:
 
 | Reviewer | What it is | What it returns |
 | --- | --- | --- |
-| `qwen3:8b` | The summarizer reviewing its own work | A corrected summary |
-| `llama3.1:8b` | A different model, same size | A corrected summary |
-| `qwen2.5:14b` | A different model, nearly twice the size | A corrected summary |
+| `qwen3:8b` | The same model that wrote the summary | A corrected summary |
+| `llama3.1:8b` | A different model of similar size | A corrected summary |
+| `qwen2.5:14b` | A somewhat larger general model | A corrected summary |
+| `qwen3.8:27b-mlx` | A newer high-capacity reviewer | A corrected summary |
+| `qwen3:30b-a3b` | A newer high-capacity reviewer with fewer active parameters | A corrected summary |
 
-All models ran through Ollama with `temperature=0`, `seed=0`, and `num_ctx=16384`. I used one seed on a MacBook Pro M5 Pro with 64 GB of memory.
+All models ran through Ollama with `temperature=0`, `seed=0`, and `num_ctx=16384`, on a MacBook Pro M5 Pro with 64 GB of memory.
 
 ## How I Scored the Reviewers
 
@@ -129,58 +130,71 @@ For each claim from the first summary, I needed both the ground truth and the re
 | Supported | Disappeared | The reviewer removed true content |
 | Supported | Survived | The reviewer kept true content |
 
-
 ## Results
-
-### How Many Unsupported Claims Did They Catch?
-
-The first question was simple: how many unsupported claims did each reviewer catch?
-
-```text
-qwen3:8b      caught 3 of 12 unsupported claims
-qwen2.5:14b   caught 6 of 12 unsupported claims
-llama3.1:8b   caught 9 of 12 unsupported claims
-```
-
-That was below the target I wanted. I was looking for a reviewer that caught roughly 80% or more of the unsupported claims, and none of the general reviewers reached that.
 
 ### Which General Reviewer Was Best?
 
-At first glance, `llama3.1:8b` looks strongest because it caught the most unsupported claims.
+At first, the pattern looks simple: larger reviewers caught more unsupported claims.
 
-But that is only one part of the result. It caught more unsupported claims, but it also removed more claims the transcript supported.
+```text
+qwen3:8b         caught  3 of 12 unsupported claims
+qwen2.5:14b      caught  6 of 12 unsupported claims
+llama3.1:8b      caught  9 of 12 unsupported claims
+qwen3.8:27b-mlx  caught 10 of 12 unsupported claims
+qwen3:30b-a3b    caught 10 of 12 unsupported claims
+```
 
-A strong reviewer needs both: it should catch unsupported claims and leave supported claims alone.
+But catching more bad claims is only part of it. A reviewer can look better by removing more claims overall, including claims the transcript actually supports.
+
+```text
+qwen3:8b         wrongly removed  2 of 23 supported claims
+qwen2.5:14b      wrongly removed  2 of 23 supported claims
+llama3.1:8b      wrongly removed  7 of 23 supported claims
+qwen3.8:27b-mlx  wrongly removed  1 of 23 supported claims
+qwen3:30b-a3b    wrongly removed 10 of 23 supported claims
+```
+
+Looked at this way, the pattern looks weaker. The larger reviewers caught more unsupported claims, but most also removed more supported claims.
+
+To compare them fairly, I needed both numbers side by side: what they caught and what they wrongly removed.
 
 | Reviewer | Unsupported claims caught | Supported claims wrongly removed | Recall | Precision |
 | --- | ---: | ---: | ---: | ---: |
-| `qwen3:8b` on its own summary | 3 of 12 | 2 of 23 | 25% | 60% |
+| `qwen3:8b` | 3 of 12 | 2 of 23 | 25% | 60% |
 | `qwen2.5:14b` | 6 of 12 | 2 of 23 | 50% | 75% |
 | `llama3.1:8b` | 9 of 12 | 7 of 23 | 75% | 56% |
+| `qwen3:30b-a3b` | 10 of 12 | 10 of 23 | 83% | 50% |
+| `qwen3.8:27b-mlx` | 10 of 12 | 1 of 23 | 83% | 91% |
 
-So which model should you pick? It would depend on what you care about most:
+That makes `qwen3.8:27b-mlx` the best general reviewer in this test. It caught 10 of 12 unsupported claims while removing only 1 supported claim.
 
-- If you want to catch the most unsupported claims, pick `llama3.1:8b`.
-- If you want the best balance of caught unsupported claims and fewer bad removals, pick `qwen2.5:14b`.
-- If you want the fewest supported claims removed, `qwen3:8b` and `qwen2.5:14b` tie, but `qwen2.5:14b` catches more unsupported claims.
+`qwen3:30b-a3b` caught the same 10 unsupported claims, but it also removed 10 supported claims.
 
 ### Did the Reviewers Catch the Same Claims?
 
-Do different reviewer models catch the same unsupported claims? The grid below shows that they do not.
+Do different reviewer models catch the same unsupported claims? Not really. The grid below shows which reviewer removed which claim.
 
-![Grid of 12 unsupported claims across three reviewer models, with a filled dot where the reviewer removed that claim. Columns are sorted by how many reviewers caught each claim. Only claims C6 and C9 were caught by all three. Four claims were caught by two reviewers, four by one, and C11 and C12 by none. Row totals are 3 for qwen3:8b, 6 for qwen2.5:14b, and 9 for llama3.1:8b.](images/llm-review-reliability/which-reviewer-caught-which-claim.png)
+![Grid of 12 unsupported claims across five reviewer models, with a filled dot where the reviewer removed that claim. Only claims C6 and C9 were caught by every reviewer, and C11 was caught by none. Each stronger model catches close to a superset of the weaker one. Row totals are 3 for qwen3:8b, 6 for qwen2.5:14b, 9 for llama3.1:8b, and 10 for both qwen3.8:27b-mlx and qwen3:30b-a3b, whose rows are identical.](images/llm-review-reliability/which-reviewer-caught-which-claim.png)
 
-Only 2 unsupported claims were caught by every general reviewer, and 2 were missed by every reviewer. The other 8 depended on which model I used.
+Only 2 of the 12 unsupported claims were caught by every reviewer. One claim was missed by every reviewer.
 
-That means the reviewer stage **was not stable**. Swapping the reviewer changed which unsupported claims were removed.
+That means the reviewer choice still mattered. Most unsupported claims were caught by some models and missed by others, so the final summary depended on which model did the review.
 
-## What To Do Instead
+## How to Make Review More Reliable
 
-### Move Support Judgment to a Model Trained for It
+These results made one thing clear: I would not let a general reviewer silently delete claims on its own. Some unsupported claims survived, and some supported claims disappeared.
 
-So I tried a different kind of reviewer: a model trained to check whether a claim is supported by a document.
+To make the review step safer, I tried three changes:
 
-For that test, I used [bespoke-minicheck:7b](https://github.com/Liyan06/MiniCheck), an Ollama model for grounded fact-checking. It takes a source document and a claim, then predicts whether the source supports the claim.
+- Use a model trained for support judgment
+- Flag claims instead of deleting them
+- Remove a claim only when multiple reviewers flag it
+
+### Try a Model Trained for Support Judgment
+
+The general reviewers were being asked to rewrite a summary, but the real task was narrower: decide whether each claim was supported. Since there is a model trained for that exact judgment, I wanted to test whether it would do better.
+
+The model I chose was [bespoke-minicheck:7b](https://github.com/Liyan06/MiniCheck), an Ollama model for grounded fact-checking. It takes a source document and a claim, then predicts whether the source supports the claim.
 
 Compared with the general reviewers, `bespoke-minicheck:7b` changed both the input and the output:
 
@@ -189,16 +203,22 @@ Compared with the general reviewers, `bespoke-minicheck:7b` changed both the inp
 
 ![Side-by-side comparison of what each reviewer is asked. Both receive the same input, the full transcript. The general reviewer then receives a draft summary containing several claims and is asked to rewrite it and remove unsupported claims, returning a new summary. bespoke-minicheck:7b instead receives a single claim, "The council voted to oppose Proposition Six.", and is asked whether the transcript supports it, returning supported or unsupported.](images/llm-review-reliability/general-vs-minicheck-task.png)
 
-In this run, `bespoke-minicheck:7b` caught 10 of the 12 unsupported claims and removed 0 supported claims.
+Let's compare `bespoke-minicheck:7b` with other general reviewers.
 
-| Reviewer | Unsupported claims caught | Supported claims wrongly removed | Recall | Precision |
-| --- | ---: | ---: | ---: | ---: |
-| `qwen3:8b` | 3 of 12 | 2 of 23 | 25% | 60% |
-| `qwen2.5:14b` | 6 of 12 | 2 of 23 | 50% | 75% |
-| `llama3.1:8b` | 9 of 12 | 7 of 23 | 75% | 56% |
-| `bespoke-minicheck:7b` | 10 of 12 | 0 of 23 | 83% | 100% |
+| Reviewer | Unsupported claims caught | Supported claims wrongly removed | Total time |
+| --- | ---: | ---: | ---: |
+| `qwen3:8b` | 3 of 12 | 2 of 23 | 27.7s |
+| `qwen2.5:14b` | 6 of 12 | 2 of 23 | 50.5s |
+| `llama3.1:8b` | 9 of 12 | 7 of 23 | 40.3s |
+| `qwen3:30b-a3b` | 10 of 12 | 10 of 23 | 129.9s |
+| `qwen3.8:27b-mlx` | 10 of 12 | 1 of 23 | 63.0s |
+| `bespoke-minicheck:7b` | 10 of 12 | 0 of 23 | 10.2s |
 
-This was the only reviewer that met the target I wanted: catch around 80% of unsupported claims without removing supported ones.
+Compared with the two high-capacity reviewers, `bespoke-minicheck:7b` had the strongest overall result:
+
+- It caught the same 10 unsupported claims.
+- It removed no supported claims.
+- It finished faster than every rewrite-based reviewer.
 
 ### Flag Instead of Delete
 
@@ -240,22 +260,23 @@ Each rule fails in a different way:
 
 If missed unsupported claims are acceptable in your workflow, reviewer agreement can reduce bad removals. Otherwise, I would not rely on it as the main safety layer.
 
-## Should You Add a Reviewer?
+## How to Judge a Reviewer
 
-A reviewer can help when it has a narrow specific goal, such as:
+The main lesson is not about which model is best for reviewing. It is about how to judge reviewer models.
 
-- Higher recall: Catch more unsupported claims before they reach users.
-- Higher precision: Avoid removing claims the source actually supports.
-- Less manual review: Reduce how many claims a human has to inspect.
-- More visibility: Show which claims are uncertain instead of silently trusting the summary.
+A reviewer can improve an output, but it can also make new mistakes while making the answer look cleaner. If you only count what it catches, you miss what it changed, removed, or added by mistake.
 
-A reviewer cannot optimize all of those goals at once, so **choose the failure you care about most**.
+When you test a reviewer, measure the full effect:
 
-If **false claims reaching users** is the main risk, optimize for catching unsupported claims. That may fit user-facing summaries, policy documents, or legal and compliance workflows.
+- Did it catch the errors you care about?
+- Did it damage correct parts of the output?
+- Did it reduce human work, or just move the work elsewhere?
 
-If **losing true information** is the main risk, optimize for avoiding false removals. That may fit research summaries, meeting notes, or investigations where one missing detail can change the interpretation.
+If the biggest risk is showing users false information, optimize for catching more errors.
 
-My advice: **do not automate review and assume it works**. Label a small batch of claims, run the reviewers you are considering, and check whether the results match your needs. A few manual labels can keep you from seeing wrong information and acting on it.
+If the biggest risk is losing important information, optimize for removing fewer supported claims.
+
+My advice: **make the reviewer prove itself**. Test it on a small labeled set, and check both sides: what it improves and what it gets wrong before trusting it.
 
 ## Running the Code Yourself
 
