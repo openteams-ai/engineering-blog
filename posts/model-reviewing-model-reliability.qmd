@@ -52,8 +52,6 @@ final = reviewer_model(
 )
 ```
 
-Let's look at the kind of unsupported claim a reviewer model needs to catch.
-
 Here is the kind of unsupported claim the reviewer should catch.
 
 The transcript says the funding risk comes from Proposition Six passing:
