@@ -139,7 +139,7 @@ The first question was simple: how many unsupported claims did each reviewer cat
 ```text
 qwen3:8b      caught 3 of 12 unsupported claims
 qwen2.5:14b   caught 6 of 12 unsupported claims
-llama3.1:8b  caught 9 of 12 unsupported claims
+llama3.1:8b   caught 9 of 12 unsupported claims
 ```
 
 That was below the target I wanted. I was looking for a reviewer that caught roughly 80% or more of the unsupported claims, and none of the general reviewers reached that.
