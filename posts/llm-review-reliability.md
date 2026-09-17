@@ -286,6 +286,7 @@ Pull the models:
 
 ```bash
 ollama pull qwen3:8b && ollama pull llama3.1:8b && ollama pull qwen2.5:14b
+ollama pull qwen3.8:27b-mlx && ollama pull qwen3:30b-a3b
 ollama pull bespoke-minicheck:7b
 ```
 
@@ -297,6 +298,7 @@ cd notebooks/model-reviewing-model-reliability
 uv run scripts/natural.py .
 uv run scripts/crossmodel.py
 uv run scripts/agree.py
+uv run scripts/timing.py
 ```
 
 ## References
