@@ -154,7 +154,7 @@ qwen3.8:27b-mlx  wrongly removed  1 of 23 supported claims
 qwen3:30b-a3b    wrongly removed 10 of 23 supported claims
 ```
 
-Looked at this way, the pattern looks weaker. The larger reviewers caught more unsupported claims, but most also removed more supported claims.
+Looked at this way, the pattern looks weaker. One of the larger reviewers, `qwen3:30b-a3b`, caught more unsupported claims than the smaller ones, but it also removed more supported ones.
 
 To compare them fairly, I needed both numbers side by side: what they caught and what they wrongly removed.
 
