@@ -221,14 +221,15 @@ def get_ppma_author_term_ids(
     return term_ids
 
 
-def lookup_post_id_by_slug(
+def lookup_post_by_slug(
     slug: str, wp_token: str, wp_api_url: str, username: str
-) -> Optional[int]:
-    """Return the WordPress post ID for a given slug, or None if not found.
+) -> Optional[Dict]:
+    """Return {"id", "status"} for a given slug, or None if not found.
 
     Searches across all statuses (draft, publish, private, etc.) so that a
     publish run can locate posts it previously created, regardless of their
-    current state.
+    current state. The status matters because a PR preview creates the post
+    as a draft first, so publishing is a status change rather than a create.
     """
     headers = get_auth_headers(username, wp_token)
     response = requests.get(
@@ -240,7 +241,17 @@ def lookup_post_id_by_slug(
     if response.status_code != 200:
         return None
     results = response.json()
-    return results[0]["id"] if results else None
+    if not results:
+        return None
+    return {"id": results[0]["id"], "status": results[0].get("status", "")}
+
+
+def lookup_post_id_by_slug(
+    slug: str, wp_token: str, wp_api_url: str, username: str
+) -> Optional[int]:
+    """Return the WordPress post ID for a given slug, or None if not found."""
+    post = lookup_post_by_slug(slug, wp_token, wp_api_url, username)
+    return post["id"] if post else None
 
 
 def get_categories_map(wp_token: str, wp_api_url: str, username: str) -> Dict[str, int]:
