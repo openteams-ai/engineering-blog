@@ -34,9 +34,7 @@ I've tested the most popular GGUF collections on HuggingFace for the model:
 
 In the plots below, the X axis shows the total memory usage for weights + 128k unquantized K/V cache (f16/f16). DSpark drafter and scratch buffers are not included.
 
-In this first plot, we see the mean KLD of each GGUF quant. The plot highlights how,
-past IQ4_XS, the divergence shoots up vertically, indicating rapid loss of quality for
-very little additional size reduction.
+In this first plot, we see the mean KLD of each GGUF quant. The plot highlights how, past IQ4_XS, the divergence shoots up vertically, indicating rapid loss of quality for very little additional size reduction.
 
 ![Mean KLD (weights only)](images/MiniCPM5-2B-quantization/01_mean_KLD_f16_v2.png)
 
