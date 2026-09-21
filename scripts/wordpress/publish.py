@@ -23,7 +23,7 @@ from wordpress_utils import (
     get_auth_headers,
     get_user_id,
     get_ppma_author_term_ids,
-    lookup_post_id_by_slug,
+    lookup_post_by_slug,
     resolve_categories_and_tags,
     convert_markdown_to_html,
     verify_authentication,
@@ -52,10 +52,12 @@ def _ensure_required_categories(categories):
     return merged
 
 
-def _notify_slack_new_post(post_data: Dict, final_url: str) -> None:
-    """Fire the design-team Slack workflow when a NEW post is created.
+def _notify_slack_published(post_data: Dict, final_url: str) -> None:
+    """Fire the design-team Slack workflow when a post first goes live.
 
-    Sync updates are intentionally excluded so post edits don't re-notify.
+    Called only on the transition to `publish`, so editing a live post does
+    not re-notify. A post usually exists as a draft before this, because the
+    PR preview creates it, so creation alone is not the right trigger.
     No-op when SLACK_PUBLISH_WEBHOOK is unset (local runs).
     """
     webhook = os.environ.get("SLACK_PUBLISH_WEBHOOK")
@@ -275,7 +277,12 @@ def _validate_and_prepare(
 
 
 def _sync_existing_post(
-    file_path: str, post_data: Dict, wp_token: str, wp_api_url: str, username: str
+    file_path: str,
+    post_data: Dict,
+    wp_token: str,
+    wp_api_url: str,
+    username: str,
+    previous_status: str = "",
 ) -> bool:
     """Sync updates to an existing WordPress post."""
     print(f"Mode: sync (wordpress_id: {post_data['wordpress_id']})")
@@ -286,6 +293,10 @@ def _sync_existing_post(
     slug = wp_post.get("slug") or post_data.get("slug") or ""
     final_url = build_published_url(wp_api_url, slug)
     _record_wp_identifiers(file_path, post_data, wp_post["id"], final_url)
+    # The PR preview already created this post as a draft, so going live is a
+    # status change. Notify here, and only on the draft-to-live edge.
+    if previous_status != "publish" and wp_post.get("status") == "publish":
+        _notify_slack_published(post_data, final_url)
     return True
 
 
@@ -304,7 +315,8 @@ def _create_new_post(
     print(f"Draft URL: {wp_post['link']}")
     print(f"Published URL: {final_url}")
     _record_wp_identifiers(file_path, post_data, wp_post["id"], final_url)
-    _notify_slack_new_post(post_data, final_url)
+    if wp_post.get("status") == "publish":
+        _notify_slack_published(post_data, final_url)
     return True
 
 
@@ -326,12 +338,12 @@ def process_file(
         return False
     post_data["_default_status"] = default_status
 
-    existing_id = lookup_post_id_by_slug(
-        post_data["slug"], wp_token, wp_api_url, username
-    )
-    if existing_id:
-        post_data["wordpress_id"] = existing_id
-        return _sync_existing_post(file_path, post_data, wp_token, wp_api_url, username)
+    existing = lookup_post_by_slug(post_data["slug"], wp_token, wp_api_url, username)
+    if existing:
+        post_data["wordpress_id"] = existing["id"]
+        return _sync_existing_post(
+            file_path, post_data, wp_token, wp_api_url, username, existing["status"]
+        )
     return _create_new_post(file_path, post_data, wp_api_url, wp_token, username)
 
 
