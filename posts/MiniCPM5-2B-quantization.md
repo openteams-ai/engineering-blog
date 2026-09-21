@@ -13,7 +13,7 @@ focus_keyword: MiniCPM5-2B quantization
 
 The below measures show:
 
-- Mean KLD, for the sake of anchoring to a familiar measure. Note that I'm using a linear scale for the Y axis to highlight the quality cliff.
+- Mean [Kullback–Leibler divergence (KLD)](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence), for the sake of anchoring to a familiar measure. Note that I'm using a linear scale for the Y axis to highlight the quality cliff.
 - Same Sampled Token, a.k.a. collision cross-entropy, from [Quesma's brilliant blog post](https://quesma.com/blog/qwen-quantization-quality/), which is the probability that the model will produce the same token as the baseline when running at temperature=1. This differs from Top-1, which instead runs at temperature=0. Same Sampled Token shows the sharpest cliff behaviour among all synthetic measures and highlights outliers that are normally invisible on the Mean KLD report. In Quesma's blog, it is the synthetic measure whose shape most resembles the degradation actually measured by benchmarks.
 
 ## Weights quantization
@@ -34,29 +34,40 @@ I've tested the most popular GGUF collections on HuggingFace for the model:
 
 In the plots below, the X axis shows the total memory usage for weights + 128k unquantized K/V cache (f16/f16). DSpark drafter and scratch buffers are not included.
 
+In this first plot, we see the mean KLD of each GGUF quant. The plot highlights how,
+past IQ4_XS, the divergence shoots up vertically, indicating rapid loss of quality for
+very little additional size reduction.
+
 ![Mean KLD (weights only)](images/MiniCPM5-2B-quantization/01_mean_KLD_f16_v2.png)
+
+The Same Sampled Token plot confirms the cliff edge past IQ4_XS. However, this plot also shows a different, more realistic angle for lower quants, where Q5's emitted tokens remain very close to the unquantized model, which suggests that it's unlikely to be any measurable difference in benchmark quality. IQ4_XS sits quite a lot farther below, which increases the possibility that quality may start degrading. [Quesma](https://quesma.com/blog/qwen-quantization-quality/) and [ByteShape](https://byteshape.com/blogs/Evaluating-Quantized-Models/) however ran tests for Qwen3.8-27B (which, admittedly, is much larger) and could not find any noticeable degradation until past IQ4_XS. Crucially, the shape of the Same Sampled Token curve for MiniCPM5-2B looks the same as that of Qwen3.8-27B, which supports the hypothesis that the two models may behave in the same way during actual use.
 
 ![Same Sampled Token (weights only)](images/MiniCPM5-2B-quantization/02_sst_f16_v2.png)
 
 ## Stock K/V quants
 
-- On stock llama.cpp, `bartowski/MiniCPM5-2B-GGUF:Q6_K` with **q8_0/q8_0** KV cache is indistinguishable from the unquantized model; **q8_0/q5_0** is also almost lossless;
-- **q5_0/q5_0** KV cache lets you shed some weight for a small cost. Drop the K/V cache to q5_0/q5_0 first before increasing the quantization of the weights;
-- **q5_0/q4_0** shows contained degradation;
-- **q4_0/q4_0** is still useable - barely. If it's the only one that fits, you should consider switching to BeeLlama (read below). Again, you should drop KV cache to q4_0/q4_0 before dropping weights to Q4.
+Let's now add 128k tokens worth of K/V cache, a.k.a. context, to the measure, using just stock llama.cpp for the time being.
+
+- `bartowski/MiniCPM5-2B-GGUF:Q6_K` with `ctk=q8_0 ctv=q8_0` KV cache is indistinguishable from the unquantized model; `ctk=q8_0 ctv=q5_0` is also almost lossless;
+- `ctk=q5_0 ctv=q5_0` KV cache lets you shed some weight for a small cost. Drop the K/V cache to q5_0/q5_0 first before increasing the quantization of the weights;
+- `ctk=q5_0 ctv=q4_0` shows contained degradation;
+- `ctk=q4_0 ctv=q4_0` is still useable - barely. If it's the only one that fits, you should consider switching to BeeLlama (read below). Again, you should drop KV cache to q4_0/q4_0 before dropping weights to Q4.
 
 ![Stock K/V quants](images/MiniCPM5-2B-quantization/03_sst_stock_quants_v2.png)
 
 ## BeeLlama.cpp K/V quants
 
-- **q6_0/q6_0** is almost lossless and slightly smaller than q8_0/q5_0; **q5_0/q3_0** is strictly better than q4_0/q4_0 for the same size; **q4_0/q3_0** is still useable.
+[BeeLlama.cpp](https://github.com/Anbeeld/beellama.cpp) is a Llama.cpp fork, regularly sync'ed with upstream, that adds a wealth of options for the quantiation of the K/V cache: q6, q3, KVarN, and an exact fp16/f16 tail applied to the sliding window (of configurable size) of the most recent tokens.
+
+- `ctk=q6_0 ctv=q6_0` is almost lossless and slightly smaller than q8_0/q5_0; `ctk=q4_0 ctv=q3_0` is still useable.
 - An exact tail as small as the last 128 tokens drastically uplifts the highest quants, while it has a more modest benefit for larger ones. Whether this uplift actually reflects on real-life performance has yet to be proven. True performance is bounded between the best-case scenario, marked on the plot for t128, and the worst-case scenario where old tokens are extremely important, which will perform in line with the point for the same quant without tail.
 - Increasing the exact tail from 128 to 1024 tokens has a modest cost in size and equally modest performance improvement on the plot. However, it should make the worst-case scenario described above less likely to happen, so it is recommended.
+- Enabling the exact tail caused a 40% slowdown in prefill speed on CUDA, so it is not recommended for lower quants.
 
 ![BeeLlama.cpp K/V quants](images/MiniCPM5-2B-quantization/04_sst_beellama_v2.png)
 
-- **q3_0/q3_0** and **kvarn3** sit on the quality/size frontier in these plots - but only thanks to the uplift from the exact tail; their worst-case scenario is catastrophic. They are **not** recommended.
-- KVarN offers very little benefit in terms of quality/size compared to the equivalent traditional quants with the same exact tail. Note that KVarN has a minimum implicit exact tail of 128 tokens, so e.g. kvarn4's like-for-like comparison is q4_0/q4_0 with `kv-tail-tokens=128`. On CUDA, KVarN K/V cache was observed to be ~20% slower than traditional quants.
+- KVarN offers very little benefit in terms of quality/size compared to the equivalent traditional quants with the same exact tail. Note that KVarN has a minimum implicit exact tail of 128 tokens, so e.g. kvarn4's like-for-like comparison is q4_0/q4_0 with `kv-tail-tokens=128`. On CUDA, KVarN K/V cache was observed to introduce an additional ~20% slowdown compared to traditional quants with the same exact tail. KVarN is **not** recommended.
+- `ctk=q3_0 ctv=q3_0` and `kvarn3` sit on the quality/size frontier in these plots - but only thanks to the uplift from the exact tail; their worst-case scenario is catastrophic. They are **not** recommended.
 
 The plot below shows how the gap between best and worst case widens as the quantization increases:
 
@@ -70,15 +81,11 @@ Frontier abliterated weights + K/V cache combos on stock llama.cpp:
 
 ![Abliterated stock K/V quants](images/MiniCPM5-2B-quantization/06_sst_abliterated_stock_quants_v2.png)
 
-BeeLlama.cpp:
-
-![Abliterated BeeLlama.cpp K/V quants](images/MiniCPM5-2B-quantization/07_sst_abliterated_beellama_v2.png)
-
 ## Presets
 
 The below .ini files can be loaded with `llama-server --models-preset models.ini`.
 
-No-compromises setup, indistinguishable in quality from the original model. It occupies 7.1 GiB VRAM on CUDA, including drafter and scratch buffers:
+No-compromises setup, indistinguishable in quality from the unquantized model. It occupies 7.1 GiB VRAM on CUDA, including drafter and scratch buffers:
 
 ```ini
 [*]
@@ -93,6 +100,33 @@ hf = bartowski/MiniCPM5-2B-GGUF:Q6_K
 ctx-size = 131072
 cache-type-k = q8_0
 cache-type-v = q8_0
+
+temperature = 1.0
+top-p = 0.95
+min-p = 0.0
+
+spec-type = draft-dspark
+spec-draft-hf = openbmb/MiniCPM5-2B-DSpark-GGUF:DSpark
+spec-draft-ngl = 99
+spec-draft-n-max = 7
+```
+
+A slightly more constrained setup, which probably does not show any measurable quality degradation. 40% slower prefill on CUDA. It occupies 5.5 GiB VRAM and requires BeeLlama.cpp:
+
+```ini
+[*]
+flash-attn = on
+kv-unified = true
+jinja = true
+parallel = 4
+
+[MiniCPM5-2B]
+hf = NANI-Nithin/MiniCPM5-2B-GGUF:Q5_K_S
+
+ctx-size = 131072
+cache-type-k = q5_0
+cache-type-v = q3_0
+kv-tail-tokens = 1024
 
 temperature = 1.0
 top-p = 0.95
