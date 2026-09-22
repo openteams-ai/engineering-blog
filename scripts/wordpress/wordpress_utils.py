@@ -15,6 +15,7 @@ import base64
 import yaml
 import markdown
 from pathlib import Path
+from functools import lru_cache
 from typing import Optional, Dict, List, Any
 from pydantic import BaseModel, Field, field_validator
 
@@ -506,45 +507,97 @@ PRISM_LANGUAGE_MAP = {
 }
 
 
-def _build_prism_injection(
+PRISM_BASE = "https://cdn.jsdelivr.net/npm/prismjs@1"
+
+
+@lru_cache(maxsize=None)
+def _fetch_stylesheet(url: str) -> str:
+    """Download one Prism stylesheet, or return '' if it can't be fetched.
+
+    Cached because a publish run converts several posts and they share the
+    same handful of stylesheets. A failure here must never abort a publish:
+    the caller falls back to @import, which still renders, just a beat later.
+    """
+    try:
+        resp = requests.get(url, timeout=DEFAULT_TIMEOUT)
+        if resp.status_code != 200:
+            print(f"⚠️  {url} returned {resp.status_code}; falling back to @import")
+            return ""
+        css = resp.text.strip()
+    except requests.RequestException as exc:
+        print(f"⚠️  Could not fetch {url} ({exc}); falling back to @import")
+        return ""
+
+    # A stray closing tag in the payload would end our <style> element early
+    # and spill CSS into the page as text.
+    if "</style" in css.lower():
+        print(f"⚠️  {url} contains a closing style tag; falling back to @import")
+        return ""
+    return css
+
+
+def _build_inline_styles(urls: List[str]) -> str:
+    """Return one <style> element carrying every stylesheet in `urls`.
+
+    WordPress strips <link rel="stylesheet"> out of post content on save, so
+    the stylesheets this pipeline used to emit never reached the database and
+    code blocks rendered unstyled. <style> survives the same sanitizer, which
+    is why the Mermaid injection below has always worked. Inlining the bytes
+    also drops a render-blocking round trip per post.
+    """
+    chunks = [(url, _fetch_stylesheet(url)) for url in urls]
+    inlined = "\n".join(css for _, css in chunks if css)
+    imports = "".join(f'@import url("{url}");' for url, css in chunks if not css)
+
+    # @import has to lead the stylesheet, so keep any fallbacks at the front.
+    return f"<style>{imports}\n{inlined}</style>"
+
+
+def _build_prism_assets(
     languages: set, has_line_highlight: bool, has_command_line: bool
 ) -> str:
-    """Build the Prism.js CDN script/style tags for detected languages and plugins."""
-    prism_base = "https://cdn.jsdelivr.net/npm/prismjs@1"
+    """Build the Prism.js block for a post: inlined styles plus CDN scripts.
+
+    Scripts stay on the CDN because they survive WordPress's sanitizer as-is
+    and are far larger than the stylesheets.
+    """
+    stylesheets = [
+        f"{PRISM_BASE}/themes/prism.min.css",
+        f"{PRISM_BASE}/plugins/toolbar/prism-toolbar.min.css",
+    ]
 
     lang_scripts = [
-        f'<script src="{prism_base}/components/prism-{PRISM_LANGUAGE_MAP.get(lang, lang)}.min.js"></script>'
+        f'<script src="{PRISM_BASE}/components/prism-{PRISM_LANGUAGE_MAP.get(lang, lang)}.min.js"></script>'
         for lang in languages
         if PRISM_LANGUAGE_MAP.get(lang, lang) != "text"
     ]
 
-    plugin_assets = [
-        f'<link rel="stylesheet" href="{prism_base}/plugins/toolbar/prism-toolbar.min.css"/>',
-        f'<script src="{prism_base}/plugins/toolbar/prism-toolbar.min.js"></script>',
-        f'<script src="{prism_base}/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script>',
-        f'<script src="{prism_base}/plugins/show-language/prism-show-language.min.js"></script>',
+    plugin_scripts = [
+        f'<script src="{PRISM_BASE}/plugins/toolbar/prism-toolbar.min.js"></script>',
+        f'<script src="{PRISM_BASE}/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script>',
+        f'<script src="{PRISM_BASE}/plugins/show-language/prism-show-language.min.js"></script>',
     ]
     if has_line_highlight:
-        plugin_assets.append(
-            f'<link rel="stylesheet" href="{prism_base}/plugins/line-highlight/prism-line-highlight.min.css"/>'
+        stylesheets.append(
+            f"{PRISM_BASE}/plugins/line-highlight/prism-line-highlight.min.css"
         )
-        plugin_assets.append(
-            f'<script src="{prism_base}/plugins/line-highlight/prism-line-highlight.min.js"></script>'
+        plugin_scripts.append(
+            f'<script src="{PRISM_BASE}/plugins/line-highlight/prism-line-highlight.min.js"></script>'
         )
     if has_command_line:
-        plugin_assets.append(
-            f'<link rel="stylesheet" href="{prism_base}/plugins/command-line/prism-command-line.min.css"/>'
+        stylesheets.append(
+            f"{PRISM_BASE}/plugins/command-line/prism-command-line.min.css"
         )
-        plugin_assets.append(
-            f'<script src="{prism_base}/plugins/command-line/prism-command-line.min.js"></script>'
+        plugin_scripts.append(
+            f'<script src="{PRISM_BASE}/plugins/command-line/prism-command-line.min.js"></script>'
         )
 
     return (
         '\n<!-- wp:html -->\n'
-        f'<link rel="stylesheet" href="{prism_base}/themes/prism.min.css"/>\n'
-        f'<script src="{prism_base}/prism.min.js" data-manual></script>\n'
+        + _build_inline_styles(stylesheets) + "\n"
+        f'<script src="{PRISM_BASE}/prism.min.js" data-manual></script>\n'
         + "\n".join(lang_scripts) + "\n"
-        + "\n".join(plugin_assets) + "\n"
+        + "\n".join(plugin_scripts) + "\n"
         '<script>Prism.highlightAll();</script>\n'
         '<!-- /wp:html -->'
     )
@@ -630,7 +683,7 @@ def convert_markdown_to_html(
     if mermaid_blocks:
         html += _MERMAID_SCRIPT
     if languages:
-        html += _build_prism_injection(languages, has_hl, has_cmd)
+        html += _build_prism_assets(languages, has_hl, has_cmd)
 
     return html
 
