@@ -9,7 +9,7 @@ Posts are authored in Markdown (`.md`) or Quarto Markdown (`.qmd`) and automatic
 ## How It Works
 
 1. Write your post as a `.md` file in `posts/`.
-2. Open a pull request for review.
+2. Open a pull request for review, and answer the social brief CI adds to it.
 3. Once merged to `main`, a GitHub Actions workflow automatically publishes it to WordPress.
 
 Contributors do not need WordPress credentials.
@@ -37,7 +37,7 @@ Full reference for contributors writing engineering blog posts.
 2. Write your content in standard markdown.
 3. Add YAML frontmatter at the top of the file (see [Frontmatter](#frontmatter) below).
 4. *Optional:* If you use Claude Code, run `/seo-meta-description posts/your-article.md` to auto-generate title, slug, focus keyword, and meta description.
-5. *Optional:* Run `/create-posts-from-article posts/your-article.md` to draft the accompanying LinkedIn post. It writes three options to `social/your-article.md`. Pick one, edit it, and post it manually after the article goes live.
+5. Open a PR. CI commits a social brief to `social/<slug>.yml`: four short questions used to write the LinkedIn post. Answer them yourself or with your AI assistant, and push. The PR can't merge until you do. See [Social Brief](#social-brief).
 
 ### Preview
 
@@ -95,6 +95,57 @@ authors:
 ```
 
 The publish script matches posts to WordPress by `slug`, so do not change the slug of a live post. Renaming it orphans the existing WordPress post and creates a new draft under the new slug.
+
+### Social Brief
+
+Every new post needs an answered `social/<slug>.yml` before its PR can merge. It seeds the LinkedIn post for the article. CI commits it to your PR with the questions and empty answers. To create it earlier, run `uv run scripts/social/create_brief.py posts/your-article.md`.
+
+The comment above each field is its question, and the allowed values are listed for `audience`. The three written answers need at least 8 words each, so they carry the article's specifics. Good answers:
+
+- **`problem`:** What problem does this article solve? (1-2 sentences)
+- **`what_it_does`:** What does the article build, test, compare, or argue? (1-2 sentences)
+- **`remember_one_thing`:** If readers remember one thing, what should it be? (1 sentence)
+- **`audience`:** Who should read this? Pick one or more, usually the 1-3 groups the article is written for:
+  - `data-scientists`
+  - `ml-ai-engineers`
+  - `python-developers`
+  - `platform-devops-engineers`
+  - `security-compliance-engineers`
+  - `oss-maintainers`
+  - `engineering-leaders`
+
+You can either answer the questions yourself or with your AI assistant. To have your AI assistant answer them, run `/fill-social-brief posts/your-article.md`.
+
+#### Examples
+
+Here are some examples of social briefs from real posts in this repo:
+
+**An experiment** (`posts/llm-review-reliability.md`):
+
+```yaml
+problem: "Using a second model to review a first model's output might not be a reliable safety layer, as the second model can also be wrong."
+what_it_does: "Tests six local reviewer models on 35 hand-labeled claims from MeetingBank summaries, scoring how many unsupported claims each catches and how many true claims it wrongly deletes."
+remember_one_thing: "Ensure you test a reviewer model on a few samples yourself before relying on it as a safety layer in production."
+audience: ["ml-ai-engineers", "data-scientists"]
+```
+
+**An essay** (`posts/slow-down-youre-already-shipping-faster.md`):
+
+```yaml
+problem: "AI coding tools speed developers up so much that you might miss subtle bugs and security gaps."
+what_it_does: "Argues for a handful of habits: start from a reviewed plan, keep PRs small, make small edits by hand, keep instruction files lean, and have a different agent review the PR."
+remember_one_thing: "It is worth it to spend some time to ensure the AI did a good job instead of spending more time fixing the mistakes it makes later."
+audience: ["ml-ai-engineers", "engineering-leaders"]
+```
+
+**A benchmark** (`posts/benchmark-python-package-managers.md`):
+
+```yaml
+problem: "ML projects need packages from both conda-forge and PyPI, and conda is slow to solve while pip and poetry can't use conda-forge at all."
+what_it_does: "Benchmarks six package managers on one ML project with 25 direct dependencies split across conda-forge and PyPI, timing installs and lockfile generation."
+remember_one_thing: "Which tool is fastest depends on your project needs."
+audience: ["ml-ai-engineers", "python-developers"]
+```
 
 ### File Formats
 

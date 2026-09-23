@@ -1,0 +1,99 @@
+name: Social brief
+
+# Every new post needs an answered social/<slug>.yml before merge. It seeds the
+# LinkedIn post. This workflow commits the brief's questions to the PR branch as
+# an empty template, and fails the `social-brief` check until the author
+# answers them, by hand or with any AI assistant.
+# CI calls no model and needs no secrets.
+#
+# No paths filter: `social-brief` is a required check, and a required check
+# that never runs stays pending and blocks every PR that skips it. PRs without
+# a new post pass in a few seconds.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: social-brief-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  social-brief:
+    runs-on: ubuntu-latest
+    steps:
+      # The branch itself, not the merge commit, so the draft can be pushed
+      # back to it.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      # Only newly added posts need a brief. Edits to live articles don't.
+      # Three dots diff against the merge base, so posts that landed on main
+      # after this branch was cut don't count.
+      - name: Find new posts
+        id: detect
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          {
+            echo "post-files<<EOF"
+            git diff --name-only --diff-filter=A "$BASE_SHA"...HEAD -- \
+              'posts/*.md' 'posts/*.qmd'
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: astral-sh/setup-uv@v4
+        if: steps.detect.outputs.post-files != ''
+
+      - name: Install dependencies
+        if: steps.detect.outputs.post-files != ''
+        run: uv sync
+
+      # Forked PRs can't be pushed to, so they skip this. The check below
+      # tells their authors how to add the brief themselves.
+      - name: Add missing brief templates
+        id: template
+        if: >-
+          steps.detect.outputs.post-files != '' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          POST_FILES: ${{ steps.detect.outputs.post-files }}
+        run: |
+          # Post paths are slug-derived, so they never contain whitespace.
+          # shellcheck disable=SC2086
+          uv run scripts/social/create_brief.py $POST_FILES
+
+          if [ -n "$(git status --porcelain social/)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898+github-actions[bot]@users.noreply.github.com"
+            git add social/
+            git commit -m "chore(social): add social brief template"
+            git push
+            echo "added=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Tell the author what to do
+        if: steps.template.outputs.added == 'true'
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ### Social brief needed
+
+          `social/<slug>.yml` was committed to this branch with 4 short questions.
+          Answer them and push.
+
+          - **In the browser:** open the edit link in the failed check below.
+          - **Locally:** `git pull`, then answer them yourself or ask your AI
+            assistant to fill the brief from the post.
+          EOF
+
+      - name: Check briefs are answered
+        env:
+          POST_FILES: ${{ steps.detect.outputs.post-files }}
+        run: |
+          [ -z "$POST_FILES" ] && { echo "No new posts."; exit 0; }
+          # shellcheck disable=SC2086
+          uv run scripts/social/check_brief.py $POST_FILES
