@@ -19,6 +19,7 @@ concurrency:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   social-brief:
@@ -71,29 +72,44 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898+github-actions[bot]@users.noreply.github.com"
             git add social/
-            git commit -m "chore(social): add social brief template"
+            # [skip ci]: this commit only adds the template, and the check
+            # below already reports on it. Without this, GitHub queues a second
+            # run that waits for approval.
+            git commit -m "chore(social): add social brief template [skip ci]"
             git push
             echo "added=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Tell the author what to do
-        if: steps.template.outputs.added == 'true'
-        run: |
-          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
-          ### Social brief needed
-
-          `social/<slug>.yml` was committed to this branch with 4 short questions.
-          Answer them and push.
-
-          - **In the browser:** open the edit link in the failed check below.
-          - **Locally:** `git pull`, then answer them yourself or ask your AI
-            assistant to fill the brief from the post.
-          EOF
-
+      # Records the result instead of failing here, so the comment below is
+      # posted either way. The last step fails the job.
       - name: Check briefs are answered
+        id: check
         env:
           POST_FILES: ${{ steps.detect.outputs.post-files }}
         run: |
           [ -z "$POST_FILES" ] && { echo "No new posts."; exit 0; }
           # shellcheck disable=SC2086
-          uv run scripts/social/check_brief.py $POST_FILES
+          if uv run scripts/social/check_brief.py --comment comment.md $POST_FILES; then
+            echo "passed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "passed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # One comment per PR, edited on every push: it asks for the brief while
+      # answers are missing and says thanks once they're in. Same pinned action
+      # as preview-draft.yml. Forked PRs get a read-only token, so they rely on
+      # the check's own error message.
+      - name: Ask the author to fill in the brief
+        if: >-
+          steps.detect.outputs.post-files != '' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
+        with:
+          header: social-brief
+          path: comment.md
+
+      - name: Fail until every brief is answered
+        if: steps.check.outputs.passed == 'false'
+        run: |
+          echo "A social brief still needs answers. See the PR comment or the errors above."
+          exit 1
