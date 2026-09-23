@@ -13,7 +13,7 @@ At OpenTeams, my colleagues and I have contributed upstream to AI in Jupyter ove
 
 ## Navigating the space of Jupyter AI extensions
 
-New AI integrations keep popping up weekly. Many JupyterLab extensions are created to serve users at a university or a specific company, and are often not widely announced. A quick web search will only find the ones that were loud with marketing, not the ones that were silently maintained for a narrow group of users. This means that the community sometimes lacks a full picture. I would like the community to be able to map out which ideas were already explored and which remain underexplored.
+New AI integrations keep popping up weekly. Many JupyterLab extensions are created to serve users at a university or a specific company, and are rarely announced to the outside world. A quick web search will only find the ones that were loudly marketed, not the ones that were silently maintained for a narrow group of users. This means that the community sometimes lacks a full picture. I would like the community to be able to map out which ideas were already explored and which remain underexplored.
 
 For that reason, we started the list from over 1,200 PyPI packages that carry a JupyterLab classifier, searched them for AI terms and model SDKs, added a few npm and GitHub searches, and screened the licence of each candidate (see [method](https://github.com/openteams-ai/awesome-jupyter-ai/blob/main/CONTRIBUTING.md#how-the-list-was-assembled) for details).
 
