@@ -24,6 +24,8 @@ from pydantic import ValidationError
 from brief_schema import SocialBrief, brief_path, is_blank
 
 COMMENT_HEADER = "### Social brief"
+# The comment's link already says to answer the questions, so it skips this one.
+UNANSWERED = "Its 4 questions are unanswered."
 
 
 def github_url(path: str) -> str:
@@ -52,7 +54,7 @@ def find_problems(post_path: Path) -> List[str]:
 
     data = yaml.safe_load(target.read_text(encoding="utf-8")) or {}
     if is_blank(data):
-        return ["Its 4 questions are unanswered."]
+        return [UNANSWERED]
     try:
         SocialBrief.model_validate(data)
     except ValidationError as error:
@@ -94,27 +96,27 @@ def render_comment(results: Dict[Path, List[str]]) -> str:
     lines = [
         f"{COMMENT_HEADER} needed",
         "",
-        "This PR needs a social brief before it can merge: 4 short "
-        "questions about the article, used to write its LinkedIn post. "
-        f"See the {guide} section in the README for details.",
+        "Before this PR can merge, please answer 4 short questions about your post. "
+        "We use them to write its LinkedIn post.",
         "",
     ]
     for post, problems in pending.items():
         target = brief_path(post)
         link = edit_url(target)
-        name = f"[`{target}`]({link})" if link else f"`{target}`"
-        lines.append(f"**{name}** for `{post}`:")
-        lines += [f"- {problem}" for problem in problems]
+        action = f"Answer the questions in `{target}`"
+        lines.append(f"👉 **[{action}]({link})**" if link else f"👉 **{action}**")
+        lines += [f"- {problem}" for problem in problems if problem != UNANSWERED]
         lines.append("")
 
     lines += [
         "To fill it in, either:",
         "",
-        "- **In the browser:** click the brief above, answer the questions, and commit.",
+        "- **In the browser:** click the link above, answer the questions, and commit.",
         "- **With an AI assistant:** `git pull`, then run `/fill-social-brief "
         f"{next(iter(pending))}` (or ask any agent to fill in the brief from the post). "
         "Check its answers, then push.",
         "",
+        f"See {guide} in the README for what each question means, with examples. "
         "This comment updates on every push.",
     ]
     return "\n".join(lines) + "\n"
