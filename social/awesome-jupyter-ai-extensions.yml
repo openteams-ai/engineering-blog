@@ -3,14 +3,14 @@
 # README.md). The PR can merge once all four are answered.
 
 # What problem does this article solve? (1-2 sentences)
-problem: ""
+problem: "While the number of AI integrations for Jupyter grew, there was no curated list or map for the users and contributors to consult."
 
 # What does the article build, test, compare, or argue? (1-2 sentences)
-what_it_does: ""
+what_it_does: "It introduces Jupyter AI Awesome List and shares some observations and lessons on choosing the right AI integration tool."
 
 # If readers remember one thing, what should it be? (1 sentence)
-remember_one_thing: ""
+remember_one_thing: "Relying on open-source providers, models and code gives a better outcome in the long term than chasing the latest pitch from a closed-source vendor."
 
 # Who should read this? Pick one or more:
 # data-scientists, ml-ai-engineers, python-developers, platform-devops-engineers, security-compliance-engineers, oss-maintainers, engineering-leaders
-audience: []
+audience: ["data-scientists", "ml-ai-engineers", "python-developers", "engineering-leaders"]
