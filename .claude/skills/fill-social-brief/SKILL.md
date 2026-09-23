@@ -1,7 +1,7 @@
 ---
 name: fill-social-brief
 description: >
-  Fill in the social brief (social/<slug>.yml) for an engineering-blog post: the four short answers that the PR's required `social-brief` check asks for. Use when the author asks to "fill the social brief", "answer the brief", "fix the social-brief check", or when a PR adding a post fails that check. Operates on a posts/<file> path or a bare slug. This skill only answers the brief; it does not write the LinkedIn post.
+  Fill in the social brief (social/<slug>.yml) for an engineering-blog post: the four short answers that the PR's `social-brief` check asks for. Use when the author asks to "fill the social brief", "answer the brief", "fix the social-brief check", or when a PR adding a post fails that check. Operates on a posts/<file> path or a bare slug. This skill only answers the brief; it does not write the LinkedIn post.
 user-invocable: true
 ---
 

@@ -1,17 +1,26 @@
 name: Social brief
 
 # Every new post needs an answered social/<slug>.yml before merge. It seeds the
-# LinkedIn post. This workflow commits the brief's questions to the PR branch as
-# an empty template, and fails the `social-brief` check until the author
-# answers them, by hand or with any AI assistant.
+# LinkedIn post. This workflow asks for it in a PR comment, adds the empty
+# template to the PR branch when it can, and fails the `social-brief` check
+# until the author answers the questions, by hand or with any AI assistant.
 # CI calls no model and needs no secrets.
 #
-# No paths filter: `social-brief` is a required check, and a required check
-# that never runs stays pending and blocks every PR that skips it. PRs without
-# a new post pass in a few seconds.
+# Runs only on PRs that touch posts/, so other PRs don't show the check. It's
+# deliberately not a required check: GitHub can't require a check for only some
+# PRs, and a required check that never runs blocks merge forever. The required
+# review is the gate instead.
+#
+# pull_request_target, not pull_request, so PRs from forks also get a token
+# that can comment. That token has write access, so this workflow must never
+# run code from the PR: the scripts and dependencies come from main, and only
+# the PR's posts/ and social/ files are read, as data (YAML is parsed with
+# safe_load, posts are read as text).
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
+    paths:
+      - 'posts/**'
 
 concurrency:
   group: social-brief-${{ github.event.pull_request.number }}
@@ -24,28 +33,42 @@ permissions:
 jobs:
   social-brief:
     runs-on: ubuntu-latest
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+      HEAD_REF: ${{ github.event.pull_request.head.ref }}
+      SAME_REPO: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     steps:
-      # The branch itself, not the merge commit, so the draft can be pushed
-      # back to it.
+      # main, i.e. the trusted scripts. The PR is fetched separately below.
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
           fetch-depth: 0
+
+      # refs/pull/<n>/head exists in this repo for fork PRs too, unlike the
+      # branch name.
+      - name: Fetch the PR
+        run: git fetch --no-tags origin "refs/pull/$PR_NUMBER/head:pr-head"
 
       # Only newly added posts need a brief. Edits to live articles don't.
       # Three dots diff against the merge base, so posts that landed on main
       # after this branch was cut don't count.
       - name: Find new posts
         id: detect
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           {
             echo "post-files<<EOF"
-            git diff --name-only --diff-filter=A "$BASE_SHA"...HEAD -- \
+            git diff --name-only --diff-filter=A "$BASE_SHA"...pr-head -- \
               'posts/*.md' 'posts/*.qmd'
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
+
+      # Data only: the PR's posts and briefs, never its scripts or workflows.
+      - name: Read the PR's posts and briefs
+        if: steps.detect.outputs.post-files != ''
+        run: |
+          git checkout pr-head -- posts/
+          git checkout pr-head -- social/ 2>/dev/null || true
 
       - uses: astral-sh/setup-uv@v4
         if: steps.detect.outputs.post-files != ''
@@ -54,31 +77,33 @@ jobs:
         if: steps.detect.outputs.post-files != ''
         run: uv sync
 
-      # Forked PRs can't be pushed to, so they skip this. The check below
-      # tells their authors how to add the brief themselves.
+      # The token can't push to a fork, so fork PRs skip this. Their comment
+      # links to a pre-filled "new file" page on the fork instead.
       - name: Add missing brief templates
-        id: template
-        if: >-
-          steps.detect.outputs.post-files != '' &&
-          github.event.pull_request.head.repo.full_name == github.repository
+        if: steps.detect.outputs.post-files != '' && env.SAME_REPO == 'true'
         env:
           POST_FILES: ${{ steps.detect.outputs.post-files }}
         run: |
+          # The PR's tree, where the template gets committed. main's script
+          # writes it; nothing from the PR is executed.
+          git worktree add --quiet --detach ../pr pr-head
+          cd ../pr
           # Post paths are slug-derived, so they never contain whitespace.
           # shellcheck disable=SC2086
-          uv run scripts/social/create_brief.py $POST_FILES
+          uv run --project "$GITHUB_WORKSPACE" python \
+            "$GITHUB_WORKSPACE/scripts/social/create_brief.py" $POST_FILES
+          git add social/
+          git diff --cached --quiet && exit 0
 
-          if [ -n "$(git status --porcelain social/)" ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898+github-actions[bot]@users.noreply.github.com"
-            git add social/
-            # [skip ci]: this commit only adds the template, and the check
-            # below already reports on it. Without this, GitHub queues a second
-            # run that waits for approval.
-            git commit -m "chore(social): add social brief template [skip ci]"
-            git push
-            echo "added=true" >> "$GITHUB_OUTPUT"
-          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898+github-actions[bot]@users.noreply.github.com"
+          # [skip ci]: the check below already reports on this commit.
+          # Without it, GitHub queues a second run that waits for approval.
+          git commit --quiet -m "chore(social): add social brief template [skip ci]"
+          git push --quiet origin "HEAD:$HEAD_REF"
+          # So the check below sees the new templates.
+          mkdir -p "$GITHUB_WORKSPACE/social"
+          cp social/*.yml "$GITHUB_WORKSPACE/social/"
 
       # Records the result instead of failing here, so the comment below is
       # posted either way. The last step fails the job.
@@ -97,12 +122,9 @@ jobs:
 
       # One comment per PR, edited on every push: it asks for the brief while
       # answers are missing and says thanks once they're in. Same pinned action
-      # as preview-draft.yml. Forked PRs get a read-only token, so they rely on
-      # the check's own error message.
+      # as preview-draft.yml.
       - name: Ask the author to fill in the brief
-        if: >-
-          steps.detect.outputs.post-files != '' &&
-          github.event.pull_request.head.repo.full_name == github.repository
+        if: steps.detect.outputs.post-files != ''
         uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
         with:
           header: social-brief

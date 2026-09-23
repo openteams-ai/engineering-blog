@@ -2,7 +2,7 @@
 """
 Fail unless every given post has a fully answered social/<slug>.yml.
 
-Runs as the required `social-brief` check on pull requests. Inside GitHub
+Runs as the `social-brief` check on pull requests that touch posts/. Inside GitHub
 Actions each problem is also emitted as an error annotation on the brief file,
 and --comment writes the body of the PR comment that asks the author to fill
 the brief in.
@@ -17,40 +17,51 @@ import os
 import sys
 from pathlib import Path
 from typing import Dict, List
+from urllib.parse import quote
 
 import yaml
 from pydantic import ValidationError
 
-from brief_schema import SocialBrief, brief_path, is_blank
+from brief_schema import SocialBrief, brief_path, is_blank, render_template
 
 COMMENT_HEADER = "### Social brief"
 # The comment's link already says to answer the questions, so it skips this one.
 UNANSWERED = "Its 4 questions are unanswered."
+# Likewise for a missing brief: the comment links straight to creating it.
+MISSING = "The brief is missing."
 
 
-def github_url(path: str) -> str:
-    """A github.com URL for this repo, or "" outside GitHub Actions."""
-    repo = os.environ.get("GITHUB_REPOSITORY")
+def github_url(path: str, repo_var: str = "GITHUB_REPOSITORY") -> str:
+    """A github.com URL for a repo named in the environment, or "" outside CI."""
+    repo = os.environ.get(repo_var) or os.environ.get("GITHUB_REPOSITORY")
     if not repo:
         return ""
     server = os.environ.get("GITHUB_SERVER_URL", "https://github.com")
     return f"{server}/{repo}/{path}"
 
 
+def head_url(path: str) -> str:
+    """A URL in the repo the PR comes from, which is a fork for outside PRs."""
+    branch = os.environ.get("HEAD_REF") or os.environ.get("GITHUB_HEAD_REF")
+    return github_url(path.format(branch=branch), "HEAD_REPO") if branch else ""
+
+
 def edit_url(target: Path) -> str:
-    """The GitHub web-editor URL for the brief on this PR's branch."""
-    branch = os.environ.get("GITHUB_HEAD_REF")
-    return github_url(f"edit/{branch}/{target.as_posix()}") if branch else ""
+    """The GitHub web editor for the brief on the PR's branch."""
+    return head_url(f"edit/{{branch}}/{target.as_posix()}")
+
+
+def create_url(post_path: Path, target: Path) -> str:
+    """GitHub's "new file" page on the PR's branch, pre-filled with the template."""
+    template = quote(render_template(post_path))
+    return head_url(f"new/{{branch}}?filename={quote(target.as_posix())}&value={template}")
 
 
 def find_problems(post_path: Path) -> List[str]:
     """Return one fix-it message per problem with this post's brief."""
     target = brief_path(post_path)
     if not target.exists():
-        return [
-            "The brief is missing. Create it with "
-            f"`uv run scripts/social/create_brief.py {post_path}`."
-        ]
+        return [MISSING]
 
     data = yaml.safe_load(target.read_text(encoding="utf-8")) or {}
     if is_blank(data):
@@ -74,9 +85,9 @@ def report(post_path: Path, problems: List[str]) -> None:
     """Print problems to the log, plus annotations when in GitHub Actions."""
     target = brief_path(post_path)
     in_actions = os.environ.get("GITHUB_ACTIONS") == "true"
-    link = edit_url(target)
+    link = create_url(post_path, target) if MISSING in problems else edit_url(target)
     for problem in problems:
-        message = f"{target}: {problem}" + (f" Edit it: {link}" if link else "")
+        message = f"{target}: {problem}" + (f" Fix it here: {link}" if link else "")
         print(f"❌ {message}")
         if in_actions:
             print(f"::error file={target}::{message}")
@@ -102,10 +113,12 @@ def render_comment(results: Dict[Path, List[str]]) -> str:
     ]
     for post, problems in pending.items():
         target = brief_path(post)
-        link = edit_url(target)
-        action = f"Answer the questions in `{target}`"
+        if MISSING in problems:
+            link, action = create_url(post, target), f"Create `{target}` and answer its questions"
+        else:
+            link, action = edit_url(target), f"Answer the questions in `{target}`"
         lines.append(f"👉 **[{action}]({link})**" if link else f"👉 **{action}**")
-        lines += [f"- {problem}" for problem in problems if problem != UNANSWERED]
+        lines += [f"- {problem}" for problem in problems if problem not in (UNANSWERED, MISSING)]
         lines.append("")
 
     lines += [
