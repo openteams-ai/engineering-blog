@@ -6,9 +6,10 @@ name: Social brief
 # until the author answers the questions, by hand or with any AI assistant.
 # CI calls no model and needs no secrets.
 #
-# No paths filter: `social-brief` is a required check, and a required check
-# that never runs stays pending and blocks every PR that skips it. PRs without
-# a new post pass in a few seconds.
+# Runs only on PRs that touch posts/, so other PRs don't show the check. It's
+# deliberately not a required check: GitHub can't require a check for only some
+# PRs, and a required check that never runs blocks merge forever. The required
+# review is the gate instead.
 #
 # pull_request_target, not pull_request, so PRs from forks also get a token
 # that can comment. That token has write access, so this workflow must never
@@ -18,6 +19,8 @@ name: Social brief
 on:
   pull_request_target:
     types: [opened, synchronize, reopened]
+    paths:
+      - 'posts/**'
 
 concurrency:
   group: social-brief-${{ github.event.pull_request.number }}

@@ -2,7 +2,7 @@
 """
 Fail unless every given post has a fully answered social/<slug>.yml.
 
-Runs as the required `social-brief` check on pull requests. Inside GitHub
+Runs as the `social-brief` check on pull requests that touch posts/. Inside GitHub
 Actions each problem is also emitted as an error annotation on the brief file,
 and --comment writes the body of the PR comment that asks the author to fill
 the brief in.
