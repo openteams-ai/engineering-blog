@@ -124,7 +124,7 @@ Let the user choose.
 
 ## Step 5: Apply changes
 
-Edit the YAML frontmatter to add `meta_description` and `focus_keyword`. Insert them after `categories:` and before any `wordpress_*` fields, matching the ordering in [CLAUDE.md](CLAUDE.md).
+Edit the YAML frontmatter to add `meta_description` and `focus_keyword`. Insert them after `categories:` and before any `wordpress_*` fields, matching the ordering in [README.md](README.md).
 
 ## Step 6: On-page checklist
 
