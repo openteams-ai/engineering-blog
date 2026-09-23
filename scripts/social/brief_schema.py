@@ -50,10 +50,10 @@ class SocialBrief(BaseModel):
     def specific_enough(cls, value: str) -> str:
         words = len(value.split())
         if words == 0:
-            raise ValueError("is empty")
+            raise ValueError("is empty.")
         if words < MIN_WORDS:
             raise ValueError(
-                f"is only {words} words. Say more: at least {MIN_WORDS} words, with the "
+                f"is only {words} word{'' if words == 1 else 's'}. Say more: at least {MIN_WORDS} words, with the "
                 "article's specifics (tools, numbers, what was tested or argued)."
             )
         return value
