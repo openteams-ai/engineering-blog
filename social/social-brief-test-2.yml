@@ -3,14 +3,14 @@
 # README.md). The PR can merge once all four are answered.
 
 # What problem does this article solve? (1-2 sentences)
-problem: ""
+problem: "New posts need a social brief, and nobody has checked yet that the bot comment asks authors for one clearly."
 
 # What does the article build, test, compare, or argue? (1-2 sentences)
-what_it_does: ""
+what_it_does: "Adds a throwaway post so the social-brief workflow runs on a real pull request, then fills in the brief from the browser."
 
 # If readers remember one thing, what should it be? (1 sentence)
-remember_one_thing: ""
+remember_one_thing: "Authors can answer the brief from one link in the PR comment, without cloning the repo."
 
 # Who should read this? Pick one or more:
 # data-scientists, ml-ai-engineers, python-developers, platform-devops-engineers, security-compliance-engineers, oss-maintainers, engineering-leaders
-audience: []
+audience: ["python-developers"]
