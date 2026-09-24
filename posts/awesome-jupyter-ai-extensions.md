@@ -9,7 +9,9 @@ meta_description: "Find the right Jupyter AI extension: a curated map of 100+ ch
 focus_keyword: "jupyter ai extensions"
 ---
 
-At OpenTeams, my colleagues and I have contributed upstream to AI in Jupyter over the years: from the implementation of the inline completion API, which shipped in JupyterLab 4.1, through multiple versions of Jupyter AI, to in-browser JupyterLite AI. We have always cheered on other efforts to bring AI to Jupyter, whether they came from other maintainers or from new contributors, and whether they were under the official Project Jupyter umbrella or not. Over time the number of extensions grew until it became hard to keep track. The ease of extension development in the agentic LLM era and low maintenance cost due to stable APIs (which keep a solution developed years ago usable today) contributed to the increasing selection of extensions that users now have. We have now systematically catalogued AI extensions for Jupyter in [openteams-ai/awesome-jupyter-ai](https://github.com/openteams-ai/awesome-jupyter-ai), and I want to share a few lessons and observations.
+At OpenTeams, my colleagues and I have contributed upstream to AI in Jupyter over the years: from the implementation of the inline completion API, which shipped in JupyterLab 4.1, through multiple versions of Jupyter AI, to in-browser JupyterLite AI. We have always cheered on other efforts to bring AI to Jupyter, whether they came from other maintainers or from new contributors, and whether they were under the official Project Jupyter umbrella or not. We love sharing the interesting extensions with the community and the discussions around the new ideas.
+
+Over time the number of extensions grew until it became hard to keep track. The ease of extension development in the agentic LLM era and low maintenance cost due to stable APIs (which keep a solution developed years ago usable today) contributed to the increasing selection of extensions that users now have. We have now systematically catalogued AI extensions for Jupyter in [openteams-ai/awesome-jupyter-ai](https://github.com/openteams-ai/awesome-jupyter-ai), and I want to share a few lessons and observations.
 
 ## Navigating the space of Jupyter AI extensions
 
@@ -23,7 +25,7 @@ The extension API of JupyterLab has been stable since the 4.0 release, so the li
 
 The main list has 103 entries in ten sections, and a separate historical file has 19 more:
 
-| Section | What it covers | Entries | Example |
+| Section | What it covers | Number of extensions | Example |
 | --- | --- | ---: | --- |
 | [Chat panels and agents](https://github.com/openteams-ai/awesome-jupyter-ai#chat-panels-and-agents) | A panel you type into, which can read and edit your notebook | 28 | [Jupyter AI](https://github.com/jupyterlab/jupyter-ai) |
 | [Inline completion](https://github.com/openteams-ai/awesome-jupyter-ai#inline-completion) | Ghost text as you type | 6 | [jupyter-copilot](https://github.com/baolong281/jupyter-copilot) |
@@ -35,7 +37,6 @@ The main list has 103 entries in ten sections, and a separate historical file ha
 | [Building blocks: live reload](https://github.com/openteams-ai/awesome-jupyter-ai#live-reload) | Update the open notebook when an agent edits the file | 5 | [jupyter-collaboration](https://github.com/jupyterlab/jupyter-collaboration) |
 | [Building blocks: MCP](https://github.com/openteams-ai/awesome-jupyter-ai#mcp) | Agents outside JupyterLab, and JupyterLab commands as tools | 7 | [Jupyter MCP Server](https://github.com/datalayer/jupyter-mcp-server) |
 | [Beyond the JupyterLab UI](https://github.com/openteams-ai/awesome-jupyter-ai#beyond-the-jupyterlab-ui) | Command line tools, magics and models used next to Jupyter | 9 | [nb-cli](https://github.com/jupyter-ai-contrib/nb-cli) |
-| [Historical](https://github.com/openteams-ai/awesome-jupyter-ai/blob/main/HISTORICAL.md) | No commit for two years, archived, or the service is gone | 19 | [Chapyter](https://github.com/chapyter/chapyter) |
 
 ## How to choose one
 
