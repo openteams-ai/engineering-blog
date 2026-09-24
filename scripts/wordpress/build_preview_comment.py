@@ -21,15 +21,12 @@ SHADOW_NOTE = (
     "untouched, and the duplicate is trashed when this PR closes."
 )
 
+# A GitHub alert box, so authors see it before asking why their name is wrong.
 AUTHOR_NOTE_TEMPLATE = (
-    "The byline is wrong on {who}, because {names} {verb} not a WordPress user "
-    "yet. Authors are created when `authors.yml` reaches main, so this "
-    "corrects itself on merge. Everything else renders normally."
-)
-
-THEME_NOTE = (
-    "These render in the live theme, so the Elementor lightbox, brand fonts, "
-    "and content column all behave as they will on publish."
+    "> [!IMPORTANT]\n"
+    "> **The author name on {who} is wrong, and that's expected.** {names} "
+    "{verb} not {users} yet, so the preview shows a placeholder author. "
+    "The real name appears when this PR merges."
 )
 
 LOGIN_NOTE = (
@@ -55,7 +52,7 @@ def preview_table(previews: List[Dict]) -> List[str]:
 
 
 def author_note(previews: List[Dict]) -> str:
-    """Warn about substituted bylines, or return an empty string."""
+    """Warn about substituted author names, or return an empty string."""
     affected = [r for r in previews if r.get("author_fallback")]
     if not affected:
         return ""
@@ -65,11 +62,12 @@ def author_note(previews: List[Dict]) -> str:
         who="this preview" if len(affected) == 1 else "some of these previews",
         names=", ".join(f"`{name}`" for name in names),
         verb="is" if len(names) == 1 else "are",
+        users="a WordPress user" if len(names) == 1 else "WordPress users",
     )
 
 
 def access_note(previews: List[Dict]) -> str:
-    """Explain who can open these links and for how long.
+    """Say how long the links work, or that they need a WordPress login.
 
     Falls back to the login-required wording unless every link is public, so
     a partial failure never overstates what a reviewer can do.
@@ -78,11 +76,12 @@ def access_note(previews: List[Dict]) -> str:
         return LOGIN_NOTE
 
     expiry = next((r["expires"] for r in previews if r.get("expires")), "")
-    deadline = f" They stay valid until **{expiry}**." if expiry else ""
-    return (
-        "Anyone with the link can open them, no WordPress account needed."
-        f"{deadline} Push anything to this PR to reissue them."
-    )
+    one = len(previews) == 1
+    links = "This preview link works" if one else "These preview links work"
+    renew = "a new one" if one else "new ones"
+    if not expiry:
+        return f"Push anything to this PR to get {'a new link' if one else 'new links'}."
+    return f"{links} until **{expiry}**. Push anything to this PR to get {renew}."
 
 
 def render(results: List[Dict]) -> str:
@@ -96,7 +95,6 @@ def render(results: List[Dict]) -> str:
         blocks.append("\n".join(preview_table(previews)))
         if any(r.get("shadow") for r in previews):
             blocks.append(SHADOW_NOTE)
-        blocks.append(THEME_NOTE)
         blocks.append(access_note(previews))
         byline = author_note(previews)
         if byline:
