@@ -112,8 +112,9 @@ def _prepare_wp_context(post_data: Dict, wp_token: str, wp_api_url: str, usernam
 
     # PublishPress renders the byline, and an update that omits ppma_author
     # leaves whatever the post already had. Silently keeping a previous
-    # author's name is worse than refusing to publish.
-    if authors and ppma_author_ids == []:
+    # author's name is worse than refusing to publish. Only a PR preview
+    # turns this off; see process_file.
+    if authors and ppma_author_ids == [] and post_data.get("_require_byline", True):
         print(f"  ❌ No PublishPress author term for: {', '.join(authors)}")
         print("     Run sync_authors.py so the byline resolves.")
         return None
@@ -326,17 +327,24 @@ def process_file(
     wp_token: str,
     wp_api_url: str,
     default_status: str = "draft",
+    require_byline: bool = True,
 ) -> bool:
     """Publish or sync a markdown file to WordPress.
 
     default_status is used for NEW posts only and only when frontmatter
     does not specify `status`. Sync mode preserves whatever status the
     post already has in WordPress.
+
+    require_byline=False lets a post through when none of its authors has a
+    PublishPress term. preview_draft.py passes it for a first-time author's
+    draft, which it has re-authored to the API user. Publishing on merge
+    keeps the default, so the live byline always resolves.
     """
     post_data = _validate_and_prepare(file_path, username, wp_token, wp_api_url)
     if not post_data:
         return False
     post_data["_default_status"] = default_status
+    post_data["_require_byline"] = require_byline
 
     existing = lookup_post_by_slug(post_data["slug"], wp_token, wp_api_url, username)
     if existing:

@@ -257,14 +257,21 @@ def publish_target(
         copy.unlink(missing_ok=True)
 
 
-def create_draft(file_path: str, slug: str, auth: WordPressAuth) -> Optional[Dict]:
+def create_draft(
+    file_path: str, slug: str, auth: WordPressAuth, require_byline: bool = True
+) -> Optional[Dict]:
     """Publish a file as a draft and return the resulting post, or None.
 
     process_file reports only success or failure, so the post is re-resolved
     by slug to recover the ID that the preview URL needs.
     """
     if not process_file(
-        file_path, auth.username, auth.token, auth.api_url, default_status="draft"
+        file_path,
+        auth.username,
+        auth.token,
+        auth.api_url,
+        default_status="draft",
+        require_byline=require_byline,
     ):
         return None
     return lookup_post_by_slug(slug, auth)
@@ -317,7 +324,12 @@ def preview_file(
         target,
         target_slug,
     ):
-        created = create_draft(target, target_slug, auth)
+        # publish.py refuses a post whose authors have no PublishPress term,
+        # and no term carries the API user's login as its slug. The PR comment
+        # already says this byline is wrong, so let the draft through.
+        created = create_draft(
+            target, target_slug, auth, require_byline=not missing_author
+        )
 
     if not created:
         return {**result, "reason": "could not create the draft; see the log above"}

@@ -36,6 +36,7 @@ jobs:
     env:
       PR_NUMBER: ${{ github.event.pull_request.number }}
       BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
       HEAD_REF: ${{ github.event.pull_request.head.ref }}
       SAME_REPO: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
@@ -45,10 +46,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      # refs/pull/<n>/head exists in this repo for fork PRs too, unlike the
-      # branch name.
+      # By the SHA this event is for. refs/pull/<n>/head can still point at
+      # the previous push when the job starts, and the check then reads the
+      # old brief. This repo serves a fork PR's commit by SHA too.
       - name: Fetch the PR
-        run: git fetch --no-tags origin "refs/pull/$PR_NUMBER/head:pr-head"
+        run: git fetch --no-tags origin "+$HEAD_SHA:refs/heads/pr-head"
 
       # Only newly added posts need a brief. Edits to live articles don't.
       # Three dots diff against the merge base, so posts that landed on main
