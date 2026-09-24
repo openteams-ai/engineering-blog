@@ -2,12 +2,8 @@
 title: "Where Does Jev Fit in a Software Supply Chain? We Benchmarked It Against the Open Alternatives"
 slug: jev-bench-package-curation
 authors:
-- brandon-geraci
-categories:
-- Engineering
-meta_description: "We benchmarked TypeSafe's Jev, Laya, CLM-8B and Claude Haiku on five package-curation triage tasks. A fine-tuned 421M model matched Jev at a tenth of the latency."
-focus_keyword: jev benchmark
----
+- brandon-geraci categories:
+- Engineering meta_description: "We benchmarked TypeSafe's Jev, Laya, CLM-8B and Claude Haiku on five package-curation triage tasks. A fine-tuned 421M model matched Jev at a tenth of the latency." focus_keyword: jev benchmark ---
 
 ## Why I'm looking at this at all
 
@@ -49,15 +45,12 @@ Seven columns: Jev, Claude Haiku 4.5, Laya off the shelf, Laya after I fine-tune
 
 My first pass was full of accidental unfairness. Laya reads 1k tokens, CLM 2k, Jev 32k. CLM caches embeddings so a repeated input answers in a millisecond. The fine-tuned models saw a different rendering of the input than the hosted ones. A friend looked at it and said: cap the context for everyone, and make context its own experiment. He was right.
 
-1. Every model gets the exact same bytes. The state is rendered to plain `key: value` text and cut at 768 tokens,
-with 256 left for the question, so even the smallest model reads the whole thing.
+1. Every model gets the exact same bytes. The state is rendered to plain `key: value` text and cut at 768 tokens, with 256 left for the question, so even the smallest model reads the whole thing.
 2. Every number is on a held-out test split the fine-tunes never saw.
 3. Both fine-tunes train on the same labels, three random seeds each, and I report the spread.
-4. Latency is one request at a time, cold cache, fresh server, from my desk. The hosted models include my home
-internet, because that's what a real deployment would see too.
+4. Latency is one request at a time, cold cache, fresh server, from my desk. The hosted models include my home internet, because that's what a real deployment would see too.
 5. Context is a separate sweep afterwards.
-6. Where the data leaks, I say so. The typosquat positives have templated README and publisher fields, because
-the malicious packages are gone from the registries, and a fine-tuned model learns the template. Those cells are marked and kept out of every claim.
+6. Where the data leaks, I say so. The typosquat positives have templated README and publisher fields, because the malicious packages are gone from the registries, and a fine-tuned model learns the template. Those cells are marked and kept out of every claim.
 
 ## What I got
 
@@ -104,11 +97,9 @@ The context sweep is the friend's experiment. Reachability needs to see the whol
 
 I couldn't leave the black box alone, so I ran a few hundred controlled calls against it.
 
-- Billed output tokens grow by about 9 per answer option. 64 options billed 584 tokens. Latency didn't move. A
-model writing 584 tokens would take seconds. The "output" is an accounting of the answer's size, not generation.
+- Billed output tokens grow by about 9 per answer option. 64 options billed 584 tokens. Latency didn't move. A model writing 584 tokens would take seconds. The "output" is an accounting of the answer's size, not generation.
 - Twenty questions in one call cost the same as one. They're scored in parallel.
-- Reading cost is small: about 8 ms per thousand tokens on top of a floor near 115 ms. It read 16,000 tokens in a
-quarter of a second.
+- Reading cost is small: about 8 ms per thousand tokens on top of a floor near 115 ms. It read 16,000 tokens in a quarter of a second.
 - The same input twenty times: no speedup. No cache.
 - Reversing the option order flipped 0 of 60 quarantine answers, 2 of 60 curation, 4 of 60 license.
 
@@ -120,8 +111,7 @@ Jev is a week old and there are already eight or so independent evaluations. On 
 
 ## What I didn't test
 
-- My own queue. Everything here is public or synthetic, and two of the five tasks are synthetic enough that a
-fine-tune can learn the template. The next step is real review decisions through the same harness.
+- My own queue. Everything here is public or synthetic, and two of the five tasks are synthetic enough that a fine-tune can learn the template. The next step is real review decisions through the same harness.
 - Load. One stream on a quiet box. A real soak test with p99s is separate work.
 - CPU. Laya on a Ryzen 5900X was 270 to 710 ms per item. I didn't try ONNX.
 - Adversarial READMEs. They're attacker-controlled and none of the open models have any defense.
