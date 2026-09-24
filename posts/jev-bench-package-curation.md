@@ -103,7 +103,9 @@ He was right.
 
 ## What I got
 
-![Accuracy on held-out test splits, four honest tasks, five engines](images/jev-bench-package-curation/accuracy-by-task.png)
+![Accuracy heatmap: six engines by four tasks, with the difference from Jev in percentage points](images/jev-bench-package-curation/accuracy-heatmap.png)
+
+Left: darker is more accurate. Right: amber is worse than the hosted model, blue is better, gray is a wash.
 
 | Task | Jev | Haiku 4.5 | Laya (off the shelf) | Laya tuned ×3 | CLM-8B | CLM tuned ×3 |
 |---|---|---|---|---|---|---|
