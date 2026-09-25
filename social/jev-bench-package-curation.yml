@@ -3,14 +3,14 @@
 # README.md). The PR can merge once all four are answered.
 
 # What problem does this article solve? (1-2 sentences)
-problem: ""
+problem: "A package registry proxy sees millions of artifacts and nobody can approve them one at a time, so the review queue has to be sorted by a model that gives a label and a confidence without generating text or running code."
 
 # What does the article build, test, compare, or argue? (1-2 sentences)
-what_it_does: ""
+what_it_does: "Benchmarks TypeSafe Jev, the open Laya and CLM-8B models, and Claude Haiku 4.5 on five package-curation tasks built from public data, with identical capped inputs, held-out test splits, three seeds per fine-tune and cold single-stream latency."
 
 # If readers remember one thing, what should it be? (1 sentence)
-remember_one_thing: ""
+remember_one_thing: "A hosted decision model is for the questions you have not asked yet; once you have labels, a small model you own can match it on your questions at a fraction of the latency."
 
 # Who should read this? Pick one or more:
 # data-scientists, ml-ai-engineers, python-developers, platform-devops-engineers, security-compliance-engineers, oss-maintainers, engineering-leaders
-audience: []
+audience: ["security-compliance-engineers", "platform-devops-engineers", "ml-ai-engineers"]
