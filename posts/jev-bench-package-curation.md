@@ -9,7 +9,7 @@ meta_description: "We benchmarked TypeSafe's Jev, Laya, CLM-8B and Claude Haiku 
 focus_keyword: jev benchmark
 ---
 
-I'm building [artifact-keeper](https://github.com/brandonrc/artifact-keeper), an open source artifact manager that sits in front of your package registries and decides what gets in. Most of that is deterministic: allow, block, or send to a review queue. The review queue is the problem. At any real scale it's millions of artifacts, and nobody is going to approve them one at a time. If the curation isn't automated, the product doesn't get adopted.
+I'm building [artifact-keeper](https://github.com/brandonrc/artifact-keeper), an open source artifact manager that sits in front of your package registries and decides what gets in. Most of that is deterministic: allow, block, or send to a review queue. The review queue is the problem. At any real scale it's millions of artifacts, and nobody is going to approve them one at a time. Not every team needs this automated, but for some of them it's the whole value of the project.
 
 The questions in that queue are small ones. Is this package a typosquat of something popular, or a fork with a similar name? What license family is this LICENSE file that doesn't match an SPDX id? Does this scanner finding reach anything in the declared dependency graph? Why was this artifact quarantined? Each one needs a label and a confidence, not a paragraph. Get it wrong and someone reviews things in a slightly worse order.
 
