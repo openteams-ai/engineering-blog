@@ -29,7 +29,7 @@ I've been hesitant about LLMs in a project like this from the start, and I still
 
 So when TypeSafe launched Jev in September and called it a "System One model", I paid attention, because it's a different shape of thing. You give it a state and a typed question with a fixed set of answers, and it gives you a probability for each answer. No text. No tool calls. A decision with a limited scope, based on rules I wrote. That is automation I can get behind. A bash script on steroids, if you like. It can't wander off.
 
-People at my company pushed back immediately. Jev isn't new, they said. It's a classifier. Classifiers have been around for decades. Why would we need this, and why would it be better than something we host ourselves? Fair question, and I wanted the answer to be "we can own it". Then two open alternatives appeared the same week, Laya and CLM-8B, and Claude Haiku exists as the "just use an LLM" baseline. So I built a benchmark and ran them all.
+The common pushback is that Jev isn't new. It's a classifier, and classifiers have been around for decades, so why pay for one, and why would it beat something you host yourself? Fair question, and I wanted the answer to be "we can own it". Then two open alternatives appeared the same week, Laya and CLM-8B, and Claude Haiku exists as the "just use an LLM" baseline. So I built a benchmark and ran them all.
 
 ## What I tested
 
@@ -75,7 +75,7 @@ Accuracy on held-out test splits with 768-token capped inputs. Fine-tuned column
 
 I was rooting for Jev going in. I like new technology. Here's what actually happened.
 
-**Off the shelf, the open models were at chance.** Laya scored 31% on curation and 23% on license with no training. CLM was worse. Jev, also with no training, scored 94% and 63% on the same items. That gap is the product TypeSafe is selling: a model that reads a rubric I wrote five minutes ago and mostly gets it right. My colleagues are correct that it's a classifier. They're wrong that it's nothing new. Delivering a general one that works on a rubric it has never seen, packaged so you can use it in an afternoon, is new. Nobody had shipped that.
+**Off the shelf, the open models were at chance.** Laya scored 31% on curation and 23% on license with no training. CLM was worse. Jev, also with no training, scored 94% and 63% on the same items. That gap is the product TypeSafe is selling: a model that reads a rubric I wrote five minutes ago and mostly gets it right. Some will say it's just a classifier, and they're right about that part. Where they're wrong is "nothing new". Delivering a general one that works on a rubric it has never seen, packaged so you can use it in an afternoon, is new. Nobody had shipped that.
 
 **Fifteen minutes of training flipped it.** This is the part that shocked me. Laya fine-tuned on my train split, three times with different seeds, on the two 3090s in my office: 99.6% on quarantine, 98% on curation, 84% on reachability, 78% on license. Jev was 100, 94, 89, 63. A 421 million parameter model I own matched or beat the hosted one on every honest task, at 21 milliseconds against 135. On license it wasn't close, because it learned the strange corners of ScanCode's taxonomy from the labels, and no rubric can teach a hosted model that.
 
