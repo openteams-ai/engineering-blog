@@ -1,12 +1,14 @@
 ---
-title: "Awesome Jupyter AI: A Map of 100+ Jupyter Extensions for AI"
+title: 'Awesome Jupyter AI: A Map of 100+ Jupyter Extensions for AI'
 slug: awesome-jupyter-ai-extensions
 authors:
-  - michal-krassowski
+- michal-krassowski
 categories:
-  - Engineering
-meta_description: "Find the right Jupyter AI extension: a curated map of 100+ chat panels, inline completers, agent bridges and MCP servers for JupyterLab and Notebook 7."
-focus_keyword: "jupyter ai extensions"
+- Engineering
+meta_description: 'Find the right Jupyter AI extension: a curated map of 100+ chat panels, inline completers, agent bridges and MCP servers for JupyterLab and Notebook 7.'
+focus_keyword: jupyter ai extensions
+wordpress_id: 40334
+wordpress_url: https://openteams.com/awesome-jupyter-ai-extensions/
 ---
 
 At OpenTeams, my colleagues and I have contributed upstream to AI in Jupyter over the years: from the implementation of the inline completion API, which shipped in JupyterLab 4.1, through multiple versions of Jupyter AI, to in-browser JupyterLite AI. We have always cheered on other efforts to bring AI to Jupyter, whether they came from other maintainers or from new contributors, and whether they were under the official Project Jupyter umbrella or not. We love sharing the interesting extensions with the community and the discussions around the new ideas.
