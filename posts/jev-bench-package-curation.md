@@ -89,6 +89,8 @@ Jev is a week old and there are already eight or so independent evaluations. On 
 
 Our own queue, which is the real test; everything here is public or synthetic. Load beyond one stream. CPU, where Laya was 15 to 25x slower. Adversarial READMEs, which are attacker-controlled and which none of the open models defend against.
 
+And a plain classifier. Two reviewers asked why not skip the neural network entirely, and for some of these tasks that's the right call. Quarantine reason is templated text, curation review is mostly structured fields, and reachability is computable. A logistic regression or gradient-boosted model on those would likely match the fine-tuned Laya at a fraction of the cost, and it's the baseline the next post adds. What the decision models buy is different: the question is the input, so a new policy is a sentence in config instead of a feature pipeline, they read free text with meaning, and they work before you have any labels. For a fixed question with labels in hand, use the classifier.
+
 ## Where this leaves me
 
 I'm not deciding how this goes into artifact-keeper yet. Whether the decision engine lives inside the Rust service or beside it depends on one more experiment: a Qwen-class open model, a few billion parameters, trained the way Laya trains but with a reader that handles 32k tokens, on my own forms. I expect it to land between fine-tuned Laya and Jev on accuracy, near Jev on speed once the network is gone, and to hold up better on questions it hasn't seen.
