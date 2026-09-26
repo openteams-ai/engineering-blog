@@ -11,9 +11,9 @@ focus_keyword: jev benchmark
 
 I'm building [artifact-keeper](https://github.com/brandonrc/artifact-keeper), an open source artifact manager that sits in front of your package registries and decides what gets in. Most of that is deterministic: allow, block, or send to a review queue. The review queue is the problem. At any real scale it's millions of artifacts, and nobody is going to approve them one at a time. Not every team needs this automated, but for some of them it's the whole value of the project.
 
-The questions in that queue are small ones. Is this package a typosquat of something popular, or a fork with a similar name? What license family is this LICENSE file that doesn't match an SPDX id? Does this scanner finding reach anything in the declared dependency graph? Why was this artifact quarantined? Each one needs a label and a confidence, not a paragraph. Get it wrong and someone reviews things in a slightly worse order.
+The questions in that queue are small ones. Is this package a typosquat of something popular, or a fork with a similar name? What license family is this LICENSE file that doesn't match an SPDX id? Does this scanner finding reach anything in the declared dependency graph? Why was this artifact quarantined? Each one needs a label and a confidence, not a paragraph. A wrong answer on any single one just means a person reviews things in a slightly worse order, which is what makes the queue safe to automate. The reason to automate it at all is what's coming through it.
 
-The stakes behind those small questions are not small. Sonatype counted [454,000 new malicious open source packages in 2025](https://www.sonatype.com/state-of-the-software-supply-chain/2026/open-source-malware), up 75%, almost all of it on npm. And the artifact repository itself is now a target: at Black Hat USA 2026, OpenAI described how [two of its own agents used an internal JFrog Artifactory as a side channel](https://www.welivesecurity.com/en/business-security/black-hat-usa-2026-hugging-face-hack-human-responsibility/), exploited a zero-day in it, and reached Hugging Face. As ESET's Tony Anscombe put it, the agents "should never have been permitted to adapt and set their own tasks." The package manager was the road they drove on.
+Sonatype counted [454,000 new malicious open source packages in 2025](https://www.sonatype.com/state-of-the-software-supply-chain/2026/open-source-malware), up 75%, almost all of it on npm. And the artifact repository itself is now a target: at Black Hat USA 2026, OpenAI described how [two of its own agents used an internal JFrog Artifactory as a side channel](https://www.welivesecurity.com/en/business-security/black-hat-usa-2026-hugging-face-hack-human-responsibility/), exploited a zero-day in it, and reached Hugging Face. As ESET's Tony Anscombe put it, the agents "should never have been permitted to adapt and set their own tasks." The package manager was the road they drove on.
 
 That story is also why I don't want an LLM making decisions inside this pipeline. An LLM that writes a script to do something is dangerous in a real-time system, and limiting its reach is the whole problem. What I want is closer to a bash script on steroids: a decision with a fixed set of answers, based on rules I wrote.
 
@@ -59,7 +59,7 @@ Left: darker is more accurate. Right: amber is worse than Jev, blue is better, g
 
 **Rubric wording was worth 15 points on Jev.** My first curation rubric said "no release in years" for abandoned, and Jev called 204 of 300 abandoned packages benign. Changing it to "last release more than 4 years ago, even if not flagged" took it from 80% to 95% on the same items. Haiku inferred the rule either way.
 
-**Jev has a blind spot I reproduced fifty times.** When the vulnerable package sits under both a dev path and a prod path, Jev got 0 of 50. It saw "dev" and stopped. A model that reads once can't combine two facts.
+**Jev has a blind spot I reproduced fifty times.** When the vulnerable package sits under both a dev path and a prod path, Jev got 0 of 50, while every other scenario was near perfect. The failure isn't gradual, it's a cliff, and with a hosted model you have no remediation beyond rewording the rubric and hoping. That unevenness is the cost of not owning the model.
 
 **Haiku is accurate and slow.** It tied Jev on three tasks, beat it slightly on curation, and scored 59% on reachability, confidently calling dev-only findings reachable. Over a second per decision, at about 25x Jev's price per token.
 
@@ -83,9 +83,9 @@ So Jev reads the whole form once and scores every option in that pass. In behavi
 
 ## What others found
 
-Jev is a week old and there are already eight or so independent evaluations. On generic decision tasks, Jev leads every open clone on the [public leaderboard](https://benchmarkheaven.com/jev-models), Laya included. Our result is a fine-tuned result on our tasks and nothing more. Small in-domain models beating Jev is a pattern others have hit too, and the academic version dates to [2024](https://arxiv.org/abs/2406.08660). Nobody had tried any of this on package curation.
+Jev is a week old and I've already seen eight or so independent evaluations. On generic decision tasks, Jev leads every open clone on the [public leaderboard](https://benchmarkheaven.com/jev-models), Laya included. Our result is a fine-tuned result on our tasks and nothing more. Small in-domain models beating Jev is a pattern others have hit too, and the academic version dates to [2024](https://arxiv.org/abs/2406.08660). Nobody had tried any of this on package curation.
 
-## What we didn't test
+## Some limitations
 
 Our own queue, which is the real test; everything here is public or synthetic. Load beyond one stream. CPU, where Laya was 15 to 25x slower. Adversarial READMEs, which are attacker-controlled and which none of the open models defend against.
 
