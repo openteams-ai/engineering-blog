@@ -75,4 +75,15 @@ authors:
     slug: michal-krassowski
     email: mkrassowski@openteams.com
     bio: Senior Software Engineer at OpenTeams. JupyterLab maintainer and Jupyter Distinguished Contributor.
-    avatar_url: https://avatars.githubusercontent.com/u/5832902?v=4
+    avatar_
+
+   
+  - name: Lenore Mullin
+    slug: lenore-mullin
+    email: arraylady@gmail.com
+    bio: "MoA researcher, memory-optimal kernels. 5-paper series on transformer attention validated on real hardware including Stampede3."
+    
+    
+    
+    
+    url: https://avatars.githubusercontent.com/u/5832902?v=4
