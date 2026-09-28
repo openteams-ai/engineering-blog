@@ -1,0 +1,2 @@
+We validated the first attention kernel proven minimal BEFORE code was written — on real hardware across two HPC clusters.
+5-Part MoA Series: I Foundation, II Fused Kernels, III CPU Verification, IV GPU Verification, V Real Hardware Validation (Sep 2026) Full 2.4MB software package + benchmarks: github.com/womenflyplanes/moa-attention-verified-mullin Includes paper_V_software/ with core kernels, CPU+GPU experiments, verification code
