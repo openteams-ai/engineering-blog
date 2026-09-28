@@ -1,15 +1,4 @@
-# What problem does this post solve? Why should someone care?
 problem: "Transformer attention kernels waste memory because minimality is only measured after implementation, not proven before code exists."
-
-# What does this post do? (experiment, benchmark, argument)
 what_it_does: "Derives the memory lower bound using Mathematics of Arrays, constructs the first attention kernel proven minimal before coding, and validates it across two HPC clusters including Stampede3 with CPU and GPU sweeps and a 2.4MB reproducible artifact."
-
-# One thing to remember after reading
 remember_one_thing: "You can prove a transformer kernel is memory-minimal before writing it, and the proof holds on real hardware."
-
-# Who is this for? Use only values from the repo: ml-ai-engineers, data-scientists, engineering-leaders, python-developers, etc.
 audience: ["ml-ai-engineers", "engineering-leaders"]
-- slug: lenore-mullin
-  name: Lenore Mullin
-  email: arraylady@gmail.com
-  bio: "MoA researcher, memory-optimal kernels. 5-paper series on transformer attention validation on real hardware (Stampede3)."
