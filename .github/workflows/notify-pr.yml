@@ -1,7 +1,11 @@
 name: Notify Slack on new PR
 
+# pull_request_target, not pull_request, so PRs from forks also get the
+# SLACK_PR_WEBHOOK secret (pull_request runs from forks get it empty). That
+# makes it unsafe to run anything from the PR, so there is no checkout: the
+# list of added files comes from the GitHub API, as data.
 on:
-  pull_request:
+  pull_request_target:
     types: [opened]
     # The channel exists to announce posts. Without this every workflow and
     # script change lands there too, which trains people to ignore it.
@@ -11,22 +15,23 @@ on:
 jobs:
   notify:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       # The paths filter above lets through any PR touching posts/, which
       # includes edits to articles that are already published. The channel
-      # announces new writing, so look for a post file that was ADDED
-      # (--diff-filter=A) and stay quiet when the PR only modifies one.
+      # announces new writing, so look for a post file that was ADDED and
+      # stay quiet when the PR only modifies one.
       - name: Is this a new post?
         id: check
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          ADDED=$(git diff --name-only --diff-filter=A "$BASE_SHA" HEAD -- \
-            'posts/*.md' 'posts/*.qmd')
+          ADDED=$(gh api --paginate \
+            "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" \
+            --jq '.[] | select(.status == "added") | .filename
+                  | select(test("^posts/.*\\.q?md$"))')
           if [ -n "$ADDED" ]; then
             echo "Announcing:"; echo "$ADDED"
             echo "new-post=true" >> "$GITHUB_OUTPUT"
