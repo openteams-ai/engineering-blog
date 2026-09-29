@@ -70,3 +70,9 @@ authors:
     email: gimperiale@openteams.com
     bio: Staff Software Engineer at OpenTeams. Dask maintainer.
     avatar_url: https://avatars.githubusercontent.com/u/6213168?v=4
+
+  - name: Michał Krassowski
+    slug: michal-krassowski
+    email: mkrassowski@openteams.com
+    bio: Senior Software Engineer at OpenTeams. JupyterLab maintainer and Jupyter Distinguished Contributor.
+    avatar_url: https://avatars.githubusercontent.com/u/5832902?v=4
