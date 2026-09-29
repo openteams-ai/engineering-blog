@@ -96,3 +96,4 @@ I'm not deciding how this goes into artifact-keeper yet. Whether the decision en
 What I do know: a rule-driven model like Jev is for questions you haven't asked yet, bootstrapping labels, the long tail of small questions, things decided at runtime. A fine-tuned small model is for the questions you ask all day, once you have labels, and in my pipeline that's nearly all the volume. Code is for anything that's actually logic.
 
 No open model matches Jev as a general-purpose decision engine today. I hope I'm wrong about that, and the next experiment is me trying to be. For my pipeline, it turned out not to be the question.
+
