@@ -18,7 +18,7 @@ Contributors do not need WordPress credentials.
 
 Only people with write access can open pull requests here. If you're a guest author, or an OpenTeams member with read-only access:
 
-1. Open a [Request write access](https://github.com/openteams-ai/engineering-blog/issues/new?template=request-write-access.yml) issue. OpenTeams members get write access within a minute, and the issue closes itself. Guests get a reply from a repo admin on the issue.
+1. Open a [Request write access](https://github.com/openteams-ai/engineering-blog/issues/new?template=request-write-access.yml) issue. OpenTeams members get write access within a minute, and the issue closes itself.
 2. Guests only: if the admin approves, accept the email invite from GitHub.
 3. Follow the [Writing Guide](#writing-guide).
 
