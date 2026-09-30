@@ -14,6 +14,23 @@ Posts are authored in Markdown (`.md`) or Quarto Markdown (`.qmd`) and automatic
 
 Contributors do not need WordPress credentials.
 
+## Guest Posts
+
+Only people with write access can open pull requests here. If you're a guest author, or an OpenTeams member with read-only access:
+
+1. Open a [Request write access](https://github.com/openteams-ai/engineering-blog/issues/new?template=request-write-access.yml) issue. OpenTeams members get write access within a minute, and the issue closes itself. Guests get a reply from a repo admin on the issue.
+2. Guests only: if the admin approves, accept the email invite from GitHub.
+3. Follow the [Writing Guide](#writing-guide).
+
+**For admins:** guest requests stay open for you to decide. To approve, invite the guest with the Write role under Settings → Collaborators and teams, and remove them after the post merges. Only invite people you'd trust with the repo's secrets: workflows on branches in this repo run with the WordPress and Slack credentials.
+
+```bash
+# Invite (push = Write)
+gh api -X PUT repos/openteams-ai/engineering-blog/collaborators/<username> -f permission=push
+# Remove after the post merges
+gh api -X DELETE repos/openteams-ai/engineering-blog/collaborators/<username>
+```
+
 ## Repository Structure
 
 ```text
@@ -37,7 +54,7 @@ Full reference for contributors writing engineering blog posts.
 2. Write your content in standard markdown.
 3. Add YAML frontmatter at the top of the file (see [Frontmatter](#frontmatter) below).
 4. *Optional:* If you use Claude Code, run `/seo-meta-description posts/your-article.md` to auto-generate title, slug, focus keyword, and meta description.
-5. Open a PR. CI commits a social brief to `social/<slug>.yml`: four short questions used to write the LinkedIn post. Answer them yourself or with your AI assistant, and push. The PR can't merge until you do. See [Social Brief](#social-brief).
+5. Open a PR from a branch in this repo rather than a fork, since the WordPress draft preview doesn't run for forks. CI commits a social brief to `social/<slug>.yml`: four short questions used to write the LinkedIn post. Answer them yourself or with your AI assistant, and push. The PR can't merge until you do. See [Social Brief](#social-brief).
 
 ### Preview
 

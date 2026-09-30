@@ -1,0 +1,89 @@
+name: Grant write access
+
+# Only collaborators with write access can open PRs here, so people without it
+# ask through the "Request write access" issue template. OpenTeams org members
+# get Write right away; anyone else waits for an admin to decide on the issue.
+#
+# The "Who are you?" answer is self-reported, so it's never trusted: membership
+# comes from the GitHub API. Nothing from the issue runs; only the author's
+# login is read, and GitHub sets that, not the form.
+#
+# ACCESS_ADMIN_TOKEN is a fine-grained token for this repo with Administration:
+# write, plus Members: read on the org. The built-in token can't manage
+# collaborators, so it's only used for the comment and close.
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  grant:
+    # Title prefix set by the template. A hand-written issue with the same
+    # title goes through the same membership check, so that's harmless.
+    if: >-
+      startsWith(github.event.issue.title, 'Write access:') &&
+      github.event.issue.user.type == 'User'
+    runs-on: ubuntu-latest
+    env:
+      AUTHOR: ${{ github.event.issue.user.login }}
+      ISSUE: ${{ github.event.issue.number }}
+      ORG: ${{ github.repository_owner }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Grant Write to org members
+        id: grant
+        env:
+          GH_TOKEN: ${{ secrets.ACCESS_ADMIN_TOKEN }}
+        run: |
+          ROLE=$(gh api "repos/$GH_REPO/collaborators/$AUTHOR/permission" \
+            --jq .role_name 2>/dev/null) || ROLE=none
+          case "$ROLE" in
+            write|maintain|admin)
+              echo "result=already" >> "$GITHUB_OUTPUT"; exit 0 ;;
+          esac
+
+          # 204 for a member, 404 otherwise.
+          if ! gh api "orgs/$ORG/members/$AUTHOR" --silent 2>/dev/null; then
+            echo "result=review" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+
+          gh api -X PUT "repos/$GH_REPO/collaborators/$AUTHOR" \
+            -f permission=push --silent
+          echo "result=granted" >> "$GITHUB_OUTPUT"
+
+      - name: Reply on the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ steps.grant.outputs.result }}
+        run: |
+          case "$RESULT" in
+            granted)
+              gh issue comment "$ISSUE" --body "@$AUTHOR you now have write access, so you can push a branch and open a PR. See the [Writing Guide](https://github.com/$GH_REPO#writing-guide) to get started."
+              gh issue close "$ISSUE" --reason completed ;;
+            already)
+              gh issue comment "$ISSUE" --body "@$AUTHOR you already have write access, so you can open a PR now. See the [Writing Guide](https://github.com/$GH_REPO#writing-guide)."
+              gh issue close "$ISSUE" --reason completed ;;
+            review)
+              gh issue comment "$ISSUE" --body "Thanks @$AUTHOR! A repo admin will read your request and reply here." ;;
+          esac
+
+      # Nobody watches issues, so guest requests go to the blog channel.
+      # A Slack workflow webhook, like SLACK_PR_WEBHOOK, with three text
+      # variables: requester, issue_title, issue_url.
+      - name: Tell the blog channel about guest requests
+        if: steps.grant.outputs.result == 'review'
+        env:
+          SLACK_ACCESS_REQUEST_WEBHOOK: ${{ secrets.SLACK_ACCESS_REQUEST_WEBHOOK }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+        run: |
+          PAYLOAD=$(jq -n \
+            --arg requester "$AUTHOR" \
+            --arg issue_title "$ISSUE_TITLE" \
+            --arg issue_url "$ISSUE_URL" \
+            '{requester: $requester, issue_title: $issue_title, issue_url: $issue_url}')
+
+          curl -sf -X POST -H 'Content-Type: application/json' \
+            --data "$PAYLOAD" "$SLACK_ACCESS_REQUEST_WEBHOOK"
