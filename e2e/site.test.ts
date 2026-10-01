@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { chromium, type Browser, type Page } from "playwright";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 import { BLOG_PATH } from "../src/lib/blog-path";
 import { PORT } from "./server";
 
@@ -51,60 +51,52 @@ async function open(page: Page, path: string) {
 	return problems;
 }
 
-beforeAll(async () => {
-	browser = await chromium.launch();
+// Crawl once at collection time so every page becomes its own test and the
+// verbose reporter prints each result as it finishes.
+browser = await chromium.launch();
+{
 	const page = await browser.newPage();
 	pages = await crawl(page);
 	await page.close();
-});
+}
+console.log(`testing ${pages.length} pages under ${ORIGIN}${BLOG_PATH}`);
 
 afterAll(() => browser?.close());
 
-describe("built site", () => {
+describe("site", () => {
 	it("links every post, topic page and the index", () => {
 		// index + 18 posts + 4 topics
 		expect(pages.length).toBeGreaterThanOrEqual(23);
 	});
+});
 
-	it("loads every page with no errors, no broken files and nothing outside BLOG_PATH", async () => {
-		const failures: string[] = [];
-		for (const path of pages) {
-			const page = await browser.newPage();
-			const problems = await open(page, path);
-			const broken = await page.$$eval("img", (imgs) =>
-				imgs.filter((i) => i.naturalWidth === 0).map((i) => i.getAttribute("src")),
-			);
-			problems.push(...broken.map((src) => `image did not load: ${src}`));
-			failures.push(...problems.map((p) => `${path}: ${p}`));
-			await page.close();
-		}
-		expect(failures).toEqual([]);
+describe.each(pages)("%s", (path) => {
+	it("loads with no errors, broken files, or requests outside BLOG_PATH", async () => {
+		const page = await browser.newPage();
+		const problems = await open(page, path);
+		const broken = await page.$$eval("img", (imgs) =>
+			imgs.filter((i) => i.naturalWidth === 0).map((i) => i.getAttribute("src")),
+		);
+		problems.push(...broken.map((src) => `image did not load: ${src}`));
+		await page.close();
+		expect(problems).toEqual([]);
 	});
 
 	it("does not scroll sideways on a phone", async () => {
-		const wide: string[] = [];
-		for (const path of pages) {
-			const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
-			await open(page, path);
-			const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
-			if (overflow > 0) wide.push(`${path}: ${overflow}px`);
-			await page.close();
-		}
-		expect(wide).toEqual([]);
+		const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+		await open(page, path);
+		const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+		await page.close();
+		expect(overflow).toBeLessThanOrEqual(0);
 	});
 
 	it("has no serious accessibility problems", async () => {
-		const found: string[] = [];
-		for (const path of pages) {
-			const context = await browser.newContext();
-			const page = await context.newPage();
-			await open(page, path);
-			const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
-			for (const v of violations.filter((v) => v.impact === "serious" || v.impact === "critical")) {
-				found.push(`${path}: ${v.id} (${v.nodes.length})`);
-			}
-			await context.close();
-		}
-		expect(found).toEqual([]);
+		const context = await browser.newContext();
+		const page = await context.newPage();
+		await open(page, path);
+		const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+		await context.close();
+		const serious = violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+		expect(serious.map((v) => `${v.id} (${v.nodes.length})`)).toEqual([]);
 	});
 });
