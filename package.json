@@ -26,7 +26,7 @@
 		"@axe-core/playwright": "4.13.0",
 		"@types/node": "26.6.3",
 		"playwright": "1.63.0",
-		"typescript": "6.0.3",
+		"typescript": "7.0.2",
 		"vitest": "5.0.2",
 		"wrangler": "4.145.0"
 	}
