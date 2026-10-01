@@ -1,6 +1,7 @@
 ---
 title: Who Is Your Code's Audience? An Engineering Team Talks AI-Written Code
 slug: who-is-your-codes-audience
+date: 2026-06-17T10:44:01-07:00
 authors:
 - amelia-thurdekoos
 categories:

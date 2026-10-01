@@ -1,6 +1,7 @@
 ---
 title: The Best Code Review Says Less
 slug: best-code-reviews-say-less
+date: 2026-07-16T07:45:59-04:00
 authors:
 - johnny-bouder
 categories:

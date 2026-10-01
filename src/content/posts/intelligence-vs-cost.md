@@ -1,6 +1,7 @@
 ---
 title: 'LLMs: Intelligence vs. cost'
 slug: intelligence-vs-cost
+date: 2026-09-02T02:28:18+01:00
 authors:
 - guido-imperiale
 categories:

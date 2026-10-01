@@ -1,6 +1,7 @@
 ---
 title: MiniCPM5-2B quantization report
 slug: minicpm5-2b-quantization-report
+date: 2026-09-23T02:17:35+01:00
 authors:
 - guido-imperiale
 categories:

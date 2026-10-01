@@ -1,9 +1,14 @@
 import { getCollection, type CollectionEntry } from "astro:content";
 import authors from "../data/authors.json";
-import publishedDates from "../data/published-dates.json";
 import { POST_TOPICS, TOPIC_LABELS } from "../data/topics";
-import type { Author } from "./authors";
 import { readingTimeMinutes } from "./reading-time";
+
+export interface Author {
+	slug: string;
+	name: string;
+	bio: string;
+	avatarUrl: string | null;
+}
 
 export interface Post {
 	slug: string;
@@ -17,7 +22,6 @@ export interface Post {
 }
 
 const authorBySlug = new Map((authors as Author[]).map((a) => [a.slug, a]));
-const dates = publishedDates as Record<string, string>;
 
 function toPost(entry: CollectionEntry<"posts">): Post {
 	const topicSlug = POST_TOPICS[entry.id];
@@ -27,7 +31,7 @@ function toPost(entry: CollectionEntry<"posts">): Post {
 		excerpt: entry.data.meta_description,
 		authors: entry.data.authors.flatMap((s) => authorBySlug.get(s) ?? []),
 		topic: topicSlug ? { slug: topicSlug, label: TOPIC_LABELS[topicSlug] ?? topicSlug } : null,
-		date: new Date(dates[entry.id] ?? 0),
+		date: entry.data.date,
 		minutes: readingTimeMinutes(entry.body ?? ""),
 		entry,
 	};

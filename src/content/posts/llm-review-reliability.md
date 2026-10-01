@@ -1,6 +1,7 @@
 ---
 title: I Asked LLMs to Review Another LLM. They Still Got It Wrong
 slug: llm-review-reliability
+date: 2026-09-18T09:21:13+07:00
 authors:
 - khuyen-tran
 categories:

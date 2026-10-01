@@ -1,6 +1,7 @@
 ---
 title: Your AI Agent Ignored AGENTS.md. Your Linter Won't Let It.
 slug: lint-rules-for-ai-agents
+date: 2026-10-01T13:11:08+05:45
 authors:
 - darshan-paudyal
 categories:

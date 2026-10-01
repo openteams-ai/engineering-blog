@@ -1,35 +1,26 @@
 # OpenTeams Engineering Blog
 
-Static Astro site for the posts in
-[engineering-blog](https://github.com/openteams-ai/engineering-blog), served
-under one path set in `src/lib/blog-path.ts` (`BLOG_PATH`).
-
 ```bash
 npm install
-npm run dev          # http://localhost:4321<BLOG_PATH>
-npm run build        # dist<BLOG_PATH>/
+npm run dev          # http://localhost:4321/sandbox-4af53e-engineering-blog
+npm run build
 npm test             # unit tests
 npm run test:e2e     # browser tests against the build
 ```
 
-## Posts
+## New post
 
-```bash
-npm run sync-posts -- ../engineering-blog
-```
+Add `src/content/posts/<name>.md` with `title`, `slug`, `date`, `authors`,
+`categories: [Engineering]` and `meta_description` in the frontmatter, and
+images under `src/content/posts/images/`. Authors are in
+`src/data/authors.json`.
 
-Copies `posts/` into `src/content/posts/`, and writes author profiles and
-publication dates to `src/data/`.
-
-For a new post, also add:
+Then add:
 
 - its topic in `src/data/topics.ts`
 - card art in `src/components/PostArt.astro`, listed in `BlogThumb.astro`
-- a share image: `npm run capture-og -- <slug>` with the dev server running,
-  then an entry in `src/data/og-images.json`
+- a share image in `public/og/og-<slug>.png`, listed in `src/data/og-images.json`
 
 ## Deploy
 
-CI deploys the `openteams-engineering-blog` Cloudflare Worker: a preview
-version per pull request, and `openteams.com<BLOG_PATH>` on merge to `main`.
-It needs the `CLOUDFLARE_API_TOKEN` repo secret.
+Merging to `main` deploys to openteams.com; pull requests get a preview link.

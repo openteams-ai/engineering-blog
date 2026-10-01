@@ -7,7 +7,6 @@
 		"build": "astro build",
 		"preview": "astro preview",
 		"test": "vitest run",
-		"sync-posts": "node scripts/sync-posts.ts",
 		"capture-og": "node scripts/capture-og.ts",
 		"test:e2e": "vitest run --config vitest.e2e.config.ts",
 		"check": "astro check",

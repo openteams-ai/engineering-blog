@@ -1,6 +1,7 @@
 ---
 title: Where Does Jev Fit in a Software Supply Chain? We Benchmarked It Against the Open Alternatives
 slug: jev-bench-package-curation
+date: 2026-09-29T02:46:07-05:00
 authors:
 - brandon-geraci
 categories:

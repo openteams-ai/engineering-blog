@@ -1,6 +1,7 @@
 ---
 title: 'Awesome Jupyter AI: A Map of 100+ Jupyter Extensions for AI'
 slug: awesome-jupyter-ai-extensions
+date: 2026-09-25T13:52:17+01:00
 authors:
 - michal-krassowski
 categories:

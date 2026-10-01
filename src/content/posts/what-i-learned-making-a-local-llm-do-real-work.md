@@ -1,6 +1,7 @@
 ---
 title: What I Learned Making a Local LLM Do Real Work
 slug: what-i-learned-making-a-local-llm-do-real-work
+date: 2026-04-09T11:24:22-05:00
 authors:
 - adam-lewis
 categories:

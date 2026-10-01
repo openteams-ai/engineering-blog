@@ -1,6 +1,7 @@
 ---
 title: The tp_as_number Slot and Binary Operation Dispatch in CPython
 slug: tp-as-number-slot-and-binary-dispatch
+date: 2026-06-22T11:00:40-03:00
 authors:
 - guilherme-leobas
 categories:

@@ -1,6 +1,7 @@
 ---
 title: 'PDF Table Extraction: Docling vs Marker vs LlamaParse Compared'
 slug: docling-vs-marker-vs-llamaparse
+date: 2026-05-13T15:56:59+07:00
 authors:
 - khuyen-tran
 categories:
