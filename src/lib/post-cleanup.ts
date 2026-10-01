@@ -1,17 +1,22 @@
-interface Node {
+export interface Node {
 	type: string;
 	value?: string;
 	url?: string;
 	alt?: string;
+	lang?: string;
 	depth?: number;
 	children?: Node[];
+	data?: { hProperties?: Record<string, unknown> };
 }
 
 const textOf = (node: Node): string =>
 	node.value ?? (node.children ?? []).map(textOf).join("");
 
-/** Clean a post's markdown tree in place before it renders. */
-export function cleanupPost(tree: Node, title: string): void {
+/**
+ * Clean a post's markdown tree in place before it renders. `postUrl` maps a
+ * post slug to its URL, for links written as a bare slug (`](other-post)`).
+ */
+export function cleanupPost(tree: Node, title: string, postUrl: (slug: string) => string = (s) => s): void {
 	const first = tree.children?.[0];
 	if (first?.type === "heading" && first.depth === 1 && textOf(first).trim() === title.trim()) {
 		tree.children!.shift();
@@ -27,7 +32,7 @@ export function cleanupPost(tree: Node, title: string): void {
 			}
 			return n;
 		});
-	walk(tree);
+	walk(tree, postUrl);
 }
 
 // A standalone HTML <img> (optionally wrapped in a link) with a relative src
@@ -40,12 +45,18 @@ function htmlImage(html: string): Node | null {
 	return { type: "paragraph", children: [{ type: "image", url: m[1], alt }] };
 }
 
-function walk(node: Node): void {
+function walk(node: Node, postUrl: (slug: string) => string): void {
 	if (node.type === "code" && node.value) {
 		node.value = node.value
 			.split("\n")
 			.filter((line) => !/^\s*#\|/.test(line))
 			.join("\n");
 	}
-	node.children?.forEach(walk);
+	if (node.type === "link" && node.url && /^[a-z0-9][a-z0-9-]*\/?$/.test(node.url)) {
+		node.url = postUrl(node.url.replace(/\/$/, ""));
+	}
+	if (node.type === "table") {
+		node.data = { ...node.data, hProperties: { ...node.data?.hProperties, tabIndex: 0 } };
+	}
+	node.children?.forEach((child) => walk(child, postUrl));
 }

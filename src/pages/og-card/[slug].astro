@@ -3,7 +3,8 @@
 // "home"), captured with `npm run capture-og` and committed as a static PNG
 // under public/og/. Dev only: production builds emit no card pages.
 import { Font } from "astro:assets";
-import { getPosts } from "../../../lib/posts";
+import { blogUrl } from "../../lib/blog-path";
+import { getPosts } from "../../lib/posts";
 
 export async function getStaticPaths() {
 	if (import.meta.env.PROD) return [];
@@ -79,7 +80,7 @@ const grid = (m: number) =>
 					</g>
 				</svg>
 				<div class="home-center">
-					<img class="home-logo" src="/openteams-white-horizontal.png" alt="OpenTeams" />
+					<img class="home-logo" src={blogUrl("/openteams-white-horizontal.png")} alt="OpenTeams" />
 					<div class="home-title">Engineering Blog</div>
 				</div>
 			</div>
@@ -88,7 +89,7 @@ const grid = (m: number) =>
 				<svg class="blob" width="700" height="700" viewBox="0 0 700 700">
 					<circle cx="350" cy="350" r="350" fill="#0a2158"></circle>
 				</svg>
-				<img class="logo" src="/openteams-white-horizontal.png" alt="OpenTeams" />
+				<img class="logo" src={blogUrl("/openteams-white-horizontal.png")} alt="OpenTeams" />
 				<div class="title">{title}</div>
 				<div class="byline">{byline}</div>
 			</div>

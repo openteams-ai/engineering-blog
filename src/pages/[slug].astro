@@ -1,10 +1,11 @@
 ---
 import { render } from "astro:content";
-import Base from "../../layouts/BlogBase.astro";
-import Avatar from "../../components/Avatar.astro";
-import SubscribeBand from "../../components/SubscribeBand.astro";
-import { getPosts, type Post } from "../../lib/posts";
-import ogImages from "../../data/og-images.json";
+import Base from "../layouts/BlogBase.astro";
+import Avatar from "../components/Avatar.astro";
+import SubscribeBand from "../components/SubscribeBand.astro";
+import { getPosts, type Post } from "../lib/posts";
+import ogImages from "../data/og-images.json";
+import { blogUrl } from "../lib/blog-path";
 
 export async function getStaticPaths() {
 	const posts = await getPosts();
@@ -16,7 +17,8 @@ const { Content } = await render(post.entry);
 const { title, excerpt, minutes, authors, topic } = post;
 const publishedDate = post.date;
 const hasDiagram = /^```mermaid\s*$/m.test(post.entry.body ?? "");
-const ogImage = (ogImages as Record<string, string>)[post.slug];
+const ogPath = (ogImages as Record<string, string>)[post.slug];
+const ogImage = ogPath ? blogUrl(ogPath) : undefined;
 ---
 
 <Base title={title} description={excerpt} image={ogImage} type="article">
@@ -28,10 +30,10 @@ const ogImage = (ogImages as Record<string, string>)[post.slug];
 			<article class="mx-auto max-w-[680px] px-6 pt-16">
 				<header class="mb-8">
 					<div class="flex items-center gap-3">
-						<a href="/engineering-blog" class="cat-label hover:underline">Engineering Blog</a>
+						<a href={blogUrl("/")} class="cat-label hover:underline">Engineering Blog</a>
 						{topic && (
 							<a
-								href={`/engineering-blog/tag/${topic.slug}`}
+								href={blogUrl(`/tag/${topic.slug}`)}
 								class="rounded-full border border-border px-2.5 py-1 text-[11px] font-semibold tracking-wide text-muted uppercase hover:border-brand hover:text-brand"
 							>
 								{topic.label}

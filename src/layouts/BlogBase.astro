@@ -4,6 +4,7 @@ import { Icon } from "astro-iconset/components";
 import DarbySearch from "../components/DarbySearch.astro";
 import MainSiteHeader from "../components/MainSiteHeader.astro";
 import { SITE_TAGLINE, SITE_TITLE, footerColumns, socialLinks } from "../data/site";
+import { blogUrl } from "../lib/blog-path";
 import "../styles/global.css";
 
 interface Props {
@@ -36,8 +37,8 @@ const ogImage = image ? new URL(image, Astro.site).href : undefined;
 		{ogImage && <meta property="og:image" content={ogImage} />}
 		<meta name="twitter:card" content={ogImage ? "summary_large_image" : "summary"} />
 		{ogImage && <meta name="twitter:image" content={ogImage} />}
-		<link rel="alternate" type="application/rss+xml" title="OpenTeams Engineering Blog" href="/engineering-blog/rss.xml" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="alternate" type="application/rss+xml" title="OpenTeams Engineering Blog" href={blogUrl("/rss.xml")} />
+		<link rel="icon" type="image/svg+xml" href={blogUrl("/favicon.svg")} />
 		<Font cssVariable="--font-body" preload />
 		<Font cssVariable="--font-mono" />
 		<slot name="head" />
@@ -85,7 +86,7 @@ const ogImage = image ? new URL(image, Astro.site).href : undefined;
 		<footer class="bg-deep text-[#8d99bd]">
 			<div class="container-wide grid grid-cols-1 gap-12 py-16 md:grid-cols-[1.4fr_2fr] md:gap-20">
 				<div>
-					<img src="/openteams-white-horizontal.png" alt={SITE_TITLE} class="h-7 w-auto" />
+					<img src={blogUrl("/openteams-white-horizontal.png")} alt={SITE_TITLE} class="h-7 w-auto" />
 					<p class="mt-4 max-w-xs text-sm leading-relaxed">{SITE_TAGLINE}</p>
 					<div class="mt-5 flex flex-wrap gap-2">
 						{socialLinks.map((s) => (
@@ -101,7 +102,7 @@ const ogImage = image ? new URL(image, Astro.site).href : undefined;
 							</a>
 						))}
 						<a
-							href="/engineering-blog/rss.xml"
+							href={blogUrl("/rss.xml")}
 							aria-label="RSS feed"
 							title="RSS"
 							class="flex size-9 items-center justify-center rounded-lg bg-white/5 text-lg text-[#cfd8ef] transition-colors hover:bg-white/10 hover:text-white"

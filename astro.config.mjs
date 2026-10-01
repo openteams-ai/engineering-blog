@@ -2,13 +2,16 @@ import { unified } from "@astrojs/markdown-remark";
 import tailwindcss from "@tailwindcss/vite";
 import icon from "astro-iconset";
 import { defineConfig, fontProviders } from "astro/config";
+import { BLOG_PATH } from "./src/lib/blog-path.ts";
 import remarkPostCleanup from "./src/lib/remark-post-cleanup.ts";
 
 export default defineConfig({
 	site: "https://openteams.com",
 	output: "static",
 	trailingSlash: "ignore",
-	redirects: { "/": "/engineering-blog" },
+	// Pages, assets and public files are all written under dist<BLOG_PATH>/.
+	base: BLOG_PATH,
+	outDir: `./dist${BLOG_PATH}`,
 	devToolbar: { enabled: false },
 	vite: { plugins: [tailwindcss()] },
 	markdown: {

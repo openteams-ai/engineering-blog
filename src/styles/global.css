@@ -241,10 +241,13 @@
 		@apply rounded-md bg-surface px-1.5 py-0.5 text-[0.85em];
 		color: light-dark(#022791, #a9bcff);
 		font-family: var(--font-mono);
+		/* Long identifiers and paths wrap instead of widening the page. */
+		overflow-wrap: anywhere;
 	}
 
+	/* Wide tables scroll inside their own box instead of the page. */
 	.blog-theme .editorial-content :where(table) {
-		@apply my-8 w-full border-collapse text-base;
+		@apply my-8 block w-max max-w-full overflow-x-auto border-collapse text-base;
 	}
 
 	.blog-theme .editorial-content :where(th) {

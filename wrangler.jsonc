@@ -1,0 +1,13 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	// Static files only: no Worker code and no bindings. Routes come from
+	// BLOG_PATH at deploy time (scripts/deploy.ts).
+	"name": "openteams-engineering-blog",
+	"account_id": "22a0225163c6dd7da4154530b345b070",
+	"compatibility_date": "2026-09-24",
+	"workers_dev": true,
+	"preview_urls": true,
+	"assets": {
+		"directory": "./dist"
+	}
+}

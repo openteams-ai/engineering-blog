@@ -15,6 +15,8 @@ interface Props {
 	slug: string;
 }
 
+import { blogUrl } from "../lib/blog-path";
+
 const { slug } = Astro.props;
 const mono = "var(--font-header)"; // IBM Plex Sans, same as the nav
 const navy = "#091e42";
@@ -32,6 +34,12 @@ const greenDeep = "#164b35";
 const creamMut = "#7f5f01";
 const orange = "#d97008";
 const check = "#22a06b";
+
+// Jupyter in orbit: the logo at the centre, three sparkles for
+// extensions, and a few dots and rings around it.
+const hub = { x: 360, y: 200 };
+const sparkle = (x: number, y: number, r: number) =>
+	`M${x} ${y - r}Q${x} ${y} ${x + r} ${y}Q${x} ${y} ${x} ${y + r}Q${x} ${y} ${x - r} ${y}Q${x} ${y} ${x} ${y - r}Z`;
 ---
 
 {slug === "pixi-ubi-micro-containers" && (
@@ -48,7 +56,7 @@ const check = "#22a06b";
 			<text x="175" y="332" text-anchor="middle" font-size="30" font-weight="700" fill={navy}>803 MB</text>
 			<text x="175" y="360" text-anchor="middle" font-size="17" fill={creamMut}>188 packages</text>
 		</g>
-		<image href="/pixi-logo.webp" x="326" y="94" width="84" height="64"/>
+		<image href={blogUrl("/pixi-logo.webp")} x="326" y="94" width="84" height="64"/>
 		<path d="M310 195 H406" stroke={navy} stroke-width="4" stroke-linecap="round"/>
 		<path d="M398 184 L416 195 L398 206 Z" fill={navy}/>
 		<g font-family={mono}>
@@ -334,7 +342,7 @@ const check = "#22a06b";
 	<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="ESLint turning an agent's mistake into an error it fixes">
 		<rect x="-300" y="-300" width="1320" height="980" fill={darkNavy}/>
 		<rect x="110" y="120" width="140" height="140" rx="32" fill="#ffffff"/>
-		<image href="/blog-logos/eslint.svg" x="140" y="150" width="80" height="80"/>
+		<image href={blogUrl("/blog-logos/eslint.svg")} x="140" y="150" width="80" height="80"/>
 		<g font-family={mono}>
 			<rect x="310" y="126" width="300" height="56" rx="28" fill="#ff8f73" opacity="0.16"/>
 			<text x="340" y="163" font-size="26" fill="#ff8f73" font-weight="600">&#10005; lint error</text>
@@ -345,12 +353,25 @@ const check = "#22a06b";
 )}
 
 {slug === "awesome-jupyter-ai-extensions" && (
-	<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Jupyter logo, 100+ AI extensions">
+	<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="The Jupyter logo with extensions as stars around it">
 		<rect x="-300" y="-300" width="1320" height="980" fill={cream}/>
-		<image href="/blog-logos/jupyter.svg" x="150" y="100" width="138" height="182"/>
-		<g font-family={mono}>
-			<text x="350" y="208" font-size="88" fill={navy} font-weight="700">100+</text>
-			<text x="354" y="252" font-size="26" fill={creamMut}>AI extensions</text>
+		<g fill="none" stroke={navy} stroke-width="2.5">
+			<circle cx="360" cy="40" r="11"/>
+			<circle cx="128" cy="236" r="12"/>
+			<circle cx="612" cy="292" r="9"/>
+		</g>
+		<image href={blogUrl("/blog-logos/jupyter.svg")} x={hub.x - 84} y={hub.y - 120} width="168" height="222"/>
+		<g fill={orange}>
+			<path d={sparkle(196, 104, 30)}/>
+			<path d={sparkle(560, 128, 24)}/>
+			<path d={sparkle(118, 318, 16)}/>
+		</g>
+		<g fill={navy}>
+			<path d={sparkle(482, 70, 13)}/>
+			<circle cx="250" cy="330" r="4.5"/>
+			<circle cx="490" cy="336" r="4.5"/>
+			<circle cx="226" cy="190" r="4.5"/>
+			<circle cx="626" cy="196" r="4.5"/>
 		</g>
 	</svg>
 )}
@@ -373,7 +394,7 @@ const check = "#22a06b";
 	<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="MiniCPM5-2B in 3 GiB">
 		<rect x="-300" y="-300" width="1320" height="980" fill={softBlue}/>
 		<rect x="90" y="110" width="300" height="160" rx="24" fill="#fdfdfd"/>
-		<image href="/blog-logos/minicpm.png" x="112" y="130" width="256" height="120"/>
+		<image href={blogUrl("/blog-logos/minicpm.png")} x="112" y="130" width="256" height="120"/>
 		<g font-family={mono}>
 			<text x="430" y="210" font-size="76" fill={navy} font-weight="700">3 GiB</text>
 			<text x="434" y="252" font-size="24" fill={blueMut}>of RAM</text>
@@ -397,8 +418,8 @@ const check = "#22a06b";
 {slug === "intelligence-vs-cost" && (
 	<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Fable 5.1 at $3.69 per task against GLM-5.3-Flash at $0.023">
 		<rect x="-300" y="-300" width="1320" height="980" fill={cream}/>
-		<image href="/blog-logos/claude.svg" x="150" y="96" width="96" height="96"/>
-		<image href="/blog-logos/zai.svg" x="474" y="100" width="88" height="88"/>
+		<image href={blogUrl("/blog-logos/claude.svg")} x="150" y="96" width="96" height="96"/>
+		<image href={blogUrl("/blog-logos/zai.svg")} x="474" y="100" width="88" height="88"/>
 		<g font-family={mono} text-anchor="middle">
 			<text x="198" y="262" font-size="44" fill={navy} font-weight="700">$3.69</text>
 			<text x="360" y="160" font-size="26" fill={creamMut}>vs</text>

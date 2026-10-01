@@ -1,4 +1,5 @@
 ---
+import { blogUrl } from "../lib/blog-path";
 import BlogThumb from "./BlogThumb.astro";
 import Avatar from "./Avatar.astro";
 import type { Post } from "../lib/posts";
@@ -12,7 +13,7 @@ const { post, size = "cell" } = Astro.props;
 const author = post.authors[0]?.name ?? "OpenTeams Engineering";
 const avatarUrl = post.authors[0]?.avatarUrl ?? null;
 const label = post.topic?.label ?? "Engineering";
-const href = `/engineering-blog/${post.slug}`;
+const href = blogUrl(`/${post.slug}`);
 ---
 
 {size === "mini" ? (

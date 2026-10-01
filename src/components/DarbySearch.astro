@@ -1,7 +1,8 @@
 ---
+import { blogUrl } from "../lib/blog-path";
 // Command-palette search ported from the Darby theme: pill trigger with a
 // distinct Cmd+K chip, fixed overlay modal, Fuse.js fuzzy search over
-// /engineering-blog/search-index.json, arrow/enter keyboard navigation,
+// the blog's search-index.json, arrow/enter keyboard navigation,
 // and "Suggested pages" on empty open.
 ---
 
@@ -26,8 +27,8 @@
 	</div>
 </div>
 
-<script is:inline src="/js/vendor/fuse.min.js" defer></script>
-<script is:inline>
+<script is:inline src={blogUrl("/js/vendor/fuse.min.js")} defer></script>
+<script is:inline define:vars={{ searchIndexUrl: blogUrl("/search-index.json") }}>
 	// Ported from Darby assets/js/search.js (fuse backend only).
 	(function () {
 		function init() {
@@ -123,7 +124,7 @@
 
 			async function ensureFuse() {
 				if (ready) return;
-				var res = await fetch("/engineering-blog/search-index.json");
+				var res = await fetch(searchIndexUrl);
 				if (!res.ok) throw new Error("search index not found (" + res.status + ")");
 				var data = await res.json();
 				allData = data;

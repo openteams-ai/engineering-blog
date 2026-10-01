@@ -1,4 +1,5 @@
 ---
+import { blogUrl } from "../lib/blog-path";
 // Top bar matching the openteams.com header: navy bar, white logo linking
 // to the main site, and the Solutions / Resources / Company dropdowns.
 // Blog-only controls (search, theme toggle) go in the slot.
@@ -9,10 +10,10 @@ import { MAIN_SITE_URL, mainSiteNav } from "../data/main-site-nav";
 <header class="ot-header sticky top-0 z-100 border-b border-white/8 bg-[#000f3a] text-white">
 	<nav class="container-wide flex h-[81px] items-center gap-4 text-sm" aria-label="Main">
 		<a href={MAIN_SITE_URL} class="shrink-0" aria-label="OpenTeams home">
-			<img src="/openteams-logo-white.svg" alt="OpenTeams" width="180" height="50" class="block h-auto w-[130px] md:w-[180px]" />
+			<img src={blogUrl("/openteams-logo-white.svg")} alt="OpenTeams" width="180" height="50" class="block h-auto w-[130px] md:w-[180px]" />
 		</a>
 		<a
-			href="/engineering-blog"
+			href={blogUrl("/")}
 			class="hidden shrink-0 border-l border-white/25 pl-4 text-base sm:block font-medium text-white/75 transition-colors hover:text-white"
 		>
 			Engineering

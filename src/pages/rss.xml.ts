@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
-import { getPosts } from "../../lib/posts";
+import { BLOG_PATH } from "../lib/blog-path";
+import { getPosts } from "../lib/posts";
 
 function escapeXml(value: string): string {
 	return value
@@ -10,7 +11,7 @@ function escapeXml(value: string): string {
 }
 
 export const GET: APIRoute = async ({ site }) => {
-	const base = new URL("/engineering-blog", site).href;
+	const base = new URL(BLOG_PATH, site).href;
 	const items = (await getPosts())
 		.slice(0, 20)
 		.map((post) => {

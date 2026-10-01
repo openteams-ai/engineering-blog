@@ -1,4 +1,5 @@
 ---
+import { blogUrl } from "../lib/blog-path";
 // Horizontal subscribe call-to-action: navy band with a short pitch and an
 // RSS button. Rendered below the article grid on the index and below every
 // post. RSS is the honest subscribe target until a newsletter backend exists.
@@ -13,7 +14,7 @@
 			</p>
 		</div>
 		<a
-			href="/engineering-blog/rss.xml"
+			href={blogUrl("/rss.xml")}
 			class="inline-flex shrink-0 items-center gap-2.5 rounded-full bg-white px-6 py-3 text-[15px] font-semibold text-[#041437] transition-transform duration-200 hover:-translate-y-0.5"
 		>
 			<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">

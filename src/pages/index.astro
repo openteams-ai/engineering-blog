@@ -1,12 +1,13 @@
 ---
-import Base from "../../layouts/BlogBase.astro";
-import BlogThumb from "../../components/BlogThumb.astro";
-import Avatar from "../../components/Avatar.astro";
-import HeroSplash from "../../components/HeroSplash.astro";
-import PostCard from "../../components/PostCard.astro";
-import SubscribeBand from "../../components/SubscribeBand.astro";
-import { getPosts, topicsOf } from "../../lib/posts";
-import ogImages from "../../data/og-images.json";
+import Base from "../layouts/BlogBase.astro";
+import BlogThumb from "../components/BlogThumb.astro";
+import Avatar from "../components/Avatar.astro";
+import HeroSplash from "../components/HeroSplash.astro";
+import PostCard from "../components/PostCard.astro";
+import SubscribeBand from "../components/SubscribeBand.astro";
+import { getPosts, topicsOf } from "../lib/posts";
+import ogImages from "../data/og-images.json";
+import { blogUrl } from "../lib/blog-path";
 
 const posts = await getPosts();
 const [featured, ...rest] = posts;
@@ -40,7 +41,7 @@ const featuredAuthor = featured?.authors[0];
 <Base
 	title="Engineering Blog"
 	description="Benchmarks, systems deep dives, and hard-won lessons from OpenTeams engineers."
-	image={(ogImages as Record<string, string>).home}
+	image={blogUrl((ogImages as Record<string, string>).home)}
 >
 	<section class="container-wide relative pt-11 pb-10">
 		<div class="hero-viz pointer-events-none absolute inset-0 hidden md:block" aria-hidden="true">
@@ -58,7 +59,7 @@ const featuredAuthor = featured?.authors[0];
 
 	{featured && (
 		<section class="container-wide grid gap-10 pb-16 md:grid-cols-2">
-			<a href={`/engineering-blog/${featured.slug}`} class="group block transition-transform duration-200 hover:-translate-y-1">
+			<a href={blogUrl(`/${featured.slug}`)} class="group block transition-transform duration-200 hover:-translate-y-1">
 				<BlogThumb slug={featured.slug} size="big" />
 				<div class="cat-label mt-5">{featured.topic?.label ?? "Engineering"}</div>
 				<h2 class="post-title-link mt-2.5 mb-2.5 text-2xl leading-[1.18] font-bold tracking-tight md:text-[28px]">
@@ -101,7 +102,7 @@ const featuredAuthor = featured?.authors[0];
 					<span class="rounded-full bg-text px-4 py-2 text-[13px] leading-none font-semibold text-bg">All</span>
 					{allTags.map((t) => (
 						<a
-							href={`/engineering-blog/tag/${t.slug}`}
+							href={blogUrl(`/tag/${t.slug}`)}
 							class="rounded-full border border-border px-4 py-2 text-[13px] leading-none font-semibold text-muted transition-colors hover:border-brand hover:text-brand"
 						>
 							{t.label}
