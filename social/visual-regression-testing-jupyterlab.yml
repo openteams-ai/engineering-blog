@@ -1,0 +1,16 @@
+# The social brief for posts/visual-regression-testing-jupyterlab.md. It's used to write the LinkedIn post.
+# Answer each question yourself or with your AI assistant (see Social Brief in
+# README.md). The PR can merge once all four are answered.
+
+# What problem does this article solve? (1-2 sentences)
+problem: "JupyterLab's visual regression tests took 55 minutes, failed at random in half of the scheduled runs, and gave different pixels on a laptop than on CI. That cost contributors time, and a coding agent given a false failure changes code that was not broken."
+
+# What does the article build, test, compare, or argue? (1-2 sentences)
+what_it_does: "Describes how JupyterLab cut its Playwright suite from 55 to 15 minutes and its flaky tests from 17 to 2.4 per run, and made a local run on Linux give the same pixels as CI. Contributors now open a failure from a badge on the pull request and request new screenshots with a comment."
+
+# If readers remember one thing, what should it be? (1 sentence)
+remember_one_thing: "Developers and their coding agents both need visual tests that give CI's pixels on a laptop, rarely fail at random, and answer in minutes."
+
+# Who should read this? Pick one or more:
+# data-scientists, ml-ai-engineers, python-developers, platform-devops-engineers, security-compliance-engineers, oss-maintainers, engineering-leaders
+audience: ["oss-maintainers", "platform-devops-engineers", "ml-ai-engineers"]
