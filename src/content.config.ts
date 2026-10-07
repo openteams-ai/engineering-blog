@@ -22,7 +22,8 @@ const posts = defineCollection({
 		// Set when a published post is edited in a way readers should know about.
 		updated: z.coerce.date().optional(),
 	}).superRefine((post, ctx) => {
-		if (existsSync(`src/components/art/${post.slug}.astro`)) return;
+		// `astro dev` skips this so a draft can be previewed before its art exists.
+		if (import.meta.env.DEV || existsSync(`src/components/art/${post.slug}.astro`)) return;
 		ctx.addIssue({
 			code: "custom",
 			path: ["slug"],
