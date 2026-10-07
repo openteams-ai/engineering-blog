@@ -1,6 +1,7 @@
 ---
 // A post's card artwork: the drawing in art/<slug>.astro. Every post has one;
-// the content schema fails the build without it.
+// the content schema fails the build without it. In `astro dev` a missing
+// card shows as an empty box, so a draft can be previewed before its art exists.
 import type { AstroComponentFactory } from "astro/runtime/server/index.js";
 
 interface Props {
@@ -12,11 +13,11 @@ const { slug, size = "cell" } = Astro.props;
 
 const art = import.meta.glob<AstroComponentFactory>("./art/*.astro", { eager: true, import: "default" });
 const Art: AstroComponentFactory | undefined = art[`./art/${slug}.astro`];
-if (Art === undefined) throw new Error(`no card art for "${slug}": add src/components/art/${slug}.astro`);
+if (Art === undefined && !import.meta.env.DEV) throw new Error(`no card art for "${slug}": add src/components/art/${slug}.astro`);
 
 const heights = { big: "h-[380px]", cell: "h-[200px]", mini: "h-[150px]" };
 ---
 
 <div class:list={["thumb overflow-hidden rounded-xl transition-shadow duration-200 group-hover:shadow-xl", heights[size]]}>
-	<Art />
+	{Art && <Art />}
 </div>
