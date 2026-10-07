@@ -9,7 +9,7 @@ meta_description: "Deploy Rocky Linux image mode to bare metal with Artifact Kee
 focus_keyword: Rocky Linux image mode
 ---
 
-This post is about something less glamorous than most of what we write about: the hardware in a rack in a closet, the box somebody has to drive to when it misbehaves, and how to make every one of those boxes provably the same.
+This post is about something less glamorous than most of what we write about: the hardware in a rack in a closet, the box somebody has to drive to when it misbehaves, and how to make every one of those boxes provably the same. If you know that person, share this with them.
 
 ## The problem: four sources of truth
 
@@ -134,7 +134,7 @@ The [walkthrough](https://artifact-keeper.github.io/walkthroughs/rocky-linux-ima
 
 Dogfooding Artifact Keeper this hard produced a handful of improvements, which is part of why we do these projects. The compose and documentation fixes are already in, so the quickstart you land on matches what this post describes. The [1.11.0 release](https://github.com/artifact-keeper/artifact-keeper/issues/4468) adds signature-aware views for OCI repositories, so cosign signatures show up on the image they belong to instead of as separate tags, corrects the storage accounting for shared layers, and adds server-side image signing, which turns the cosign step into a registry setting.
 
-OpenTeams spends most of its days on AI and ML and the infrastructure that runs it, so this post was a detour into the closet. If that is your world, I hope it was useful. If you know someone whose world it is, send this their way.
+OpenTeams spends most of its days on AI and ML and the infrastructure that runs it, so this post was a detour into the closet. If that is your world, I hope it was useful.
 
 Two invitations. If you run deployments that have grown complicated and you suspect a system like this could simplify them, I would like to hear about them, and we can work out where Artifact Keeper fits. And if you are a nerd like me who wants to try this in a home lab, I want to hear how that goes just as much.
 
