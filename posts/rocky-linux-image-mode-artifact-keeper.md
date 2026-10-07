@@ -9,21 +9,19 @@ meta_description: "Deploy Rocky Linux image mode to bare metal with Artifact Kee
 focus_keyword: Rocky Linux image mode
 ---
 
-OpenTeams spends most of its days on AI and ML and the infrastructure that runs it. This post is about something less glamorous: the hardware in a rack in a closet, the box somebody has to drive to when it misbehaves. If that is your world, keep reading. If you know someone whose world it is, send this their way.
-
-Two invitations before we start. If you run deployments that have grown complicated and you suspect a system like this could simplify them, I would like to hear about them; my contact is at the bottom, and we can work out where Artifact Keeper fits. And if you are a nerd like me who wants to try this in a home lab, I want to hear how that goes just as much.
-
-Last, a thank you to Edward Mora for putting Artifact Keeper to work at his company. This post is my open version of what I believe he built internally, and it would not exist without that example.
+This post is about something less glamorous than most of what we write about: the hardware in a rack in a closet, the box somebody has to drive to when it misbehaves, and how to make every one of those boxes provably the same.
 
 ## The problem: four sources of truth
 
-Every box in an edge fleet should be running the same operating system, the same Kubernetes, and the same site configuration, and you should be able to prove it. That is harder than it sounds. With a package-based install, two machines start to drift the first time someone runs `dnf update` on one of them and not the other. Image mode fixes this at the operating system layer. With [bootc](https://bootc-dev.github.io/bootc/) (a tool that boots and updates a Linux system from a container image), the whole operating system is built with a Containerfile, nodes boot it, and upgrading means pointing them at a new image. Rocky Linux image mode is this idea on Rocky Linux.
+The same application behaves differently on different machines, or fails on one and not the others, because each machine pulls its software from several places. After a few upgrades no two machines are identical, and in a fleet you have to be able to audit, that is the whole problem.
 
-An image is only as trustworthy as where it came from, though. Think about a typical setup: the base RPMs come from a public mirror, the Kubernetes packages come from a vendor repository, your own configuration comes from a tarball on someone's laptop, and the final image sits in yet another registry. That is four sources of truth. When something goes wrong on node 37, nobody can say for sure what is running on it.
+Image mode helps. With [bootc](https://bootc-dev.github.io/bootc/) (a tool that boots and updates a Linux system from a container image), the operating system is built once as an image and every machine boots the same one. Rocky Linux image mode is this idea on Rocky Linux. But the image is still assembled from parts fetched from several places: base RPMs from a public mirror, Kubernetes packages from a vendor repository, your own configuration from a tarball on someone's laptop, the finished image in yet another registry. Four sources of truth. When something goes wrong on node 37, nobody can say for sure where everything on it came from, or that any of it was approved.
+
+This post shows how to keep every piece in one place, [Artifact Keeper](https://github.com/artifact-keeper/artifact-keeper), so every machine installs the same approved copy, rejects anything unapproved, and can be audited from the registry.
 
 ## One registry for everything a node boots from
 
-This post is the 30,000-foot view of a proof of concept that puts all of that in one place. [Artifact Keeper](https://github.com/artifact-keeper/artifact-keeper) is an open-source universal artifact registry, and in this setup it holds every byte a node boots from:
+This is the 30,000-foot view of a proof of concept. Artifact Keeper is an open-source universal artifact registry, and in this setup it holds every byte a node boots from:
 
 - Rocky Linux 10 BaseOS, AppStream, extras and EPEL, as **RPM proxy repositories**
 - RKE2 (Rancher's Kubernetes distribution) packages, as another **RPM proxy**
@@ -136,6 +134,12 @@ The [walkthrough](https://artifact-keeper.github.io/walkthroughs/rocky-linux-ima
 
 Dogfooding Artifact Keeper this hard produced a handful of improvements, which is part of why we do these projects. The compose and documentation fixes are already in, so the quickstart you land on matches what this post describes. The [1.11.0 release](https://github.com/artifact-keeper/artifact-keeper/issues/4468) adds signature-aware views for OCI repositories, so cosign signatures show up on the image they belong to instead of as separate tags, corrects the storage accounting for shared layers, and adds server-side image signing, which turns the cosign step into a registry setting.
 
+OpenTeams spends most of its days on AI and ML and the infrastructure that runs it, so this post was a detour into the closet. If that is your world, I hope it was useful. If you know someone whose world it is, send this their way.
+
+Two invitations. If you run deployments that have grown complicated and you suspect a system like this could simplify them, I would like to hear about them, and we can work out where Artifact Keeper fits. And if you are a nerd like me who wants to try this in a home lab, I want to hear how that goes just as much.
+
+A thank you to Edward Mora for putting Artifact Keeper to work at his company. This post is my open version of what I believe he built internally, and it would not exist without that example.
+
 ---
 
-If your deployments have grown complicated and you think one registry could simplify them, or you try this in a home lab, I would like to hear about it: bgeraci@openteams.com.
+Questions, war stories, or home-lab results: bgeraci@openteams.com.
