@@ -1,0 +1,20 @@
+---
+import { code, plex, navy, peach, green, check, gold, peachInk } from "./style";
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Dial turned down from rushed to deliberate">
+	<rect x="-300" y="-300" width="1320" height="980" fill={peach}/>
+	<g font-family={plex} font-size="24">
+		<path d="M210 264 A 150 150 0 0 1 510 264" fill="none" stroke="#ffffff" stroke-width="26" stroke-linecap="round"/>
+		<path d="M210 264 A 150 150 0 0 1 318 127" fill="none" stroke={gold} stroke-width="26" stroke-linecap="round"/>
+		<line x1="360" y1="264" x2="278" y2="176" stroke={navy} stroke-width="8" stroke-linecap="round"/>
+		<circle cx="360" cy="264" r="14" fill={navy}/>
+		<text x="176" y="316" fill={navy} font-weight="700">deliberate</text>
+		<text x="470" y="316" fill={peachInk}>rushed</text>
+		<g>
+			<circle cx="580" cy="120" r="26" fill={check}/>
+			<path d="M569 120 l8 8 l14 -16" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+		</g>
+		<text x="580" y="178" text-anchor="middle" font-size="20" fill={green} font-weight="600">better code</text>
+	</g>
+</svg>

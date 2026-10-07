@@ -10,7 +10,7 @@ export const GET: APIRoute = async () => {
 	const items = (await getPosts()).map((p) => ({
 		title: p.title,
 		titleParts: p.titleParts,
-		section: p.topic?.label ?? "Engineering",
+		section: p.topic.label,
 		byline: bylineNames(p.authors),
 		faces: p.authors.map((a) => ({ name: a.name, src: a.avatarUrl })),
 		date: shortDate(p.date),

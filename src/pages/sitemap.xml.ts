@@ -16,7 +16,7 @@ export const GET: APIRoute = async ({ site }) => {
 		...posts.map((post) => ({ path: pageUrl(`/${post.slug}`), changed: post.changed })),
 		...topicsOf(posts).map((topic) => ({
 			path: pageUrl(`/tag/${topic.slug}`),
-			changed: newest(posts.filter((post) => post.topic?.slug === topic.slug)),
+			changed: newest(posts.filter((post) => post.topic.slug === topic.slug)),
 		})),
 		...authorsOf(posts).map(({ author, posts: written }) => ({
 			path: pageUrl(`/author/${author.slug}`),

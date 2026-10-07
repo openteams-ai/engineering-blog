@@ -1,0 +1,15 @@
+---
+import { blogUrl } from "../../lib/blog-path";
+import { plex, navy, peach, goldDeep, peachInk } from "./style";
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Fable 5.1 at $3.69 per task against GLM-5.3-Flash at $0.023">
+	<rect x="-300" y="-300" width="1320" height="980" fill={peach}/>
+	<image href={blogUrl("/blog-logos/claude.svg")} x="150" y="96" width="96" height="96"/>
+	<image href={blogUrl("/blog-logos/zai.svg")} x="474" y="100" width="88" height="88"/>
+	<g font-family={plex} text-anchor="middle">
+		<text x="198" y="262" font-size="44" fill={navy} font-weight="700">$3.69</text>
+		<text x="360" y="160" font-size="26" fill={peachInk}>vs</text>
+		<text x="518" y="262" font-size="44" fill={goldDeep} font-weight="700">$0.023</text>
+	</g>
+</svg>

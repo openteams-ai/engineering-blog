@@ -68,7 +68,7 @@ const featuredRole = featured?.authors.length === 1 ? authorRole(featured.author
 			<div class="group relative transition-transform duration-200 hover:-translate-y-1">
 				<a href={pageUrl(`/${featured.slug}`)} class="block after:absolute after:inset-0 after:content-['']">
 					<BlogThumb slug={featured.slug} size="big" />
-					<div class="cat-label mt-5">{featured.topic?.label ?? "Engineering"}</div>
+					<div class="cat-label mt-5">{featured.topic.label}</div>
 					<h2 class="post-title-link mt-2.5 mb-2.5 text-2xl leading-[1.18] font-bold tracking-tight md:text-[28px]">
 						<PostTitle parts={featured.titleParts} />
 					</h2>
@@ -101,7 +101,7 @@ const featuredRole = featured?.authors.length === 1 ? authorRole(featured.author
 		</div>
 		<div id="post-grid" class="grid gap-x-10 gap-y-11 pb-16 md:grid-cols-3">
 			{posts.map((p, i) => (
-				<div data-topic={p.topic?.slug ?? ""} data-hero={i < heroCount ? "" : undefined} hidden={i < heroCount}>
+				<div data-topic={p.topic.slug} data-hero={i < heroCount ? "" : undefined} hidden={i < heroCount}>
 					<PostCard post={p} />
 				</div>
 			))}

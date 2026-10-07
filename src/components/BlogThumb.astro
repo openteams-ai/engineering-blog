@@ -1,7 +1,7 @@
 ---
-// Card artwork for posts: hand-made art (PostArt.astro) by slug, otherwise
-// a deterministic CSS vignette so every card still gets distinct art.
-import PostArt from "./PostArt.astro";
+// A post's card artwork: the drawing in art/<slug>.astro. Every post has one;
+// the content schema fails the build without it.
+import type { AstroComponentFactory } from "astro/runtime/server/index.js";
 
 interface Props {
 	slug: string;
@@ -10,129 +10,13 @@ interface Props {
 
 const { slug, size = "cell" } = Astro.props;
 
-// Posts with hand-made art (PostArt.astro) get it by slug; anything new
-// falls back to a deterministic generic vignette until art is drawn for it.
-const ART_SLUGS = new Set([
-	"pixi-ubi-micro-containers",
-	"benchmark-python-package-managers",
-	"best-code-reviews-say-less",
-	"what-i-learned-making-a-local-llm-do-real-work",
-	"you-dont-drive-ai-you-ride-it",
-	"who-is-your-codes-audience",
-	"from-skill-to-agent",
-	"code-mode-sandboxing-local-llms",
-	"docling-vs-marker-vs-llamaparse",
-	"plugin-playground-ai-integration",
-	"slow-down-ship-better-code",
-	"tp-as-number-slot-and-binary-dispatch",
-	"lint-rules-for-ai-agents",
-	"awesome-jupyter-ai-extensions",
-	"jev-bench-package-curation",
-	"minicpm5-2b-quantization-report",
-	"llm-review-reliability",
-	"intelligence-vs-cost",
-	"visual-regression-testing-jupyterlab",
-	"rocky-linux-image-mode-artifact-keeper",
-]);
-
-const VARIANTS = ["grid", "terminal", "pkg", "review", "table"] as const;
-const hash = [...slug].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
-const variant = ART_SLUGS.has(slug) ? "art" : VARIANTS[hash % VARIANTS.length];
+const art = import.meta.glob<AstroComponentFactory>("./art/*.astro", { eager: true, import: "default" });
+const Art: AstroComponentFactory | undefined = art[`./art/${slug}.astro`];
+if (Art === undefined) throw new Error(`no card art for "${slug}": add src/components/art/${slug}.astro`);
 
 const heights = { big: "h-[380px]", cell: "h-[200px]", mini: "h-[150px]" };
 ---
 
-<div class:list={["thumb overflow-hidden rounded-xl transition-shadow duration-200 group-hover:shadow-xl", heights[size], `thumb-${variant}`]}>
-	{variant === "art" ? (
-		<PostArt slug={slug} />
-	) : variant === "terminal" ? (
-		<div class="flex h-full items-center justify-center">
-			<div class="v-term">
-				<div class="mb-2 flex gap-1.5">
-					<i class="size-2 rounded-full bg-[#2c3d6e]"></i>
-					<i class="size-2 rounded-full bg-[#2c3d6e]"></i>
-					<i class="size-2 rounded-full bg-[#2c3d6e]"></i>
-				</div>
-				<div class="text-[#8aa2ff]">$ uv run bench.py</div>
-				<div class="text-[#7fd4a3]">ok in 0.41s</div>
-				<div class="text-[#6b7ba5]"># reproducible</div>
-			</div>
-		</div>
-	) : variant === "pkg" ? (
-		<div class="flex h-full items-end justify-center gap-3 pb-[18%]">
-			<i class="block w-10 rounded-t-lg bg-white shadow-md" style="height:32%"></i>
-			<i class="block w-10 rounded-t-lg bg-brand shadow-md" style="height:52%"></i>
-			<i class="block w-10 rounded-t-lg bg-white shadow-md" style="height:42%"></i>
-			<i class="block w-10 rounded-t-lg bg-[#ffd9a1] shadow-md" style="height:24%"></i>
-		</div>
-	) : variant === "review" ? (
-		<div class="flex h-full items-center justify-center">
-			<div class="relative -translate-x-4">
-				<div class="w-36 rounded-xl bg-white p-4 shadow-lg">
-					<i class="mb-2 block h-1.5 rounded bg-[#d7e9df]"></i>
-					<i class="mb-2 block h-1.5 w-2/3 rounded bg-[#8fd8b4]"></i>
-					<i class="mb-2 block h-1.5 rounded bg-[#d7e9df]"></i>
-					<i class="block h-1.5 rounded bg-[#d7e9df]"></i>
-				</div>
-				<div class="absolute -right-14 top-3 rounded-xl rounded-bl-sm bg-brand-strong px-3 py-2 text-xs font-semibold text-white shadow-lg">&lt;/&gt;</div>
-			</div>
-		</div>
-	) : variant === "table" ? (
-		<div class="flex h-full items-center justify-center gap-4">
-			<div class="h-24 w-20 rounded-lg bg-white p-2.5 shadow-lg">
-				<i class="mb-1.5 block h-1 rounded bg-[#e5defa]"></i>
-				<i class="mb-1.5 block h-1 rounded bg-[#e5defa]"></i>
-				<div class="h-9 rounded border-2 border-[#8f79e8]"></div>
-			</div>
-			<div class="text-lg font-semibold text-[#8f79e8]">&rarr;</div>
-			<div class="flex flex-col gap-1.5">
-				<i class="block h-2.5 w-16 rounded bg-white shadow"></i>
-				<i class="block h-2.5 w-16 rounded bg-white shadow"></i>
-				<i class="block h-2.5 w-16 rounded bg-white shadow"></i>
-			</div>
-		</div>
-	) : (
-		<div class="flex h-full items-center justify-center">
-			<div class="grid -rotate-2 grid-cols-3 gap-2.5">
-				{Array.from({ length: 6 }).map(() => (
-					<i class="relative block h-9 w-12 rounded-lg bg-white shadow-md after:absolute after:top-2 after:left-2 after:h-1.5 after:w-5 after:rounded after:bg-brand before:absolute before:top-2 before:right-2 before:h-1.5 before:w-2 before:rounded before:bg-accent" />
-				))}
-			</div>
-		</div>
-	)}
+<div class:list={["thumb overflow-hidden rounded-xl transition-shadow duration-200 group-hover:shadow-xl", heights[size]]}>
+	<Art />
 </div>
-
-<style>
-	.thumb-pixi {
-		background: #fff7e0;
-	}
-	.thumb-grid {
-		background: #e4ebff;
-		background-image:
-			linear-gradient(#cdd9fa 1px, transparent 1px),
-			linear-gradient(90deg, #cdd9fa 1px, transparent 1px);
-		background-size: 36px 36px;
-	}
-	.thumb-terminal {
-		background: #041437;
-	}
-	.thumb-pkg {
-		background: #fff3e0;
-	}
-	.thumb-review {
-		background: #e2f6ec;
-	}
-	.thumb-table {
-		background: #efe9ff;
-	}
-	.v-term {
-		background: #0b1c44;
-		border-radius: 10px;
-		padding: 14px 16px;
-		min-width: 160px;
-		box-shadow: 0 14px 30px rgba(2, 20, 55, 0.5);
-		font-family: var(--font-mono);
-		font-size: 11px;
-		line-height: 1.9;
-	}
-</style>

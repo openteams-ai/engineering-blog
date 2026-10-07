@@ -1,0 +1,20 @@
+---
+import { code, navy, darkNavy, greenOnNavy } from "./style";
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Model-written code running inside a sandbox">
+	<rect x="-300" y="-300" width="1320" height="980" fill={darkNavy}/>
+	<g font-family={code}>
+		<rect x="60" y="135" width="160" height="110" rx="14" fill="#ffffff"/>
+		<text x="140" y="182" text-anchor="middle" font-size="24" fill={navy} font-weight="500">local</text>
+		<text x="140" y="214" text-anchor="middle" font-size="24" fill={navy} font-weight="500">LLM</text>
+		<path d="M234 190 H292" stroke="#8aa2ff" stroke-width="4" stroke-linecap="round"/>
+		<path d="M284 179 L302 190 L284 201 Z" fill="#8aa2ff"/>
+		<rect x="330" y="72" width="330" height="240" rx="16" fill="none" stroke="#85b8ff" stroke-width="3.5" stroke-dasharray="14 10"/>
+		<text x="495" y="54" text-anchor="middle" font-size="22" fill="#85b8ff" font-weight="500">sandbox</text>
+		<rect x="362" y="102" width="266" height="180" rx="12" fill="#0b1c44"/>
+		<text x="388" y="154" font-size="24" fill="#8aa2ff">import tools</text>
+		<text x="388" y="192" font-size="24" fill="#dce3ff">run(task)</text>
+		<text x="388" y="230" font-size="24" fill={greenOnNavy}># no network</text>
+	</g>
+</svg>

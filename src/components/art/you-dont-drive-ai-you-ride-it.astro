@@ -1,0 +1,25 @@
+---
+import { plex, navy, softBlue, solidBlue, blueMut } from "./style";
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A straight expected path versus the wavy path you actually ride">
+	<rect x="-300" y="-300" width="1320" height="980" fill={softBlue}/>
+	<g stroke="#b9d1f5" stroke-width="1">
+		{Array.from({ length: 18 }, (_, i) => (
+			<line x1={i * 44 - 20} y1="-20" x2={i * 44 - 20} y2="400" />
+		))}
+		{Array.from({ length: 10 }, (_, i) => (
+			<line x1="-20" y1={i * 44 - 20} x2="740" y2={i * 44 - 20} />
+		))}
+	</g>
+	<g font-family={plex}>
+		<path d="M90 130 H540" stroke="#7a8db0" stroke-width="4" stroke-dasharray="12 12" stroke-linecap="round"/>
+		<text x="570" y="138" font-size="26" fill={blueMut}>drive</text>
+		<path d="M90 260 C 175 190, 240 330, 325 260 S 470 195, 540 250" stroke={solidBlue} stroke-width="8" fill="none" stroke-linecap="round"/>
+		<path d="M532 228 L568 254 L526 268 Z" fill={solidBlue}/>
+		<text x="578" y="268" font-size="28" fill={navy} font-weight="700">ride</text>
+		<circle cx="90" cy="130" r="9" fill="#7a8db0"/>
+		<circle cx="90" cy="260" r="9" fill={solidBlue}/>
+		<text x="90" y="340" font-size="22" fill={blueMut}>stochastic, not deterministic</text>
+	</g>
+</svg>

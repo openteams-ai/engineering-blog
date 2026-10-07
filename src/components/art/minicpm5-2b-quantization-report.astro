@@ -1,0 +1,14 @@
+---
+import { blogUrl } from "../../lib/blog-path";
+import { plex, navy, softBlue, blueMut } from "./style";
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="MiniCPM5-2B in 3 GiB">
+	<rect x="-300" y="-300" width="1320" height="980" fill={softBlue}/>
+	<rect x="90" y="110" width="300" height="160" rx="24" fill="#fdfdfd"/>
+	<image href={blogUrl("/blog-logos/minicpm.png")} x="112" y="130" width="256" height="120"/>
+	<g font-family={plex}>
+		<text x="430" y="210" font-size="76" fill={navy} font-weight="700">3 GiB</text>
+		<text x="434" y="252" font-size="24" fill={blueMut}>of RAM</text>
+	</g>
+</svg>

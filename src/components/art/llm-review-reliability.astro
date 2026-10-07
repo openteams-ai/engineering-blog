@@ -1,0 +1,25 @@
+---
+import { plex, navy, solidBlue, check } from "./style";
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A reviewer LLM approves an unsupported claim in another LLM's summary">
+	<rect x="-300" y="-300" width="1320" height="980" fill={solidBlue}/>
+	<rect x="170" y="56" width="290" height="248" rx="16" fill="#ffffff"/>
+	{[
+		{ y: 96, w: 220 },
+		{ y: 134, w: 190 },
+		{ y: 226, w: 206 },
+		{ y: 262, w: 140 },
+	].map((l) => <rect x="204" y={l.y} width={l.w} height="14" rx="7" fill="#d6e4fa"/>)}
+	<rect x="204" y="174" width="222" height="18" rx="9" fill="#ff8f73"/>
+	<circle cx="368" cy="183" r="66" fill="none" stroke={navy} stroke-width="9"/>
+	<path d="M416 231 L476 291" stroke={navy} stroke-width="16" stroke-linecap="round"/>
+	<g transform="translate(418 132)">
+		<circle r="24" fill={check} stroke="#ffffff" stroke-width="4"/>
+		<path d="M-10 0 L-3 7 L11 -8" stroke="#ffffff" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+	</g>
+	<g font-family={plex} font-size="24" fill="#cfe1fb" text-anchor="middle">
+		<text x="315" y="346">LLM summary</text>
+		<text x="580" y="191">LLM reviewer</text>
+	</g>
+</svg>

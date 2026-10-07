@@ -27,7 +27,7 @@ export function movedPosts(markdownFiles: string[]): Move[] {
 }
 
 /** The moves of the posts in this repository. */
-export function postMoves(directory = "src/content/posts"): Move[] {
+export function postMoves(directory = "posts"): Move[] {
 	const files = readdirSync(directory).filter((name) => name.endsWith(".md"));
 	return movedPosts(files.map((name) => readFileSync(`${directory}/${name}`, "utf8")));
 }

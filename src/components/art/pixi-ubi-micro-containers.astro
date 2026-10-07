@@ -1,0 +1,35 @@
+---
+import { blogUrl } from "../../lib/blog-path";
+import { code, navy, peach, green, check, peachSoft, gold, peachInk } from "./style";
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Multi-stage build: full UBI builder shrinking to an ubi-micro runtime">
+	<rect x="-300" y="-300" width="1320" height="980" fill={peach}/>
+	<g font-family={code}>
+		<rect x="60" y="50" width="230" height="240" rx="16" fill="#ffffff"/>
+		<text x="175" y="92" text-anchor="middle" font-size="24" font-weight="500" fill={navy}>ubi9/ubi</text>
+		<rect x="84" y="112" width="182" height="22" rx="6" fill={peachSoft}/>
+		<rect x="84" y="142" width="182" height="22" rx="6" fill={peachSoft}/>
+		<rect x="84" y="172" width="140" height="22" rx="6" fill={peachSoft}/>
+		<rect x="84" y="202" width="182" height="22" rx="6" fill={peachSoft}/>
+		<rect x="84" y="232" width="182" height="22" rx="6" fill={gold}/>
+		<text x="175" y="332" text-anchor="middle" font-size="30" font-weight="500" fill={navy}>803 MB</text>
+		<text x="175" y="360" text-anchor="middle" font-size="17" fill={peachInk}>188 packages</text>
+	</g>
+	<image href={blogUrl("/pixi-logo.webp")} x="326" y="94" width="84" height="64"/>
+	<path d="M310 195 H406" stroke={navy} stroke-width="4" stroke-linecap="round"/>
+	<path d="M398 184 L416 195 L398 206 Z" fill={navy}/>
+	<g font-family={code}>
+		<g transform="translate(505 42)">
+			<circle r="22" fill={check}/>
+			<path d="M-9 0 L-3 6 L10 -8" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+		</g>
+		<text x="540" y="50" font-size="20" fill={green} font-weight="500">356 -&gt; 16</text>
+		<rect x="440" y="110" width="190" height="180" rx="16" fill="#ffffff"/>
+		<text x="535" y="152" text-anchor="middle" font-size="24" font-weight="500" fill={navy}>ubi-micro</text>
+		<rect x="464" y="176" width="142" height="22" rx="6" fill={gold}/>
+		<rect x="464" y="206" width="100" height="22" rx="6" fill={peachSoft}/>
+		<text x="535" y="332" text-anchor="middle" font-size="30" font-weight="500" fill={navy}>511 MB</text>
+		<text x="535" y="360" text-anchor="middle" font-size="17" fill={peachInk}>22 packages</text>
+	</g>
+</svg>

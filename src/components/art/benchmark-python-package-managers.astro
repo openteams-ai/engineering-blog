@@ -1,0 +1,24 @@
+---
+import { code, solidBlue } from "./style";
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Environment recreate times across six package managers">
+	<rect x="-300" y="-300" width="1320" height="980" fill={solidBlue}/>
+	<g font-family={code} font-size="20">
+		<text x="64" y="52" font-size="18" fill="#cfe1fb">env recreate, same ML project</text>
+		{[
+			{ name: "uv", t: "2.1s", w: 14, y: 74, hot: true },
+			{ name: "pixi", t: "21.8s", w: 72, y: 122, hot: true },
+			{ name: "poetry", t: "86.6s", w: 240, y: 170 },
+			{ name: "mamba", t: "104.8s", w: 290, y: 218 },
+			{ name: "pip", t: "163.5s", w: 430, y: 266 },
+			{ name: "conda", t: "163.6s", w: 431, y: 314 },
+		].map((b) => (
+			<>
+				<text x="150" y={b.y + 21} text-anchor="end" fill="#ffffff">{b.name}</text>
+				<rect x="166" y={b.y} width={b.w} height="28" rx="7" fill="#ffffff" opacity={b.hot ? 1 : 0.35}/>
+				<text x={166 + b.w + 14} y={b.y + 21} fill={b.hot ? "#ffffff" : "#cfe1fb"} font-weight={b.hot ? "500" : "400"}>{b.t}</text>
+			</>
+		))}
+	</g>
+</svg>

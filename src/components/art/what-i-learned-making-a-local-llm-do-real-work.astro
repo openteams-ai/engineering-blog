@@ -1,0 +1,26 @@
+---
+import { code, navy, darkNavy, check, greenOnNavy, gold } from "./style";
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A local model passing evals, with a caveat">
+	<rect x="-300" y="-300" width="1320" height="980" fill={darkNavy}/>
+	<g font-family={code}>
+		<rect x="64" y="70" width="290" height="220" rx="14" fill="#0b1c44"/>
+		<circle cx="92" cy="98" r="5" fill="#2c3d6e"/><circle cx="112" cy="98" r="5" fill="#2c3d6e"/><circle cx="132" cy="98" r="5" fill="#2c3d6e"/>
+		<text x="88" y="154" font-size="24" fill="#8aa2ff">$ llama-server</text>
+		<text x="88" y="192" font-size="24" fill="#8aa2ff">&#160;&#160;qwen3-coder</text>
+		<text x="88" y="230" font-size="24" fill={greenOnNavy}>local &#183; no cloud</text>
+		<g>
+			<rect x="390" y="70" width="270" height="200" rx="14" fill="#ffffff"/>
+			<text x="416" y="110" font-size="22" fill={navy} font-weight="500">evals</text>
+			{[138, 172, 206].map((y) => (
+				<g>
+					<circle cx="428" cy={y} r="10" fill={check}/>
+					<path d={`M423 ${y} l4 4 l8 -9`} stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+					<rect x="450" y={y - 5} width="180" height="10" rx="5" fill="#dbe3f0"/>
+				</g>
+			))}
+			<text x="525" y="310" text-anchor="middle" font-size="22" fill={gold} font-weight="500">100% pass != prod-ready</text>
+		</g>
+	</g>
+</svg>

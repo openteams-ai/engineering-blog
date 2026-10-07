@@ -1,0 +1,31 @@
+---
+import { blogUrl } from "../../lib/blog-path";
+import { navy, peach, gold, sparkle } from "./style";
+
+// Jupyter in orbit: the logo at the centre, three sparkles for
+// extensions, and a few dots and rings around it.
+const hub = { x: 360, y: 200 };
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="The Jupyter logo with extensions as stars around it">
+	<rect x="-300" y="-300" width="1320" height="980" fill={peach}/>
+	<g fill="none" stroke={navy} stroke-width="2.5">
+		<circle cx="360" cy="40" r="11"/>
+		<circle cx="128" cy="236" r="12"/>
+		<circle cx="568" cy="262" r="9"/>
+	</g>
+	<image href={blogUrl("/blog-logos/jupyter.svg")} x={hub.x - 84} y={hub.y - 120} width="168" height="222"/>
+	<image href={blogUrl("/blog-logos/awesome.svg")} x="618" y="306" width="76" height="56"/>
+	<g fill={gold}>
+		<path d={sparkle(196, 104, 30)}/>
+		<path d={sparkle(560, 128, 24)}/>
+		<path d={sparkle(118, 318, 16)}/>
+	</g>
+	<g fill={navy}>
+		<path d={sparkle(482, 70, 13)}/>
+		<circle cx="250" cy="330" r="4.5"/>
+		<circle cx="490" cy="336" r="4.5"/>
+		<circle cx="226" cy="190" r="4.5"/>
+		<circle cx="626" cy="196" r="4.5"/>
+	</g>
+</svg>

@@ -5,3 +5,6 @@ dist/
 
 # Editor settings
 .vscode/
+
+# scripts/card-preview.ts default output
+card-preview-*.png

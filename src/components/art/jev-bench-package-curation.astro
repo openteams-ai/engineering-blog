@@ -1,0 +1,15 @@
+---
+import { code, navy, lightGreen, green, greenDeep } from "./style";
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Latency per decision: Jev 136 ms, a fine-tuned Laya 21 ms">
+	<rect x="-300" y="-300" width="1320" height="980" fill={lightGreen}/>
+	<g font-family={code}>
+		<text x="110" y="152" font-size="28" fill={navy} font-weight="500">Jev</text>
+		<rect x="220" y="122" width="408" height="44" rx="12" fill="#ffffff"/>
+		<text x="604" y="153" text-anchor="end" font-size="26" fill={green}>136 ms</text>
+		<text x="110" y="246" font-size="28" fill={navy} font-weight="500">Laya</text>
+		<rect x="220" y="216" width="63" height="44" rx="12" fill={greenDeep}/>
+		<text x="300" y="247" font-size="28" fill={greenDeep} font-weight="500">21 ms</text>
+	</g>
+</svg>

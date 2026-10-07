@@ -14,7 +14,7 @@ interface Props {
 }
 
 const { post, size = "cell" } = Astro.props;
-const label = post.topic?.label ?? "Engineering";
+const label = post.topic.label;
 const href = pageUrl(`/${post.slug}`);
 const card = "group relative transition-transform duration-200 hover:-translate-y-1";
 const over = "block after:absolute after:inset-0 after:content-['']";

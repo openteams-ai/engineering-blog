@@ -1,0 +1,60 @@
+name: Notify Slack on new PR
+
+# pull_request_target, not pull_request, so PRs from forks also get the
+# SLACK_PR_WEBHOOK secret (pull_request runs from forks get it empty). That
+# makes it unsafe to run anything from the PR, so there is no checkout: the
+# list of added files comes from the GitHub API, as data.
+on:
+  pull_request_target:
+    types: [opened]
+    # The channel exists to announce posts. Without this every workflow and
+    # script change lands there too, which trains people to ignore it.
+    paths:
+      - 'posts/**'
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      # The paths filter above lets through any PR touching posts, which
+      # includes edits to articles that are already published. The channel
+      # announces new writing, so look for a post file that was ADDED and
+      # stay quiet when the PR only modifies one.
+      - name: Is this a new post?
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          ADDED=$(gh api --paginate \
+            "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" \
+            --jq '.[] | select(.status == "added") | .filename
+                  | select(test("^posts/[^/]+\\.md$"))')
+          if [ -n "$ADDED" ]; then
+            echo "Announcing:"; echo "$ADDED"
+            echo "new-post=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Only edits to existing posts; staying quiet."
+            echo "new-post=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Send Slack notification
+        if: steps.check.outputs.new-post == 'true'
+        env:
+          SLACK_PR_WEBHOOK: ${{ secrets.SLACK_PR_WEBHOOK }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          PAYLOAD=$(jq -n \
+            --arg pr_title "$PR_TITLE" \
+            --arg pr_url "$PR_URL" \
+            --arg pr_author "$PR_AUTHOR" \
+            --arg pr_number "$PR_NUMBER" \
+            '{pr_title: $pr_title, pr_url: $pr_url, pr_author: $pr_author, pr_number: $pr_number}')
+
+          curl -sf -X POST -H 'Content-Type: application/json' \
+            --data "$PAYLOAD" "$SLACK_PR_WEBHOOK"

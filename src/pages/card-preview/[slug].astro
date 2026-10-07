@@ -1,0 +1,65 @@
+---
+// One post's card art at every size the site shows it, for checking new art
+// (scripts/card-preview.ts screenshots it). Only `astro dev` serves it; the
+// production build has no such pages.
+import { Font } from "astro:assets";
+import BlogThumb from "../../components/BlogThumb.astro";
+import "../../styles/global.css";
+
+export function getStaticPaths() {
+	if (!import.meta.env.DEV) return [];
+	const files = Object.keys(import.meta.glob("../../components/art/*.astro"));
+	return files.map((file) => ({ params: { slug: file.replace(/^.*\/|\.astro$/g, "") } }));
+}
+
+const { slug } = Astro.params;
+
+// Measured on the home page: featured, grid and related cards on a desktop,
+// and the featured card on a phone, where it is narrowest for its height.
+const sizes = [
+	{ label: "featured, desktop", size: "big", width: 556 },
+	{ label: "grid", size: "cell", width: 357 },
+	{ label: "related", size: "mini", width: 266 },
+	{ label: "featured, phone", size: "big", width: 342 },
+] as const;
+---
+
+<html lang="en" class="blog-theme">
+	<head>
+		<meta charset="utf-8" />
+		<title>{slug} card</title>
+		<Font cssVariable="--font-body" />
+		<Font cssVariable="--font-post" />
+		<Font cssVariable="--font-mono" />
+	</head>
+	<body>
+		<main id="cards">
+			{sizes.map((s) => (
+				<figure style={`width: ${s.width}px`}>
+					<BlogThumb slug={slug} size={s.size} />
+					<figcaption>{s.label}, {s.width}px wide</figcaption>
+				</figure>
+			))}
+		</main>
+	</body>
+</html>
+
+<style>
+	#cards {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-start;
+		gap: 24px;
+		width: 1000px;
+		padding: 24px;
+		background: #ffffff;
+	}
+	figure {
+		margin: 0;
+	}
+	figcaption {
+		margin-top: 6px;
+		font: 13px/1.4 sans-serif;
+		color: #44546f;
+	}
+</style>

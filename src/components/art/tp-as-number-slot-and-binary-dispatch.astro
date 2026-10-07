@@ -1,0 +1,23 @@
+---
+import { code, navy, mut, solidBlue } from "./style";
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="How a plus b dispatches through the tp_as_number slot">
+	<rect x="-300" y="-300" width="1320" height="980" fill={solidBlue}/>
+	<g font-family={code}>
+		<rect x="66" y="140" width="190" height="100" rx="16" fill="#ffffff"/>
+		<text x="161" y="204" text-anchor="middle" font-size="36" fill={navy} font-weight="500">a + b</text>
+		<path d="M270 190 H332" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+		<path d="M324 179 L342 190 L324 201 Z" fill="#ffffff"/>
+		<g>
+			<rect x="366" y="56" width="290" height="268" rx="16" fill="#ffffff"/>
+			<text x="392" y="100" font-size="20" fill={mut}>PyNumberMethods</text>
+			<rect x="390" y="118" width="242" height="50" rx="10" fill={navy}/>
+			<text x="408" y="151" font-size="24" fill="#ffffff" font-weight="500">nb_add</text>
+			<rect x="390" y="180" width="242" height="44" rx="10" fill="#e9f0fb"/>
+			<text x="408" y="209" font-size="22" fill={mut}>nb_subtract</text>
+			<rect x="390" y="236" width="242" height="44" rx="10" fill="#e9f0fb"/>
+			<text x="408" y="265" font-size="22" fill={mut}>nb_multiply</text>
+		</g>
+	</g>
+</svg>

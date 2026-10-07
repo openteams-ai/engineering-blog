@@ -1,0 +1,32 @@
+name: Request write access
+description: Ask for write access so you can open a PR with your post
+title: "Write access: <your GitHub handle>"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Only people with write access can open pull requests in this repo. Tell us a bit about the post you'd like to write, and a repo admin will follow up here.
+
+  - type: dropdown
+    id: affiliation
+    attributes:
+      label: Who are you?
+      options:
+        - OpenTeams member with read-only access
+        - Guest author outside OpenTeams
+    validations:
+      required: true
+
+  - type: textarea
+    id: post
+    attributes:
+      label: Your post
+      description: Optional. A few sentences on what you'd like to write about. Link a draft if you have one.
+      placeholder: "I'd like to write about how we cut our CI time in half with X. Draft is here: https://..."
+
+  - type: input
+    id: contact
+    attributes:
+      label: OpenTeams contact
+      description: Optional. The GitHub handle of someone at OpenTeams you've worked with.
+      placeholder: "@username"

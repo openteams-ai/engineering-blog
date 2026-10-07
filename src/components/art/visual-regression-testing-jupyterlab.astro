@@ -1,0 +1,78 @@
+---
+import { plex, navy, solidBlue, check, sparkle } from "./style";
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A human and a coding agent both rely on the same screenshot comparison, and it passes. Three wins: 55 minutes down to 15, 17 flaky tests down to 2.4, the same pixels as CI">
+	<rect x="-300" y="-300" width="1320" height="980" fill={solidBlue}/>
+	<g transform="translate(230 54)">
+		<rect width="260" height="188" rx="14" fill="#ffffff"/>
+		<rect width="260" height="36" rx="14" fill="#e9f0fb"/>
+		<rect y="22" width="260" height="14" fill="#e9f0fb"/>
+		<circle cx="24" cy="18" r="5" fill="#9db8e8"/><circle cx="42" cy="18" r="5" fill="#9db8e8"/><circle cx="60" cy="18" r="5" fill="#9db8e8"/>
+		<line x1="58" y1="36" x2="58" y2="188" stroke="#e9f0fb" stroke-width="2.5"/>
+		<rect x="14" y="54" width="30" height="9" rx="4.5" fill="#dbe7fa"/>
+		<rect x="14" y="74" width="30" height="9" rx="4.5" fill="#dbe7fa"/>
+		<rect x="14" y="94" width="20" height="9" rx="4.5" fill="#dbe7fa"/>
+		<rect x="74" y="52" width="170" height="44" rx="8" fill="#eef4fd"/>
+		<rect x="74" y="52" width="5" height="44" rx="2.5" fill={solidBlue}/>
+		<rect x="90" y="63" width="110" height="9" rx="4.5" fill="#c3d6f5"/>
+		<rect x="90" y="77" width="74" height="9" rx="4.5" fill="#c3d6f5"/>
+		{[
+			{ x: 74, h: 26 },
+			{ x: 100, h: 44 },
+			{ x: 140, h: 34 },
+			{ x: 166, h: 54, hot: true },
+		].map((b) => (
+			<rect x={b.x} y={168 - b.h} width="20" height={b.h} rx="5" fill={b.hot ? solidBlue : "#9db8e8"}/>
+		))}
+		<line x1="130" y1="36" x2="130" y2="188" stroke={navy} stroke-width="3"/>
+		<g transform="translate(130 109)">
+			<circle r="14" fill={navy} stroke="#ffffff" stroke-width="3"/>
+			<path d="M-3 -5 L-8 0 L-3 5 Z M3 -5 L8 0 L3 5 Z" fill="#ffffff"/>
+		</g>
+		<g transform="translate(260 0)">
+			<circle r="24" fill={check} stroke="#ffffff" stroke-width="4"/>
+			<path d="M-10 0 L-3 7 L11 -8" stroke="#ffffff" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+		</g>
+	</g>
+	<g transform="translate(110 148)">
+		<circle r="44" fill="#ffffff"/>
+		<circle cy="-11" r="12" fill={navy}/>
+		<path d="M-22 26 a22 21 0 0 1 44 0 Z" fill={navy}/>
+	</g>
+	<g transform="translate(610 148)">
+		<circle r="44" fill="#ffffff"/>
+		<path d={sparkle(-4, 4, 25)} fill={navy}/>
+		<path d={sparkle(21, -20, 9)} fill={navy}/>
+	</g>
+	<g stroke="#ffffff" stroke-width="4" stroke-linecap="round">
+		<path d="M168 148 H206"/>
+		<path d="M552 148 H514"/>
+	</g>
+	<path d="M198 137 L216 148 L198 159 Z M522 137 L504 148 L522 159 Z" fill="#ffffff"/>
+	<g font-family={plex} text-anchor="middle">
+		<text x="110" y="226" font-size="24" font-weight="600" fill="#ffffff">human</text>
+		<text x="610" y="226" font-size="24" font-weight="600" fill="#ffffff">agent</text>
+		<g font-size="20" font-weight="600" fill="#ffffff">
+			{[
+				{ x: 76, w: 164, from: "55", to: "15 min" },
+				{ x: 252, w: 182, from: "17", to: "2.4 flaky" },
+				{ x: 446, w: 198, label: "same pixels as CI" },
+			].map((c) => (
+				<>
+					<rect x={c.x} y="292" width={c.w} height="40" rx="20" fill-opacity="0.16"/>
+					{c.label ? (
+						<text x={c.x + c.w / 2} y="319">{c.label}</text>
+					) : (
+						<>
+							<text x={c.x + 18} y="319" text-anchor="start">{c.from}</text>
+							<path d={`M${c.x + 51} 312 h14`} stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+							<path d={`M${c.x + 65} 306.5 l8 5.5 l-8 5.5 Z`}/>
+							<text x={c.x + 82} y="319" text-anchor="start">{c.to}</text>
+						</>
+					)}
+				</>
+			))}
+		</g>
+	</g>
+</svg>

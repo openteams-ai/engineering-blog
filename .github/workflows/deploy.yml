@@ -60,3 +60,19 @@ jobs:
       - name: Deploy production
         if: github.event_name == 'push' && steps.token.outputs.set == 'true'
         run: node scripts/deploy.ts
+
+      # Posts this push added, not ones it edited. Only the two commits'
+      # trees are needed, so the shallow checkout plus one fetch is enough.
+      - name: Announce new posts in Slack
+        if: github.event_name == 'push' && steps.token.outputs.set == 'true'
+        continue-on-error: true
+        env:
+          BEFORE: ${{ github.event.before }}
+          SLACK_PUBLISH_WEBHOOK: ${{ secrets.SLACK_PUBLISH_WEBHOOK }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$BEFORE"
+          # No pathspec on the diff: git pairs a moved post with its old path only
+          # when it sees both, so a move doesn't count as a new post.
+          mapfile -t added < <(git diff --name-only --diff-filter=A "$BEFORE" HEAD | grep -E '^posts/[^/]+\.md$')
+          [ "${#added[@]}" -eq 0 ] && { echo "No new posts."; exit 0; }
+          node scripts/notify-published.ts "${added[@]}"

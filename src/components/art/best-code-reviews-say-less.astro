@@ -1,0 +1,27 @@
+---
+import { plex, lightGreen, green, greenDeep, check, greenBar } from "./style";
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Forty review comments filtered down to the three that matter">
+	<rect x="-300" y="-300" width="1320" height="980" fill={lightGreen}/>
+	<g font-family={plex}>
+		{[60, 106, 152, 198, 244].map((y, i) => (
+			<g opacity={0.6 + i * 0.02}>
+				<rect x="70" y={y} width="240" height="38" rx="12" fill="#ffffff"/>
+				<rect x="88" y={y + 14} width={170 - i * 16} height="10" rx="5" fill={greenBar}/>
+			</g>
+		))}
+		<text x="190" y="336" text-anchor="middle" font-size="22" fill={green} font-weight="500">40 comments</text>
+		<path d="M330 190 H400" stroke={greenDeep} stroke-width="4" stroke-linecap="round"/>
+		<path d="M392 179 L410 190 L392 201 Z" fill={greenDeep}/>
+		{[96, 158, 220].map((y) => (
+			<g>
+				<rect x="430" y={y} width="230" height="46" rx="12" fill="#ffffff"/>
+				<circle cx="458" cy={y + 23} r="11" fill={check}/>
+				<path d={`M452 ${y + 23} l4 4 l9 -10`} stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/>
+				<rect x="482" y={y + 18} width="150" height="10" rx="5" fill={greenBar}/>
+			</g>
+		))}
+		<text x="545" y="316" text-anchor="middle" font-size="22" fill={greenDeep} font-weight="600">the 3 that matter</text>
+	</g>
+</svg>

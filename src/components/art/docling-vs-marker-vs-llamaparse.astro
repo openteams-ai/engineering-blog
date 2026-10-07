@@ -1,0 +1,28 @@
+---
+import { code, navy, peach, peachSoft, peachMid, gold } from "./style";
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="One PDF parsed by three tools">
+	<rect x="-300" y="-300" width="1320" height="980" fill={peach}/>
+	<g font-family={code}>
+		<path d="M84 96 h110 l36 36 v152 h-146 Z" fill="#ffffff"/>
+		<path d="M194 96 v36 h36" fill="none" stroke={peachMid} stroke-width="2.5"/>
+		<rect x="106" y="152" width="102" height="12" rx="6" fill={peachSoft}/>
+		<rect x="106" y="180" width="102" height="62" rx="4" fill="none" stroke={gold} stroke-width="2.5"/>
+		<line x1="106" y1="202" x2="208" y2="202" stroke={gold} stroke-width="2"/>
+		<line x1="106" y1="222" x2="208" y2="222" stroke={gold} stroke-width="2"/>
+		<line x1="157" y1="180" x2="157" y2="242" stroke={gold} stroke-width="2"/>
+		{[
+			{ y: 70, name: "docling", w: 160, hot: true },
+			{ y: 166, name: "marker", w: 110 },
+			{ y: 262, name: "llamaparse", w: 90 },
+		].map((t) => (
+			<g>
+				<path d={`M246 190 C 310 190, 320 ${t.y + 32}, 372 ${t.y + 32}`} stroke={gold} stroke-width="2.5" fill="none"/>
+				<rect x="380" y={t.y} width="260" height="64" rx="14" fill="#ffffff"/>
+				<text x="402" y={t.y + 30} font-size="24" fill={navy} font-weight="500">{t.name}</text>
+				<rect x="402" y={t.y + 42} width={t.w} height="12" rx="6" fill={t.hot ? gold : peachMid}/>
+			</g>
+		))}
+	</g>
+</svg>

@@ -28,7 +28,8 @@
 		"playwright": "1.63.0",
 		"typescript": "6.0.3",
 		"vitest": "5.0.2",
-		"wrangler": "4.145.0"
+		"wrangler": "4.145.0",
+		"yaml": "2.9.1"
 	},
 	"overrides": {
 		"sharp": "0.35.5"

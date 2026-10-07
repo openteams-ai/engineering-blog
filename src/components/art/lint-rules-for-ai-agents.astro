@@ -1,0 +1,41 @@
+---
+import { blogUrl } from "../../lib/blog-path";
+import { code, darkNavy, greenOnNavy } from "./style";
+
+// Lint feedback loop: four nodes on one ring. Angles are degrees clockwise
+// from 12 o'clock; each segment runs from where one node ends to where the
+// next begins, with its arrowhead at that end.
+const loop = { x: 360, y: 190, r: 105 };
+const ringPt = (deg: number) => {
+	const t = (deg * Math.PI) / 180;
+	return [loop.x + loop.r * Math.sin(t), loop.y - loop.r * Math.cos(t)].map((v) => v.toFixed(1));
+};
+const ringArc = (from: number, to: number) =>
+	`M${ringPt(from).join(" ")} A${loop.r} ${loop.r} 0 0 1 ${ringPt(to).join(" ")}`;
+const loopSegments = [
+	{ from: 33, to: 67, c: "#8aa2ff" },
+	{ from: 113, to: 140, c: "#ff8f73" },
+	{ from: 220, to: 255, c: greenOnNavy },
+	{ from: 285, to: 327, c: "#8aa2ff" },
+];
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Feedback loop: the agent writes code, ESLint flags a lint error, the agent fixes it">
+	<rect x="-300" y="-300" width="1320" height="980" fill={darkNavy}/>
+	{loopSegments.map((s) => (
+		<>
+			<path d={ringArc(s.from, s.to - 4)} fill="none" stroke={s.c} stroke-width="2.5" stroke-linecap="round"/>
+			<path d="M0 0 L-10 -5.5 L-10 5.5 Z" fill={s.c} transform={`translate(${ringPt(s.to).join(" ")}) rotate(${s.to})`}/>
+		</>
+	))}
+	<circle cx="465" cy="190" r="32" fill="#ffffff"/>
+	<image href={blogUrl("/blog-logos/eslint.svg")} x="446" y="171" width="38" height="38"/>
+	<g font-family={code} font-size="17" font-weight="500" text-anchor="middle">
+		<rect x="311" y="67" width="98" height="36" rx="18" fill="#0b1c44" stroke="#8aa2ff" stroke-width="2"/>
+		<text x="360" y="91" fill="#dce3ff">agent</text>
+		<rect x="276" y="277" width="168" height="36" rx="18" fill="#2c2841" stroke="#ff8f73" stroke-width="2"/>
+		<text x="360" y="301" fill="#ff8f73">&#10005; lint error</text>
+		<rect x="197" y="172" width="116" height="36" rx="18" fill="#18334a" stroke={greenOnNavy} stroke-width="2"/>
+		<text x="255" y="196" fill={greenOnNavy}>&#10003; fixed</text>
+	</g>
+</svg>
