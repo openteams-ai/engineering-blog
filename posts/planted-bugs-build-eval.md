@@ -14,36 +14,48 @@ meta_description: "I hid 5 bugs in an LLM eval and ran Claude Code's build-eval 
 focus_keyword: "build-eval"
 ---
 
-I build an eval, it runs without errors, and I start changing my prompt based on what it says.
+Have you ever built an eval to measure how good your LLM app is, then tuned your prompt until the score went up?
 
-I rarely stop to check whether the eval itself is right: whether the labels are correct, whether the grader is fair, whether the test cases are too easy.
+A high score might not mean your app is good if the eval itself is not correct. A wrong label, an unfair grader, or test cases that are too easy can make a weak app look strong, or a strong one look weak.
 
-So when Claude Code added a command that checks an eval for you, I wanted to know how much it would actually catch.
+Claude Code recently added a command, `/claude-api build-eval`, that checks an eval for these problems. I wanted to know how much it would actually catch.
 
-To find out, I built a small eval for an email router, **hid 5 known bugs in it**, and handed it to `/claude-api build-eval` without telling it about any of them. Then I counted what it found.
+To find out, I built a small eval for an email router, hid 5 bugs in it, and handed it to the command without telling it about any of them.
 
-By the end, you will know which of the 5 bugs it caught, at what point in the session, and **when the command is worth running on your own eval**.
+This article shows what it found, and when you should run it on your own eval.
 
 > 💻 **Get the Code**: The broken eval, the answer key, and the eval the skill left behind are in the [companion folder](https://github.com/khuyentran1401/codecut-articles/tree/main/notebooks/planted-bugs-build-eval).
 
+## What makes an eval good
+
+An eval is the LLM version of a unit test suite: inputs paired with expected answers, a grader that scores each output, and a script that runs them all.
+
+![One unit test and one eval case side by side: add(2, 3) expects 5 and an assert passes; "I forgot my password" expects account and a grader passes](images/planted-bugs-build-eval/unit-test-vs-eval.svg)
+
+An eval can have bugs too, and with hundreds of cases you can't read them all. The [post that introduced build-eval](https://claude.dev/blog/automating-eval-design-and-hillclimbing/) gives 4 signs of a well-designed eval instead. In plain words:
+
+1. **The test cases look like what users send.** If the cases are easier than real ones, a high score only proves the app can handle easy cases.
+2. **Better models score higher.** A stronger model should do better. When it doesn't, the problem is often the eval, not the model.
+3. **Leave room to improve.** Include cases hard enough that even the best model scores well below 100%. Otherwise a better prompt can't raise the score.
+4. **The same answer gets the same verdict.** Scores shouldn't jump between runs. When they do, the cause is often an unclear case or a grader that scores the same answer differently each time.
+
+![Score against effort for three model sizes: the strongest model scores highest but stays below a perfect score, and each score has a short error bar](images/planted-bugs-build-eval/eval-signs.svg)
+
+*Adapted from Figure 1 in [Automating eval design and hillclimbing with Claude](https://claude.dev/blog/automating-eval-design-and-hillclimbing/).*
+
+This article tests the first, third, and fourth signs.
+
 ## Meet build-eval
 
-`build-eval` is a sub-command of the `claude-api` skill, which ships inside [Claude Code](https://github.com/anthropics/claude-code). You run it from Claude Code in the folder that holds your app:
+`build-eval` is part of [claude-api](https://github.com/anthropics/skills/tree/main/skills/claude-api), the built-in Claude Code skill for apps built on the Claude API.
 
-```text
+To run it, open Claude Code in your app's folder and type:
+
+```bash
 /claude-api build-eval
 ```
 
-If you already have test cases, a grader, or a script that runs them, it reuses them instead of starting over. The skill's instructions say it directly:
-
-```text
-If there are cases: read them, then run eval-audit.md against them -
-cases, runner, and grader - and report.
-```
-
-`eval-audit.md` is a checklist inside the skill. It covers wrong labels, unclear cases, answers the model can see, graders that change their verdict, and evals too easy to show an improvement.
-
-The [post that introduced the command](https://claude.dev/blog/automating-eval-design-and-hillclimbing/) shows it working on evals the authors already trusted. What it does with an eval that has known bugs is what this article tests.
+If you already have an eval, it reads your cases and grader, suggests a fix for each problem it finds, and applies the ones you approve.
 
 ## Setup
 
@@ -90,15 +102,15 @@ Before handing the eval over, I checked that each bug was real. For example, I r
 
 The run was blind. I copied the eval to a folder outside my repo so the session could not find my notes, and I answered every question the way a real owner would, with no hint about any bug.
 
-## Step 1: It Reads Your Files
+## Step 1: it reads your files
 
 `build-eval` started by reading every file in the folder. Before running the router once, it found 3 of the 5 bugs.
 
-### Bug 1: The Wrong Label
+### Bug 1: the wrong label
 
 The first question it asked was about case_09:
 
-```output
+```text
 case_09 "I forgot my password" is labeled billing. Change it?
 1. Relabel to account (Recommended)
    Password/login issues belong with account management.
@@ -108,11 +120,11 @@ case_09 "I forgot my password" is labeled billing. Change it?
 
 It named the exact case and proposed the right fix. It also left room for the label to be intentional, in case a bank really does route password resets to billing.
 
-### Bug 5: The Answers Hidden in the Prompt
+### Bug 5: the answers hidden in the prompt
 
 The next question caught the cases copied into the router's prompt:
 
-```output
+```text
 case_03, case_07, case_11 are copied word for word from the prompt's examples.
 How should I handle them?
 1. Replace with new cases (Recommended)
@@ -124,11 +136,11 @@ These 3 cases pass every time, because the router has already seen their answers
 
 I chose to replace them, which left the app untouched. The skill wrote 3 new emails covering the same queues.
 
-### Bug 2: The Case That Fits Two Queues
+### Bug 2: the case that fits two queues
 
 After rewriting the cases, it listed the ones where the right answer could be argued:
 
-```output
+```text
 2 cases where the right queue could be argued:
   - case_11 "Do you charge a monthly fee for the account?" could also go to account.
   - case_12 mentions a charge but is about adding money, so it could go to either billing or top-up.
@@ -140,7 +152,7 @@ case_12 is the bug I planted. case_11 is one of the emails the skill had just wr
 
 It kept case_12's label and marked it as arguable rather than changing it. That turned out to matter: case_12 was the only email the router got wrong in the final run.
 
-## Step 2: It Picks a Grader
+## Step 2: it picks a grader
 
 Next, `build-eval` turned to how answers are scored. This is the grader I handed over:
 
@@ -158,7 +170,7 @@ Two lines carry the bug. The judge mixes two qualities into one score, and only 
 
 The skill named both problems in one question:
 
-```output
+```text
 How should the queue choice be graded?
 1. Code check (Recommended)
    Parse the `Queue:` line, normalize case/whitespace, exact-match expected.
@@ -168,11 +180,11 @@ How should the queue choice be graded?
    Non-deterministic and blends queue with reason quality.
 ```
 
-For a router, the right queue is a fact, not a matter of taste, so comparing it to the expected label in code is enough. The new check is free, gives the same verdict every time, and reports format errors separately from wrong queues.
+For a router, the right queue has one correct answer, so comparing it to the expected label in code is enough. The new check is free, gives the same verdict every time, and reports format errors separately from wrong queues.
 
 That made 4 of the 5 bugs, all found before the router answered a single email.
 
-## Step 3: It Runs a Pilot and the Full Set
+## Step 3: it runs a pilot and the full set
 
 With the cases and grader fixed, `build-eval` ran the router on 5 cases first, then on all 15 cases 3 times each.
 
@@ -180,7 +192,7 @@ The score here is the share of emails the grader marked as sent to the right tea
 
 After the 5-case pilot, it raised the last bug:
 
-```output
+```text
 The scores may be too close to perfect. If the full run also lands near 100%,
 the eval can't show whether a change made things better. It would only show
 cost and latency moving. If that happens, I'll suggest harder cases rather
@@ -189,7 +201,7 @@ than hill-climbing on it.
 
 The full run confirmed it. The router got 44 of 45 answers right, and the skill said so plainly:
 
-```output
+```text
 This eval is close to its ceiling. There are 2 points of room above the
 baseline, but the margin of error is ±4 points. That means it can catch a
 change that makes routing worse, so it works as a regression check before you
@@ -201,9 +213,9 @@ This is bug 3, and it could only show up here. Before the fixes, the strict judg
 - **Before:** the old grader passed 9 of 15 answers. 4 of the 6 failures were correct answers it scored 4 instead of 5.
 - **After:** the new grader passed 44 of 45. The only miss was case_12 on 1 of 3 runs.
 
-The router barely changed. The measurement did.
+The router barely changed, but the score went from 0.60 to 0.98.
 
-## What It Left Behind
+## What it left behind
 
 When it finished, the eval looked like this:
 
@@ -218,27 +230,27 @@ When it finished, the eval looked like this:
 
 It also built a runner, an HTML report linking each case to its transcript, and a folder of results. It committed the result to git only when I asked.
 
-## Final Thoughts
+## Final thoughts
 
 `build-eval` found all 5 bugs I planted, 4 of them before running the app once. Here is when I would reach for it.
 
 **Use it when:**
 
-- **You have an eval you built yourself and never checked.** It found 4 of the 5 bugs just by reading the files.
-- **Your grader is an LLM judge.** It read the judge, named both problems, and replaced it with an exact match.
-- **Your cases came from a public dataset or sit in your prompt.** It caught the mislabeled Banking77 case and the 3 cases copied into the prompt.
-- **You are about to tune a prompt against the score.** It told me the fixed eval was too close to 100% to show an improvement.
+- You have an eval you built yourself and never checked. It found 4 of the 5 bugs just by reading the files.
+- Your grader is an LLM judge. It read the judge, named both problems, and replaced it with an exact match.
+- Your cases came from a public dataset or sit in your prompt. It caught the mislabeled Banking77 case and the 3 cases copied into the prompt.
+- You are about to tune a prompt against the score. It told me the fixed eval was too close to 100% to show an improvement.
 
 **Expect it to:**
 
-- **Change your eval.** Here it relabeled 1 case, replaced 3, swapped the grader, and ran every case 3 times.
-- **Ask you questions throughout.** The run took 32 minutes, with stops to approve the inputs, the grader, and the runner.
+- Change your eval. Here it relabeled 1 case, replaced 3, swapped the grader, and ran every case 3 times.
+- Ask you questions throughout. The run took 32 minutes, with stops to approve the inputs, the grader, and the runner.
 
 **Use something else when:**
 
-- **There is no fixed set of cases to score**, such as a one-off demo of what a tool can do.
-- **Your app does not call Claude.** The skill is written for Claude apps, and I did not test other providers.
-- **You need to know how reliably it catches a kind of bug.** This was one run on one eval, and all 5 bugs are the kind its checklist names.
+- There is no fixed set of cases to score, such as a one-off demo of what a tool can do.
+- Your app does not call Claude. The skill is written for Claude apps, and I did not test other providers.
+- You need to know how reliably it catches a kind of bug. This was one run on one eval, and all 5 bugs are the kind its checklist names.
 
 To try it yourself, copy the broken eval out of the [companion folder](https://github.com/khuyentran1401/codecut-articles/tree/main/notebooks/planted-bugs-build-eval) and run the command in a fresh Claude Code session:
 
