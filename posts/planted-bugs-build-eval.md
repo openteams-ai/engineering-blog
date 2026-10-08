@@ -59,7 +59,7 @@ If you already have an eval, it reads your cases and grader, suggests a fix for 
 
 ## Setup
 
-The app under test is an email router for a bank's support team. It reads a customer email and picks one of 5 queues: cards, billing, account, transfers, or top-up.
+I tested an email router for a bank's support team. It reads a customer email and sends it to one of 5 queues: cards, billing, account, transfers, or top-up.
 
 The eval I handed over has 15 questions from the [Banking77](https://huggingface.co/datasets/PolyAI/banking77) dataset, each mapped to one of the 5 queues. 15 is the smallest set the skill accepts.
 
@@ -100,7 +100,7 @@ Before handing the eval over, I checked that each bug was real. For example, I r
 | Runs of `build-eval` | 1 |
 | Date | 2026-10-07 |
 
-The run was blind. I copied the eval to a folder outside my repo so the session could not find my notes, and I answered every question the way a real owner would, with no hint about any bug.
+`build-eval` never saw my answer key. I copied the eval to a folder outside my repo so the session could not find my notes, and I answered every question the way a real owner would, with no hint about any bug.
 
 ## Step 1: it reads your files
 
@@ -148,13 +148,13 @@ After rewriting the cases, it listed the ones where the right answer could be ar
 Are these 15 representative of what your router actually sees?
 ```
 
-case_12 is the bug I planted. case_11 is one of the emails the skill had just written, so it also flagged a weak spot in its own work.
+I planted case_12. The skill had just written case_11, so it also flagged a weak spot in its own work.
 
-It kept case_12's label and marked it as arguable rather than changing it. That turned out to matter: case_12 was the only email the router got wrong in the final run.
+It kept case_12's label and marked it as arguable rather than changing it. That mattered: in the final run, the router missed only case_12.
 
 ## Step 2: it picks a grader
 
-Next, `build-eval` turned to how answers are scored. This is the grader I handed over:
+Next, `build-eval` turned to how answers are scored. I handed over this grader:
 
 ```python
 JUDGE_PROMPT = """You are grading an email router for a bank's support team.
@@ -188,7 +188,7 @@ That made 4 of the 5 bugs, all found before the router answered a single email.
 
 With the cases and grader fixed, `build-eval` ran the router on 5 cases first, then on all 15 cases 3 times each.
 
-The score here is the share of emails the grader marked as sent to the right team.
+The score counts the share of emails the grader marked as sent to the right team.
 
 After the 5-case pilot, it raised the last bug:
 
@@ -208,10 +208,10 @@ change that makes routing worse, so it works as a regression check before you
 change the prompt or model. It can't show a change that makes routing better.
 ```
 
-This is bug 3, and it could only show up here. Before the fixes, the strict judge failed so many correct answers that the eval looked hard:
+This exposed bug 3, which only a real run could show. Before the fixes, the strict judge failed so many correct answers that the eval looked hard:
 
 - **Before:** the old grader passed 9 of 15 answers. 4 of the 6 failures were correct answers it scored 4 instead of 5.
-- **After:** the new grader passed 44 of 45. The only miss was case_12 on 1 of 3 runs.
+- **After:** the new grader passed 44 of 45. It missed only case_12, on 1 of 3 runs.
 
 The router barely changed, but the score went from 0.60 to 0.98.
 
@@ -250,7 +250,7 @@ It also built a runner, an HTML report linking each case to its transcript, and 
 
 - There is no fixed set of cases to score, such as a one-off demo of what a tool can do.
 - Your app does not call Claude. The skill is written for Claude apps, and I did not test other providers.
-- You need to know how reliably it catches a kind of bug. This was one run on one eval, and all 5 bugs are the kind its checklist names.
+- You need to know how reliably it catches a kind of bug. I ran it once on one eval, and all 5 bugs are the kind its checklist names.
 
 To try it yourself, copy the broken eval out of the [companion folder](https://github.com/khuyentran1401/codecut-articles/tree/main/notebooks/planted-bugs-build-eval) and run the command in a fresh Claude Code session:
 
