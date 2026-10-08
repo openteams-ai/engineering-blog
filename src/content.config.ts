@@ -3,6 +3,7 @@ import { glob } from "astro/loaders";
 import { z } from "astro/zod";
 import { existsSync } from "node:fs";
 import authors from "../authors.json";
+import { postDate } from "./lib/post-date";
 import { TOPICS } from "./data/topics";
 
 const AUTHOR_SLUGS = authors.map((a) => a.slug) as [string, ...string[]];
@@ -16,11 +17,11 @@ const posts = defineCollection({
 		// Slugs from authors.json; the first is the main author.
 		authors: z.array(z.enum(AUTHOR_SLUGS)).min(1),
 		meta_description: z.string().default(""),
-		date: z.coerce.date(),
+		date: postDate,
 		// One of the topics in src/data/topics.ts; the post is listed under it.
 		topic: z.enum(TOPICS),
 		// Set when a published post is edited in a way readers should know about.
-		updated: z.coerce.date().optional(),
+		updated: postDate.optional(),
 	}).superRefine((post, ctx) => {
 		// `astro dev` skips this so a draft can be previewed before its art exists.
 		if (import.meta.env.DEV || existsSync(`src/components/art/${post.slug}.astro`)) return;
