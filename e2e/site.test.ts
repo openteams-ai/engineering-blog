@@ -147,8 +147,8 @@ afterAll(() => browser.close());
 
 describe.concurrent("site", () => {
 	it("links every post, topic page, author page and the index", ({ expect }) => {
-		// index + 18 posts + 4 topics
-		expect(pages.length).toBeGreaterThanOrEqual(23);
+		// index + 20 posts + 5 topics
+		expect(pages.length).toBeGreaterThanOrEqual(26);
 	});
 
 	it("shows each search suggestion's author photo, name and date", async ({ expect }) => {
