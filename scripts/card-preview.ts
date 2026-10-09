@@ -1,5 +1,6 @@
 // Screenshot one post's card art at every size the site shows it, so new art
-// can be checked before it is pushed. Starts `astro dev` for the run.
+// can be checked before it is pushed. Uses the dev server on port 4321 when one
+// is running (Astro allows one per project), and starts its own otherwise.
 //
 //   node scripts/card-preview.ts <slug> [out.png]
 import { spawn } from "node:child_process";
@@ -9,9 +10,10 @@ import { pageUrl } from "../src/lib/blog-path.ts";
 const [slug, out = `card-preview-${slug}.png`] = process.argv.slice(2);
 if (!slug) throw new Error("usage: node scripts/card-preview.ts <slug> [out.png]");
 
-const PORT = 4398;
+const PORT = 4321;
 const url = `http://localhost:${PORT}${pageUrl(`/card-preview/${slug}`)}`;
-const dev = spawn("node_modules/.bin/astro", ["dev", "--port", String(PORT)], { stdio: "ignore" });
+const running = await fetch(url).then(() => true, () => false);
+const dev = running ? undefined : spawn("node_modules/.bin/astro", ["dev", "--port", String(PORT)], { stdio: "ignore" });
 
 async function waitForServer(): Promise<void> {
 	for (let i = 0; i < 60; i++) {
@@ -39,5 +41,5 @@ try {
 	console.log(`Saved ${out}`);
 } finally {
 	await browser.close();
-	dev.kill();
+	dev?.kill();
 }
