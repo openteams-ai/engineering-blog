@@ -1,0 +1,27 @@
+---
+import { code, softBlue, solidBlue, darkNavy, greenOnNavy, gold } from "./style";
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A server rack in a closet: one node pulls its image from Artifact Keeper with bootc upgrade">
+	<rect x="-300" y="-300" width="1320" height="980" fill={darkNavy}/>
+	<rect x="96" y="40" width="250" height="300" rx="14" fill="#0b1c44" stroke="#2c3d6e" stroke-width="4"/>
+	{[64, 112, 160, 208, 256].map((y) => {
+		const hot = y === 160;
+		return (
+			<>
+				<rect x="120" y={y} width="202" height="36" rx="7" fill={hot ? solidBlue : "#1a2c5b"}/>
+				<rect x="140" y={y + 13} width="96" height="10" rx="5" fill={hot ? "#8aa2ff" : "#2c3d6e"}/>
+				<circle cx="284" cy={y + 18} r="6" fill={hot ? gold : greenOnNavy}/>
+				<circle cx="304" cy={y + 18} r="6" fill={greenOnNavy}/>
+			</>
+		);
+	})}
+	<rect x="476" y="112" width="180" height="132" rx="16" fill="#ffffff"/>
+	{[140, 172, 204].map((y, i) => <rect x="500" y={y} width={i === 1 ? 92 : 132} height="16" rx="8" fill={softBlue}/>)}
+	<path d="M462 178 H372" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 12"/>
+	<path d="M374 167 L356 178 L374 189 Z" fill="#ffffff"/>
+	<g font-family={code} text-anchor="middle">
+		<text x="409" y="158" font-size="20" fill="#cfe1fb">bootc</text>
+		<text x="566" y="286" font-size="22" font-weight="500" fill="#ffffff">Artifact Keeper</text>
+	</g>
+</svg>

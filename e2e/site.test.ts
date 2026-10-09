@@ -147,8 +147,8 @@ afterAll(() => browser.close());
 
 describe.concurrent("site", () => {
 	it("links every post, topic page, author page and the index", ({ expect }) => {
-		// index + 18 posts + 4 topics
-		expect(pages.length).toBeGreaterThanOrEqual(23);
+		// index + 20 posts + 5 topics
+		expect(pages.length).toBeGreaterThanOrEqual(26);
 	});
 
 	it("shows each search suggestion's author photo, name and date", async ({ expect }) => {
@@ -392,6 +392,33 @@ describe.concurrent("interactions", () => {
 		);
 		expect(result.expanded).toBe("true");
 		expect(result.visible).toBe(true);
+		expect(result.problems).toEqual([]);
+	});
+
+	it("mobile menu: sections start collapsed and each opens on tap to show its links", async ({ expect }) => {
+		const result = await withPage(
+			async (page) => {
+				await open(page, `${BLOG_PATH}/`);
+				await page.locator("#ot-menu-toggle").click();
+				const panel = page.locator("#ot-mobile-menu");
+				const solutionsLink = panel.getByRole("link", { name: "Nebari" });
+				const companyLink = panel.getByRole("link", { name: "About Us" });
+				const hiddenAtFirst = !(await solutionsLink.isVisible()) && !(await companyLink.isVisible());
+				await panel.getByRole("button", { name: "Solutions" }).click();
+				return {
+					hiddenAtFirst,
+					solutionsShown: await solutionsLink.isVisible(),
+					companyStillHidden: !(await companyLink.isVisible()),
+					expanded: await panel.getByRole("button", { name: "Solutions" }).getAttribute("aria-expanded"),
+					problems: await a11yProblems(page),
+				};
+			},
+			{ viewport: { width: 390, height: 844 } },
+		);
+		expect(result.hiddenAtFirst).toBe(true);
+		expect(result.solutionsShown).toBe(true);
+		expect(result.companyStillHidden).toBe(true);
+		expect(result.expanded).toBe("true");
 		expect(result.problems).toEqual([]);
 	});
 

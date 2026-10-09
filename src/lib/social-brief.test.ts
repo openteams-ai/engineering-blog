@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
-import { MISSING, UNANSWERED, briefPath, createUrl, findProblems, renderComment, renderTemplate } from "./social-brief";
+import { MISSING, UNANSWERED, briefPath, createUrl, fails, findProblems, isSkipped, renderComment, renderTemplate } from "./social-brief";
 
 const POST = "posts/my-post.md";
 const LONG = "Compares four package managers on install time with numbers from real projects.";
@@ -69,7 +69,31 @@ describe("renderTemplate", () => {
 	});
 });
 
+describe("isSkipped and fails", () => {
+	it("passes a missing or untouched brief as skipped", () => {
+		for (const problems of [[MISSING], [UNANSWERED]]) {
+			expect(isSkipped(problems)).toBe(true);
+			expect(fails(problems)).toBe(false);
+		}
+	});
+
+	it("fails a started brief with an answer that is too short", () => {
+		const problems = findProblems(brief({ ...answered, remember_one_thing: "We work on pytorch." }));
+		expect(isSkipped(problems)).toBe(false);
+		expect(fails(problems)).toBe(true);
+	});
+
+	it("passes a fully answered brief", () => {
+		expect(fails(findProblems(brief(answered)))).toBe(false);
+	});
+});
+
 describe("renderComment", () => {
+	it("recommends the brief without requiring it", () => {
+		const comment = renderComment([{ post: POST, brief: "social/my-post.yml", problems: [MISSING] }], CI);
+		expect(comment).toContain("It's optional, but recommended.");
+	});
+
 	it("thanks the author once every brief passes", () => {
 		expect(renderComment([{ post: POST, brief: "social/my-post.yml", problems: [] }], CI)).toContain("Thanks!");
 	});

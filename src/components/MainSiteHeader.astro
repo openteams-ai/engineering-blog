@@ -88,17 +88,27 @@ import { MAIN_SITE_URL, mainSiteNav } from "../data/main-site-nav";
 	</nav>
 
 	<div id="ot-mobile-menu" class="hidden max-h-[calc(100vh-81px)] overflow-y-auto border-t border-white/8 lg:hidden">
-		<div class="container-wide flex flex-col gap-6 py-6">
+		<div class="container-wide flex flex-col py-4">
 			{
-				mainSiteNav.map((menu) => (
+				mainSiteNav.map((menu, i) => (
 					<div>
-						<p class="mb-2 text-xs font-semibold tracking-[0.08em] text-white/60 uppercase">{menu.label}</p>
-						{menu.groups.flatMap((g) => g.columns.flatMap((c) => c.links)).map((link) => (
-							<a href={link.url} class="flex items-center gap-3 py-2 hover:text-[#4d75fe]">
-								<Icon name={link.icon} class="text-lg" aria-hidden="true" />
-								{link.label}
-							</a>
-						))}
+						<button
+							type="button"
+							class="ot-section-toggle flex cursor-pointer items-center gap-1.5 py-2 text-base font-medium hover:text-[#4d75fe]"
+							aria-expanded="false"
+							aria-controls={`ot-mobile-section-${i}`}
+						>
+							{menu.label}
+							<Icon name="ph:caret-down-fill" class="text-xs transition-transform" aria-hidden="true" />
+						</button>
+						<div id={`ot-mobile-section-${i}`} class="hidden pb-2 pl-1">
+							{menu.groups.flatMap((g) => g.columns.flatMap((c) => c.links)).map((link) => (
+								<a href={link.url} class="flex items-center gap-3 py-2 hover:text-[#4d75fe]">
+									<Icon name={link.icon} class="text-lg" aria-hidden="true" />
+									{link.label}
+								</a>
+							))}
+						</div>
 					</div>
 				))
 			}
@@ -128,4 +138,13 @@ import { MAIN_SITE_URL, mainSiteNav } from "../data/main-site-nav";
 		toggle.querySelector(".ot-menu-open")?.classList.toggle("hidden", open);
 		toggle.querySelector(".ot-menu-close")?.classList.toggle("hidden", !open);
 	});
+	// Each mobile menu section (Solutions, Resources, Company) opens on its own.
+	for (const button of document.querySelectorAll<HTMLButtonElement>(".ot-section-toggle")) {
+		button.addEventListener("click", () => {
+			const open = button.getAttribute("aria-expanded") !== "true";
+			button.setAttribute("aria-expanded", String(open));
+			document.getElementById(button.getAttribute("aria-controls")!)?.classList.toggle("hidden", !open);
+			button.querySelector("svg")?.classList.toggle("rotate-180", open);
+		});
+	}
 </script>
