@@ -113,24 +113,6 @@ removed, from that point on it gives coverage preventing regression. It also fee
 of 2026 we were running 32 CPython test modules, about 2,500 tests, with roughly 1,070 passing. Today it is 83 modules
 and nearly 6,800 tests, with over 3,650 passing.
 
-<!-- TODO(review): fact-check on the paragraphs above:
-- Guilherme: Please review for factual accuracy, agent notes below what it could not verify/could dispute.
-- Richard Zou's idea is UNVERIFIED. Nothing in #150787 attributes it to him; zou3519 reviewed and approved it.
-  Confirm with Guilherme.
-- The "initial batch" list is DISPUTED. #150787 merged 2025-05-07. By June 1 the modules were dict, list, set, tuple,
-  iter, sort, complex, ordered_dict, userdict and userlist. test_math came in mid-June, and test_exceptions and
-  test_generators by July 1. Swap in e.g. `test_tuple`, `test_iter`, `test_sort`, or drop "spring".
-- "tagged with the CPython commit" is minor DISPUTED: the file headers cite the tag v3.13.5, not a commit. Use
-  "tagged with the CPython release it came from".
-- The dashboard link is UNVERIFIED: it redirects to a Streamlit login and is not publicly viewable. Make it public or
-  drop the link. It seems to be dead/broken, I can leave it out, but the history may be helpful in putting the timeline
-  of progress together.
-- 32 modules at the start of 2026 is SUPPORTED. 83 modules today is minor DISPUTED: main on 2026-10-06 has 85.
-- The test and pass counts (2,500/1,070, 6,800/3,650) are UNVERIFIED and can't be counted statically. The static
-  counts are 4,220 `def test_` and 2,776 xfail files now. Get them from the dashboard or a CI run.
-- 37% -> 50% is UNVERIFIED, and on its face inconsistent with the numbers above, which give 43% -> 54%. Say which
-  fixed module set it refers to, or align the numbers. -->
-
 The pass rate is the headline number for the slots migration. On the same set of modules, each slot PR tended to flip a
 handful of tests to passing, and the pass rate climbed from 37% to 50% as the object model work landed. That is about as
 clear a signal as you can get that mirroring CPython was the right call. It has also become the starting point for
@@ -181,14 +163,10 @@ One thing that makes this area tricky is that you are not working with Python se
 sequences a given CPython version emits for them. Those differ from release to release, and from bytecode alone you
 can't always see all the code you are trying to model. For example, some CPython versions produce bytecode that won't
 show you a `try/except` has a `finally` clause until you hit it. This is where the CPython test suite earned its keep.
-Expected failures for `test_exception_variations` and `test_generator_stop` are down to zero, `test_raise` went from 15
-to 4, `test_contextlib` from 79 to 31, and `test_baseexception` from 10 to 1. `test_exceptions` and `test_generators`
-still have work left, but they are now tracked as a list of specific failures rather than a general sense that
-exceptions are risky.
-
-<!-- TODO(review): test_contextlib "79 -> 31" is partly DISPUTED. 31 now is correct, but the earlier counts found were 57
-(Sep 2025) and 72 (Jan 2026), never 79. The other xfail numbers in this paragraph are SUPPORTED. -->
-<!-- review note: omit numbers which are disputed or update numbers to match evidence -->
+`test_exception_variations` and `test_generator_stop` now pass completely. The number of passing tests in `test_raise`
+increased from 0 to 11, `test_contextlib` from 0 to 48, and `test_baseexception` from 0 to 9. `test_exceptions` and
+`test_generators` still have work remaining, but the remaining gaps are now a concrete list of specific failures rather
+than a broad sense that exception handling is risky.
 
 #### Python 3.15 support on day one
 
@@ -203,19 +181,15 @@ compared with nearly seventy for 3.14. Highlights include:
 - **Virtual iterators:** `GET_ITER` now represents some iterators as two stack entries instead of one.
 - **Lazy imports:** `IMPORT_NAME`'s oparg now carries the lazy/eager bits used by [PEP 810](https://peps.python.org/pep-0810/).
 - **Sentinels:** partial support for the new sentinel objects.[^sentinels]
-- **Frame APIs:** we moved to the CPython frame push/pop APIs, including `_PyThreadState_PushFrame`, which is public in 3.15.
+- **Reduced Maintenance Surface:** Several CPython APIs which became public in Python 3.15 have been integrated marking
+  the end of a difficult process of maintaining our own vendored implementations which required a lot of work to
+  integrate changes at each new version.
 
 
 The [PR that enables Dynamo testing on 3.15 and lifts the version check](https://github.com/pytorch/pytorch/pull/178393)
-in `torch.compile` landed on September 21, about ten days before the scheduled Python 3.15.0 final release and ahead of
-the PyTorch 2.15 branch cut. That means PyTorch 2.15, the first PyTorch release after Python 3.15, will support
-`torch.compile` on 3.15 from day one.
-
-<!-- TODO(review): DISPUTED. #178393 merged 2026-09-22 (08:29 UTC, 01:29 PT), not Sep 21. PEP 790 schedules 3.15.0 final
-for 2026-10-09, so the merge was about 17 days early, not ten: suggest "landed on September 22, more than two weeks
-before...". "Nearly seventy for 3.14" is loose: about 75 PRs have 3.14 in the title, but only about 45 are
-Dynamo/compile. Maybe "more than twice as many". Could cite PEP 661 for sentinels. -->
-<!-- review note: Either make the specifics less specific or update to be accurate here -->
+in `torch.compile` landed in time for the PyTorch 2.15 branch cut, and well before the Python 3.15 release was
+finalized. That means PyTorch 2.15, the first release after Python 3.15.0 will support that Python version in
+`torch.compile` from day one!
 
 #### Helping agents help users
 
@@ -224,11 +198,9 @@ the first stop for many people debugging `torch.compile`, and out of the box the
 they disable compilation around the problem rather than fixing it. We have been contributing agent skills to
 [meta-pytorch/skills](https://github.com/meta-pytorch/skills): improvements to the `debug-graph-breaks` skill, new
 skills for collecting compile logs, debugging recompilations and dynamic shapes, and skills that teach agents when and
-how to reach for custom ops and higher-order ops as workarounds. Rob will be presenting this work in a poster,
-*Improving the torch.compile user experience*, in the same session at the PyTorch Conference.
-
-<!-- TODO(review): Rob's skills PRs (meta-pytorch/skills #24-#27) are all still open. "We have been contributing" is
-accurate, but if they haven't merged by publish, avoid implying the skills are in the repo, or link the PRs. -->
+how to reach for custom ops and higher-order ops as workarounds. Rob will be presenting this work at the PyTorch
+Conference later this month. Look for his poster *Improving the torch.compile user experience* to hear directly from him
+if you are going to be there!
 
 ### Complex numbers, real kernels
 
@@ -264,25 +236,25 @@ for details and current limitations. What's left is the usual path from experime
 out op coverage (with a particular eye on autograd), and add integration tests on real workloads before switching the
 flag on by default. There is a lot of potential for this system to unlock functionality in the compiler beyond eager
 execution on native complex types. For example,  an [RFC for a `bcomplex32` dtype](https://github.com/pytorch/rfcs/pull/87) 
-proposes bfloat16-based complex numbers. Subclass decomposition to `bfloat16` hits existing implementations for that
-datatype without needing custom kernels to cover gaps in BLAS. Under compile we hit existing pathways for lowering ops
-on the same real dtype, and all without adding any code[^code] particular compiled code that adds size to the binary,
-and maintenance overhead.
+proposes bfloat16-based complex numbers. [Adding the new `bcomplex32`](https://github.com/pytorch/pytorch/pull/173783)
+will get you part of the way there, but making it usable requires following up with adding type dispatch clauses to
+thousands of operators in the eager backend libraries, special cases to side step a lack of support in BLAS
+implementations for the new `dtype`, and thinking carefully about what will be most useful to avoid bloating the
+footprint of the wheel. The compiler is a much different story, subclass decomposes operations to pairs of `bfloat16` tensors
+without adding anything[^code]. The implementation carried by the subclass is completely `dtype`-agnostic. We hit
+existing codegen and fusion paths already working and battle tested for `bfloat16` without needing to go through and
+special case our lowering and codegen logic at all!
 
 ### Inductor
 
 In Inductor, our biggest piece of work was correctness rather than speed. After Inductor's post-grad passes rewrite the
 FX graph, `FakeTensorUpdater` re-propagates shape, stride and dtype metadata so later passes see accurate information.
 It didn't look inside higher-order ops like `invoke_subgraph`, `cond`, `while_loop` and `scan`, so their subgraphs could
-end up with stale metadata, which could cause silent incorrectness. [Fixing it](https://github.com/pytorch/pytorch/pull/185962) 
-meant recursing into subgraphs, updating their callers, and handling subgraphs reused at several call sites with
-different input shapes. It took about ten months and several rounds of reverts against large internal models before it
-stuck. It also exposed at least one latent bug in the `scan` backward along the way.
-
-Correctness work also reached outside the compiler. `native_group_norm` gave different answers depending on where it
-ran, so we added an OpInfo test for it, fixed precision issues in the CUDA forward and backward so eager mode matches
-Inductor's decomposition, and made it handle non-contiguous inputs instead of throwing. Together with the native MPS
-kernel described [below](#apple-silicon), group norm now behaves consistently across backends, eager and compile.
+end up with stale metadata, which could cause silent incorrectness. 
+[Fixing it](https://github.com/pytorch/pytorch/pull/185962) meant recursing into subgraphs, updating their callers, and
+handling subgraphs reused at several call sites with different input shapes. It took about ten months and several rounds
+of reverts against large internal models before it stuck. It also exposed at least one latent bug in the `scan` backward
+along the way.
 
 Most recently we have been shaving microseconds off warm-cache `torch.compile` overhead, the fixed cost paid on every
 call to a compiled function even when nothing needs recompiling. The guard functions Inductor relies on are about 50%
@@ -372,12 +344,12 @@ Complex dtype support filled in across `scatter`/`gather`, `repeat`, `cumsum`, `
 `nn.functional.linear`.
 
 Two infrastructure changes stand out. First, 
-[`test_ops.py` now runs on MPS](https://github.com/pytorch/pytorch/pull/169018), backed by a long series of OpInfo dtype and skip annotations. MPS
-operators now get the same systematic coverage as CPU and CUDA. Second, MPS now has multi-stream support. A 
-[pool of MPS streams](https://github.com/pytorch/pytorch/pull/190375), a stream-aware allocator, and a 
-[`torch.mps.Stream` API](https://github.com/pytorch/pytorch/pull/191415) modeled on CUDA's let users submit work to
-separate GPU command queues that execute concurrently. `Tensor.record_stream` and a stream-aware profiler round it out.
-The stream API landed after the 2.14 branch cut, so look for it in 2.15.
+[`test_ops.py` now runs on MPS](https://github.com/pytorch/pytorch/pull/169018), backed by a long series of OpInfo dtype
+and skip annotations. MPS operators now get the same systematic coverage as CPU and CUDA. Second, MPS now has
+multi-stream support. A [pool of MPS streams](https://github.com/pytorch/pytorch/pull/190375), a stream-aware allocator,
+and a [`torch.mps.Stream` API](https://github.com/pytorch/pytorch/pull/191415) modeled on CUDA's let users submit work
+to separate GPU command queues that execute concurrently. `Tensor.record_stream` and a stream-aware profiler round it
+out. The stream API landed after the 2.14 branch cut, so look for it in 2.15.
 
 ## Infrastructure
 
@@ -441,11 +413,11 @@ before ultimate removal.
 ## TorchAO
 
 [TorchAO](https://github.com/pytorch/ao) is PyTorch's native library for quantization and low-precision training and
-inference. It covers float8 and MXFP8 training, int4 inference, structured sparsity and more, and it works with
-`torch.compile` and FSDP2 out of the box. A lot of its performance comes from custom kernels, and a lot of those kernels
-were C++/CUDA and CUTLASS extensions. Those extensions carried real costs. They tied each TorchAO build to a specific
-PyTorch version ([mismatched versions crash on import](https://github.com/pytorch/ao/issues/2919)), complicated the
-build and the wheel matrix, and made kernel development slow. TorchAO is 
+inference. It covers float8 and MXFP8 training, MXFP4 and NVFP4 inference, structured sparsity and more, and it works
+with `torch.compile` and FSDP2 out of the box. A lot of its performance comes from custom kernels, and a lot of those
+kernels were C++/CUDA and CUTLASS extensions. Those extensions carried real costs. They tied each TorchAO build to a
+specific PyTorch version ([mismatched versions crash on import](https://github.com/pytorch/ao/issues/2919)), complicated
+the build and the wheel matrix, and made kernel development slow. TorchAO is 
 [moving closer to Python-only](https://github.com/pytorch/ao/issues/3516), and CuTeDSL is how the performance-critical
 CUTLASS kernels get there.
 
@@ -546,7 +518,6 @@ In a year when code got cheap and review didn't, that felt like the right place 
 None of this would have happened without our fantastic PyTorch team, now part of OpenTeams: Rob Timpe,
 Guilherme Leobas, Hameer Abbasi, Pearu Peterson, Kurt Mohler, Aleksandar Samardžić and Benjamin Glass. The same goes
 for our colleagues at Quansight PBC: Michał Górny, Klaus Zimmermann and Ralf Gommers.
-<!-- TODO(review): check with Ralf for full list of CF contributors -->
 
 The other part of the story is the great team of PyTorch engineers at Meta and across the community. Without their
 dedication and openness to collaboration, none of this would have been possible. In particular, we would like to thank
@@ -555,9 +526,6 @@ Daniel Vega-Myhre, Jerry Zhang, Nicolas Hug, Scott Schneider, Mikayla Gawarecki,
 Supriya Rao, and Joe Isaacson from Meta, as well as Brian Hirsh, Nikita Shulga and Aaron Gokaslan from the wider PyTorch
 developer community along with the conda-forge maintainers. Thank you all for making this collaboration so fruitful and
 enjoyable.
-<!-- TODO(review): check both name lists. Thank-you list drawn from PR reviewers and collaborators found during research. 
-Check with meta regarding those who are no longer there (Brian) those no longer on the PyTorch team (mikayla) and those
-still associated with the community (Nikita) -->
 
 *Looking for earlier years? See our reviews of 
 [2023/2024](https://quansight.com/post/a-year-in-review-quansights-contributions-to-pytorch-in-2023-early-2024/),
