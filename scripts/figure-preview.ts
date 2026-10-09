@@ -4,7 +4,6 @@
 // running (Astro allows one per project), and starts its own otherwise.
 //
 //   node scripts/figure-preview.ts <slug> <figure file> [out-dir]
-//   node scripts/figure-preview.ts planted-bugs-build-eval eval-signs.svg /tmp
 import { spawn } from "node:child_process";
 import { chromium } from "playwright";
 import { pageUrl } from "../src/lib/blog-path.ts";
