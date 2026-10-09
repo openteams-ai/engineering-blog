@@ -1,15 +1,15 @@
 ---
-name: draw-card-art
+name: draw-featured-image
 description: >
-  Draw the card art for an engineering-blog post: the small SVG illustration shown on the post's card on the home page, topic pages and related posts. Use when the author asks to "draw the card art", "make a featured image", "make a thumbnail", "add card art", or when a new post's card shows a generic pattern. Operates on a posts/<file> path or a bare slug. Writes src/components/art/<slug>.astro and checks it with screenshots at every card size.
+  Draw the featured image (card art) for an engineering-blog post: the small SVG illustration shown on the post's card on the home page, topic pages and related posts. Use when the author asks to "draw the card art", "make a featured image", "make a thumbnail", "add card art", or when a new post's card shows a generic pattern. Operates on a posts/<file> path or a bare slug. Writes src/components/art/<slug>.astro and checks it with screenshots at every card size.
 user-invocable: true
 ---
 
-# Draw Card Art
+# Draw Featured Image
 
 Suggest three ideas for one post's card art, then draw the one the author picks in the style of the existing cards, check it at every size the site shows it, and fix what the screenshots show before handing it to the author.
 
-**Usage:** `/draw-card-art posts/article-name.md`
+**Usage:** `/draw-featured-image posts/article-name.md`
 
 ## Step 1: Read the post
 
