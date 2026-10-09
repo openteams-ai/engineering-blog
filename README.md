@@ -9,7 +9,7 @@ Source repository for engineering blog posts published on [openteams.com/enginee
 ## How It Works
 
 1. Write your post as a `.md` file in `posts/`.
-2. Open a pull request for review, and answer the social brief CI adds to it.
+2. Open a pull request for review.
 3. Once merged to `main`, the post goes live.
 
 Changing the site's code or settings? See [DEVELOPMENT.md](DEVELOPMENT.md).
@@ -47,11 +47,11 @@ social/                             # One social brief per post
    With Claude Code: `/seo-meta-description posts/your-article.md`
 4. Draw a thumbnail in `src/components/art/<slug>.astro`, using an existing one as a model.\
    With Claude Code: `/draw-featured-image posts/your-article.md`
-5. Answer the [social brief](#social-brief) in `social/<slug>.yml`.\
+5. Optionally, answer the [social brief](#social-brief) in `social/<slug>.yml`.\
    With Claude Code: `/fill-social-brief posts/your-article.md`
 6. Open a PR from a branch in this repo rather than a fork.
 
-The PR's checks fail until your post has a thumbnail, a social brief, and authors listed in `authors.json`.
+The PR's checks fail until your post has a thumbnail and authors listed in `authors.json`.
 
 ### Preview
 
@@ -103,9 +103,9 @@ The easiest `avatarUrl` is your GitHub avatar's address. To use a photo file ins
 
 ### Social Brief
 
-Every new post needs a short social brief, which is used to write its LinkedIn post. It lives in `social/<slug>.yml`. If you open your PR without one, it is added to the PR for you to answer.
+A short social brief helps us write your post's LinkedIn post. It's optional but recommended. It lives in `social/<slug>.yml`, and the PR comment links to creating it.
 
-The comment above each field is its question, and the allowed values are listed for `audience`. The three written answers need at least 8 words each, so they carry the article's specifics. Good answers:
+The comment above each field is its question, and the allowed values are listed for `audience`. If you answer it, the three written answers need at least 8 words each. Good answers:
 
 - **`problem`:** What problem does this article solve? (1-2 sentences)
 - **`what_it_does`:** What does the article build, test, compare, or argue? (1-2 sentences)

@@ -1,5 +1,6 @@
 // The social brief: four short answers about a post, written by its author,
-// that seed its LinkedIn post. One social/<slug>.yml per post.
+// that seed its LinkedIn post. One social/<slug>.yml per post. It is optional:
+// a missing or untouched brief passes, but a started one must be finished.
 //
 // The questions are what authors (and their AI assistants) see as comments in
 // the brief, so they are written for a human reader.
@@ -36,6 +37,13 @@ export const UNANSWERED = "Its 4 questions are unanswered.";
 // Likewise for a missing brief: the comment links straight to creating it.
 export const MISSING = "The brief is missing.";
 
+/** True when a brief was skipped: missing, or the untouched template. */
+export const isSkipped = (problems: string[]) =>
+	problems.length === 1 && (problems[0] === MISSING || problems[0] === UNANSWERED);
+
+/** True when a brief fails the check: started, but with answers that need work. */
+export const fails = (problems: string[]) => problems.length > 0 && !isSkipped(problems);
+
 /** social/<slug>.yml for a post, by its frontmatter slug, else its file name. */
 export function briefPath(postPath: string, markdown: string): string {
 	const slug = frontmatter(markdown).slug;
@@ -47,7 +55,7 @@ export function renderTemplate(postPath: string): string {
 	const lines = [
 		`# The social brief for ${postPath}. It's used to write the LinkedIn post.`,
 		"# Answer each question yourself or with your AI assistant (see Social Brief in",
-		"# README.md). The PR can merge once all four are answered.",
+		"# README.md). It's optional, but recommended.",
 	];
 	for (const q of QUESTIONS) {
 		lines.push("", `# ${q.text}`);
@@ -143,10 +151,10 @@ export function renderComment(results: Result[], env: Env): string {
 	const readme = githubUrl("blob/main/README.md#social-brief", env);
 	const guide = readme ? `[Social Brief](${readme})` : "Social Brief";
 	const lines = [
-		`${COMMENT_HEADER} needed`,
+		COMMENT_HEADER,
 		"",
-		"Before this PR can merge, please answer 4 short questions about your post. " +
-			"We use them to write its LinkedIn post.",
+		"Fill in the social brief to help us write an accurate LinkedIn post for this article. " +
+			"It's optional, but recommended.",
 		"",
 	];
 	for (const { post, brief, problems } of pending) {

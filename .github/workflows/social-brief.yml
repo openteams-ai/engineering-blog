@@ -1,9 +1,9 @@
 name: Social brief
 
-# Every new post needs an answered social/<slug>.yml before merge. It seeds the
-# LinkedIn post. This workflow asks for it in a PR comment, adds the empty
-# template to the PR branch when it can, and fails the `social-brief` check
-# until the author answers the questions, by hand or with any AI assistant.
+# A social/<slug>.yml for each new post is optional. It seeds the LinkedIn
+# post. This workflow invites the author to answer it in a PR comment, and
+# fails the `social-brief` check only when a brief was started but some
+# answers are too short to use. A missing or untouched brief passes.
 # CI calls no model and needs no secrets.
 #
 # Runs only on PRs that touch posts, so other PRs don't show the check. It's
@@ -27,7 +27,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
 
 jobs:
@@ -40,7 +40,6 @@ jobs:
       HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
       HEAD_REF: ${{ github.event.pull_request.head.ref }}
-      SAME_REPO: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     steps:
       # main, i.e. the trusted scripts. The PR is fetched separately below.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -85,36 +84,9 @@ jobs:
         if: steps.detect.outputs.post-files != ''
         run: npm ci
 
-      # The token can't push to a fork, so fork PRs skip this. Their comment
-      # links to a pre-filled "new file" page on the fork instead.
-      - name: Add missing brief templates
-        if: steps.detect.outputs.post-files != '' && env.SAME_REPO == 'true'
-        env:
-          POST_FILES: ${{ steps.detect.outputs.post-files }}
-        run: |
-          # The PR's tree, where the template gets committed. main's script
-          # writes it; nothing from the PR is executed.
-          git worktree add --quiet --detach ../pr pr-head
-          cd ../pr
-          # Post paths are slug-derived, so they never contain whitespace.
-          # shellcheck disable=SC2086
-          node "$GITHUB_WORKSPACE/scripts/social/create-brief.ts" $POST_FILES
-          git add social/
-          git diff --cached --quiet && exit 0
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898+github-actions[bot]@users.noreply.github.com"
-          # [skip ci]: the check below already reports on this commit.
-          # Without it, GitHub queues a second run that waits for approval.
-          git commit --quiet -m "chore(social): add social brief template [skip ci]"
-          git push --quiet origin "HEAD:$HEAD_REF"
-          # So the check below sees the new templates.
-          mkdir -p "$GITHUB_WORKSPACE/social"
-          cp social/*.yml "$GITHUB_WORKSPACE/social/"
-
       # Records the result instead of failing here, so the comment below is
       # posted either way. The last step fails the job.
-      - name: Check briefs are answered
+      - name: Check started briefs are finished
         id: check
         env:
           POST_FILES: ${{ steps.detect.outputs.post-files }}
@@ -127,8 +99,8 @@ jobs:
             echo "passed=false" >> "$GITHUB_OUTPUT"
           fi
 
-      # One comment per PR, edited on every push: it asks for the brief while
-      # answers are missing and says thanks once they're in.
+      # One comment per PR, edited on every push: it invites the author to
+      # answer the brief, and says thanks once it's in.
       - name: Ask the author to fill in the brief
         if: steps.detect.outputs.post-files != ''
         uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
@@ -136,8 +108,8 @@ jobs:
           header: social-brief
           path: comment.md
 
-      - name: Fail until every brief is answered
+      - name: Fail when a started brief needs more detail
         if: steps.check.outputs.passed == 'false'
         run: |
-          echo "A social brief still needs answers. See the PR comment or the errors above."
+          echo "A social brief was started but some answers are too short. See the PR comment or the errors above."
           exit 1
