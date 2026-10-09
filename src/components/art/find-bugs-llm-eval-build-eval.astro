@@ -1,0 +1,20 @@
+---
+import { blogUrl } from "../../lib/blog-path";
+import { code, navy, softBlue, green, check } from "./style";
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A terminal running /claude-api build-eval in Claude Code, reporting 5 bugs found">
+	<rect x="-300" y="-300" width="1320" height="980" fill={softBlue}/>
+	<rect x="50" y="62" width="620" height="256" rx="18" fill="#ffffff"/>
+	<circle cx="82" cy="92" r="7" fill="#c9d6ee"/>
+	<circle cx="106" cy="92" r="7" fill="#c9d6ee"/>
+	<circle cx="130" cy="92" r="7" fill="#c9d6ee"/>
+	<line x1="50" y1="118" x2="670" y2="118" stroke="#e3ebf8" stroke-width="2"/>
+	<image href={blogUrl("/blog-logos/claude.svg")} x="80" y="146" width="50" height="50"/>
+	<g font-family={code}>
+		<text x="146" y="184" font-size="36" fill={navy} font-weight="500">/claude-api build-eval</text>
+		<circle cx="105" cy="256" r="20" fill={check}/>
+		<path d="M96 256 l7 7 l13 -14" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+		<text x="146" y="268" font-size="36" fill={green} font-weight="500">5 bugs found</text>
+	</g>
+</svg>

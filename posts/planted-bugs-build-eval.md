@@ -1,6 +1,6 @@
 ---
-title: "I Planted 5 Bugs in an Eval. Claude's build-eval Found All 5"
-slug: planted-bugs-build-eval
+title: "How to Find Bugs in Your LLM Eval with Claude Code's build-eval"
+slug: find-bugs-llm-eval-build-eval
 date: 2026-10-07
 topic: ai-engineering
 authors:
@@ -10,7 +10,7 @@ tags:
   - claude-code
   - llm-as-judge
   - evals
-meta_description: "I hid 5 bugs in an LLM eval and ran Claude Code's build-eval on it once. It found all 5, four before running the app, and showed what it changes in your eval."
+meta_description: "Is your LLM eval wrong? Learn how Claude Code's build-eval finds bad labels, flaky LLM judges, and leaked test cases, tested on 5 hidden bugs."
 focus_keyword: "build-eval"
 ---
 
