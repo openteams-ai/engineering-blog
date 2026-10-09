@@ -48,6 +48,8 @@ try {
 			const figure = page.locator(`.editorial-content img[src*="${encodeURIComponent(`/${file}`)}"]`);
 			if ((await figure.count()) === 0) throw new Error(`the post has no image ending in "${file}"`);
 			await figure.scrollIntoViewIfNeeded();
+			// Raster images are lazy-loaded and converted on request, so wait until one has drawn.
+			await figure.evaluate((img: HTMLImageElement) => img.decode());
 			// The figure's drawn width and the body text size, to compare its text with the prose.
 			const sizes = await figure.evaluate((img: HTMLImageElement) => {
 				const p = document.querySelector(".editorial-content p");
