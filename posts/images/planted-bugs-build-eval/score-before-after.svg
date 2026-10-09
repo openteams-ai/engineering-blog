@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 340" role="img" aria-label="The eval score went from 0.60 before build-eval to 0.98 after. The changes were all fixes to the eval: the wrong label fixed, the copied cases replaced, and a fair grader. The router was unchanged.">
+	<defs>
+		<marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+			<path d="M0 0L10 5L0 10Z" fill="#c3d2f4"/>
+		</marker>
+	</defs>
+	<style>
+		text { font-family: "IBM Plex Sans", "Inter Tight", Helvetica, Arial, sans-serif; fill: #e8edff; font-size: 18px; dominant-baseline: central; }
+		.muted { fill: #9aa8c7; }
+		.score { font-size: 24px; font-weight: 600; }
+		.fix { fill: #72FCDB; font-weight: 600; }
+		.track { fill: #0b1d47; stroke: #1d2b55; stroke-width: 1.5; }
+		.note { stroke: #c3d2f4; stroke-width: 1.5; fill: none; }
+	</style>
+
+	<rect width="780" height="340" rx="12" fill="#041437"/>
+
+	<!-- before: 0.60 of a 480px track -->
+	<text x="40" y="60" class="score">0.60</text>
+	<rect x="120" y="42" width="480" height="36" rx="6" class="track"/>
+	<rect x="120" y="42" width="288" height="36" rx="6" fill="#FF8A69"/>
+	<text x="620" y="60" class="muted">before</text>
+
+	<!-- fixes -->
+	<line x1="150" y1="92" x2="150" y2="250" class="note" marker-end="url(#head)"/>
+	<text x="180" y="124"><tspan class="fix">+</tspan> wrong label fixed</text>
+	<text x="180" y="166"><tspan class="fix">+</tspan> copied cases replaced</text>
+	<text x="180" y="208"><tspan class="fix">+</tspan> fair grader</text>
+	<path d="M430 108 L440 108 L440 224 L430 224" class="note" style="stroke:#5b6b94"/>
+	<text x="460" y="152" class="muted">eval fixes,</text>
+	<text x="460" y="180" class="muted">router unchanged</text>
+
+	<!-- after: 0.98 of the track -->
+	<text x="40" y="282" class="score">0.98</text>
+	<rect x="120" y="264" width="480" height="36" rx="6" class="track"/>
+	<rect x="120" y="264" width="470" height="36" rx="6" fill="#72FCDB"/>
+	<text x="620" y="282" class="muted">after</text>
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 260" role="img" aria-label="Bug 3, questions that are too easy. In 'How do I track my card?', the word card gives away the queue: cards.">
+	<defs>
+		<marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+			<path d="M0 0L10 5L0 10Z" fill="#c3d2f4"/>
+		</marker>
+	</defs>
+	<style>
+		text { font-family: "IBM Plex Sans", "Inter Tight", Helvetica, Arial, sans-serif; fill: #e8edff; font-size: 18px; dominant-baseline: central; }
+		.muted { fill: #9aa8c7; }
+		.row { fill: #9aa8c7; font-weight: 600; }
+		.b { font-weight: 600; }
+		.mid { text-anchor: middle; }
+		.ok { fill: #72FCDB; font-weight: 600; }
+		.bad { fill: #FF8A69; font-weight: 600; }
+		.box { fill: #0b1d47; stroke: #1d2b55; stroke-width: 1.5; }
+		.hl { fill: #FF8A69; fill-opacity: 0.12; stroke: #FF8A69; stroke-width: 2; }
+		.rule { stroke: #1d2b55; stroke-width: 1.5; }
+		.note { stroke: #c3d2f4; stroke-width: 1.5; fill: none; }
+		.num { font-size: 15px; font-weight: 600; text-anchor: middle; }
+		.badge { fill: #041437; stroke: #FF8A69; stroke-width: 1.5; }
+	</style>
+	<rect width="780" height="260" rx="12" fill="#041437"/>
+	<text x="390" y="62" class="mid" style="font-size:24px">"How do I track my <tspan id="w" style="fill:#faa944;font-weight:600">card</tspan>?"</text>
+	<line x1="463" y1="80" x2="517" y2="80" stroke="#faa944" stroke-width="2.5"/>
+	<line x1="490" y1="88" x2="490" y2="170" class="note" marker-end="url(#head)"/>
+	<text x="506" y="128" class="muted">the word gives it away</text>
+	<rect x="410" y="176" width="160" height="56" rx="8" class="box" style="stroke:#faa944"/>
+	<text x="490" y="204" class="mid b">cards <tspan class="ok">✓</tspan></text>
+</svg>

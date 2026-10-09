@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 300" role="img" aria-label="Bug 1, a wrong label. In the eval, the input is 'I forgot my password' and the expected answer is billing, but it should be account.">
+	<defs>
+		<marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+			<path d="M0 0L10 5L0 10Z" fill="#c3d2f4"/>
+		</marker>
+	</defs>
+	<style>
+		text { font-family: "IBM Plex Sans", "Inter Tight", Helvetica, Arial, sans-serif; fill: #e8edff; font-size: 18px; dominant-baseline: central; }
+		.muted { fill: #9aa8c7; }
+		.row { fill: #9aa8c7; font-weight: 600; }
+		.b { font-weight: 600; }
+		.mid { text-anchor: middle; }
+		.ok { fill: #72FCDB; font-weight: 600; }
+		.bad { fill: #FF8A69; font-weight: 600; }
+		.box { fill: #0b1d47; stroke: #1d2b55; stroke-width: 1.5; }
+		.hl { fill: #FF8A69; fill-opacity: 0.12; stroke: #FF8A69; stroke-width: 2; }
+		.rule { stroke: #1d2b55; stroke-width: 1.5; }
+		.note { stroke: #c3d2f4; stroke-width: 1.5; fill: none; }
+		.num { font-size: 15px; font-weight: 600; text-anchor: middle; }
+		.badge { fill: #041437; stroke: #FF8A69; stroke-width: 1.5; }
+	</style>
+	<rect width="780" height="300" rx="12" fill="#041437"/>
+	<text x="330" y="34" class="b mid">Eval</text>
+	<rect x="150" y="56" width="360" height="216" rx="8" class="box"/>
+	<line x1="150" y1="110" x2="510" y2="110" class="rule"/>
+	<line x1="150" y1="218" x2="510" y2="218" class="rule"/>
+	<line x1="150" y1="164" x2="510" y2="164" class="rule"/>
+
+	<text x="40" y="83" class="row">input</text>
+	<text x="172" y="83">"I forgot my password"</text>
+
+	<rect x="146" y="110" width="368" height="54" rx="6" class="hl"/>
+	<text x="40" y="137" class="row" style="fill:#FF8A69">expected</text>
+	<text x="172" y="137" class="b">billing</text>
+
+	<g opacity="0.35">
+		<text x="40" y="191" class="row">run</text>
+		<text x="172" y="191">router</text>
+		<text x="40" y="245" class="row">check</text>
+		<text x="172" y="245">LLM judge</text>
+	</g>
+
+	<line x1="586" y1="137" x2="524" y2="137" class="note" marker-end="url(#head)"/>
+	<circle cx="606" cy="137" r="14" class="badge"/><text x="606" y="137" class="num">1</text>
+	<text x="630" y="125" class="bad">should be</text>
+	<text x="630" y="149" class="bad">account</text>
+</svg>

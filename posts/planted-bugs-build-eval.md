@@ -20,7 +20,7 @@ A high score might not mean your app is good if the eval itself is not correct. 
 
 Claude Code recently added a command, `/claude-api build-eval`, that checks an eval for these problems. I wanted to know how much it would actually catch.
 
-To find out, I built a small eval for an email router, hid 5 bugs in it, and handed it to the command without telling it about any of them.
+To find out, I built a small eval for an email router, hid 5 bugs in it, and ran the command on it without telling it about any of them.
 
 This article shows what it found, and when you should run it on your own eval.
 
@@ -61,54 +61,53 @@ If you already have an eval, it reads your cases and grader, suggests a fix for 
 
 I tested an email router for a bank's support team. It reads a customer email and sends it to one of 5 queues: cards, billing, account, transfers, or top-up.
 
-The eval I handed over has 15 questions from the [Banking77](https://huggingface.co/datasets/PolyAI/banking77) dataset, each mapped to one of the 5 queues. 15 is the smallest set the skill accepts.
+My eval has 15 questions from the [Banking77](https://huggingface.co/datasets/PolyAI/banking77) dataset, each labeled with one of the 5 queues. 15 is the smallest set the skill accepts.
 
-These are the 5 bugs I planted:
-
-```text
-eval/
-  cases.json        15 questions + expected queue
-  router.py         the app: system prompt + 3 worked examples
-  grader.py         an LLM judge
-  run_eval.py       runs the router over the cases and prints a score
-
-cases.json
-  case_09  "I forgot my password"            -> billing   <- bug 1: wrong label (should be account)
-  case_12  "i was charged when i used a us   -> top-up    <- bug 2: fits two queues (billing too)
-            issued card. why and what cards
-            are free to use to add money"
-  12 of 15 are short, with a word that gives
-  away the queue ("How do I track my card?")              <- bug 3: too easy
-
-grader.py
-  rates the queue and the reason together
-  on a 1-5 scale, and passes only a 5                     <- bug 4: same answer, different verdicts
-
-router.py system prompt
-  worked examples = case_03, case_07, case_11,
-  copied word for word                                    <- bug 5: answers in the prompt
-```
-
-Before handing the eval over, I checked that each bug was real. For example, I regraded the same 15 answers 4 times, and 8 of them switched between pass and fail. I also wrote down what would count as catching each bug before running anything.
-
-| Item | Value |
-| --- | --- |
-| Skill | `claude-api` `build-eval`, Claude Code 2.1.289 |
-| Model running the skill | Claude Opus 5.5 |
-| Router and original judge | Claude Haiku 4.5, called through `claude -p` |
-| Cases | 15 Banking77 questions on 5 queues |
-| Runs of `build-eval` | 1 |
-| Date | 2026-10-07 |
-
-`build-eval` never saw my answer key. I copied the eval to a folder outside my repo so the session could not find my notes, and I answered every question the way a real owner would, with no hint about any bug.
-
-## Step 1: it reads your files
-
-`build-eval` started by reading every file in the folder. Before running the router once, it found 3 of the 5 bugs.
+These are the 5 bugs I planted.
 
 ### Bug 1: the wrong label
 
-The first question it asked was about case_09:
+I labeled "I forgot my password" as billing instead of account. When the router correctly sends it to account, the eval marks it wrong.
+
+![Bug 1: the input "I forgot my password" is labeled billing, but it should be account](images/planted-bugs-build-eval/bug-wrong-label.svg)
+
+### Bug 2: a question with two right queues
+
+I added a question that could be routed to either billing or top-up. The label accepts only top-up, so a router that picks billing is marked wrong.
+
+![Bug 2: a question about being charged when adding money with a US card fits both billing and top-up, but the label says top-up only](images/planted-bugs-build-eval/bug-two-queues.svg)
+
+### Bug 3: questions that are too easy
+
+I filled the eval with easy questions. 12 of the 15 name their queue outright, like "How do I track my card?", so a router that just matches keywords scores high.
+
+![Bug 3: in "How do I track my card?", the word card gives away the queue, cards](images/planted-bugs-build-eval/bug-too-easy.svg)
+
+### Bug 4: a grader that changes its verdict
+
+I wrote a strict grader: an LLM scores each answer from 1 to 5, and only a 5 passes. The same answer can score 5 on one run and 4 on the next, so you can't tell whether a prompt change helped or it's just noise.
+
+![Bug 4: the router's right answer, account, scores 5 and passes when graded once, then scores 4 and fails when graded again](images/planted-bugs-build-eval/bug-grade-flips.svg)
+
+### Bug 5: answers in the prompt
+
+I copied 3 of the 15 test emails into the router's prompt as examples, answers included. The router already knows those answers, so passing them proves nothing.
+
+![Bug 5: "My top up is pending." appears both as an example in the router's prompt and as a test case, so it passes only because the router saw the answer](images/planted-bugs-build-eval/bug-answer-in-prompt.svg)
+
+I ran it with:
+
+- Claude Opus 5.5 runs `build-eval`, which checks the eval
+- Claude Haiku 4.5 is both the router being tested and the original LLM judge, called through `claude -p`
+
+
+## What build-eval found
+
+`build-eval` found all 5 bugs.
+
+### It fixed the wrong label
+
+It started with [bug 1](#bug-1-the-wrong-label), named the mislabeled password question, and recommended relabeling it from billing to account:
 
 ```text
 case_09 "I forgot my password" is labeled billing. Change it?
@@ -118,11 +117,9 @@ case_09 "I forgot my password" is labeled billing. Change it?
    Your bank genuinely routes password resets to billing.
 ```
 
-It named the exact case and proposed the right fix. It also left room for the label to be intentional, in case a bank really does route password resets to billing.
+### It replaced the copied test cases
 
-### Bug 5: the answers hidden in the prompt
-
-The next question caught the cases copied into the router's prompt:
+Next, it found [bug 5](#bug-5-answers-in-the-prompt), named all 3 test emails copied into the router's prompt, and recommended replacing them with new ones:
 
 ```text
 case_03, case_07, case_11 are copied word for word from the prompt's examples.
@@ -132,13 +129,9 @@ How should I handle them?
 3. Change the prompt examples
 ```
 
-These 3 cases pass every time, because the router has already seen their answers. That inflates the score without testing anything.
+### It flagged the two-queue question
 
-I chose to replace them, which left the app untouched. The skill wrote 3 new emails covering the same queues.
-
-### Bug 2: the case that fits two queues
-
-After rewriting the cases, it listed the ones where the right answer could be argued:
+Then it found [bug 2](#bug-2-a-question-with-two-right-queues) and named 2 questions that could reasonably go to two queues:
 
 ```text
 2 cases where the right queue could be argued:
@@ -148,27 +141,9 @@ After rewriting the cases, it listed the ones where the right answer could be ar
 Are these 15 representative of what your router actually sees?
 ```
 
-I planted case_12. The skill had just written case_11, so it also flagged a weak spot in its own work.
+### It replaced the flaky grader
 
-It kept case_12's label and marked it as arguable rather than changing it. That mattered: in the final run, the router missed only case_12.
-
-## Step 2: it picks a grader
-
-Next, `build-eval` turned to how answers are scored. I handed over this grader:
-
-```python
-JUDGE_PROMPT = """You are grading an email router for a bank's support team.
-You will see a customer email, the correct queue chosen by a person, and the router's answer.
-Rate the router's answer as a whole from 1 (poor) to 5 (excellent),
-considering both whether it picked the correct queue and how helpful its reason is to the support agent who receives the email.
-Reply with the number only."""
-
-PASS_SCORE = 5
-```
-
-Two lines carry the bug. The judge mixes two qualities into one score, and only a perfect 5 passes. A correct answer the judge rates 4 one time and 5 the next flips between fail and pass.
-
-The skill named both problems in one question:
+After that, it found [bug 4](#bug-4-a-grader-that-changes-its-verdict), named both problems with the LLM judge, and recommended replacing it with a code check:
 
 ```text
 How should the queue choice be graded?
@@ -180,26 +155,19 @@ How should the queue choice be graded?
    Non-deterministic and blends queue with reason quality.
 ```
 
-For a router, the right queue has one correct answer, so comparing it to the expected label in code is enough. The new check is free, gives the same verdict every time, and reports format errors separately from wrong queues.
+A queue name is either right or wrong, so a code check is enough. It gives the same verdict every time and doesn't need a model.
 
-That made 4 of the 5 bugs, all found before the router answered a single email.
+Here is a simplified version of the new check:
 
-## Step 3: it runs a pilot and the full set
-
-With the cases and grader fixed, `build-eval` ran the router on 5 cases first, then on all 15 cases 3 times each.
-
-The score counts the share of emails the grader marked as sent to the right team.
-
-After the 5-case pilot, it raised the last bug:
-
-```text
-The scores may be too close to perfect. If the full run also lands near 100%,
-the eval can't show whether a change made things better. It would only show
-cost and latency moving. If that happens, I'll suggest harder cases rather
-than hill-climbing on it.
+```python
+queue = re.search(r"queue:\s*(.+)", answer, re.IGNORECASE).group(1)  # read the Queue: line
+queue = queue.strip().lower()                                        # "Account " -> "account"
+passed = queue == expected                                           # exact match
 ```
 
-The full run confirmed it. The router got 44 of 45 answers right, and the skill said so plainly:
+### It warned the eval was too easy
+
+Last, it ran the router on all 15 emails and found [bug 3](#bug-3-questions-that-are-too-easy). The router scored 98%, so the eval had almost no room to show an improvement:
 
 ```text
 This eval is close to its ceiling. There are 2 points of room above the
@@ -208,49 +176,23 @@ change that makes routing worse, so it works as a regression check before you
 change the prompt or model. It can't show a change that makes routing better.
 ```
 
-This exposed bug 3, which only a real run could show. Before the fixes, the strict judge failed so many correct answers that the eval looked hard:
+## Before and after build-eval
 
-- **Before:** the old grader passed 9 of 15 answers. 4 of the 6 failures were correct answers it scored 4 instead of 5.
-- **After:** the new grader passed 44 of 45. It missed only case_12, on 1 of 3 runs.
+When `build-eval` finished, the score had jumped from 0.60 to 0.98. Since the router's prompt and model never changed, the gain came from fixing the eval.
 
-The router barely changed, but the score went from 0.60 to 0.98.
+![The eval score went from 0.60 to 0.98 after build-eval fixed the wrong label, replaced the copied cases, and swapped in a fair grader, with the router unchanged](images/planted-bugs-build-eval/score-before-after.svg)
 
-## What it left behind
+It also built an HTML report of the run. It shows the overall score, each case's score across its 3 runs, and a link to every transcript, so you can see which case failed and read why:
 
-When it finished, the eval looked like this:
-
-| | Before (handed over) | After `build-eval` |
-| --- | --- | --- |
-| Cases | 15, with 3 copied into the prompt | 15: 1 relabeled, 3 replaced |
-| Grader | Haiku 1-5 judge, pass only at 5 | Exact match on the `Queue:` line |
-| Metrics | Pass rate | Accuracy and format errors |
-| Runs per case | 1 | 3 |
-| Score | 0.60 | 0.98 ± 0.04 |
-| Router prompt | 3 worked examples | Unchanged |
-
-It also built a runner, an HTML report linking each case to its transcript, and a folder of results. It committed the result to git only when I asked.
+![The build-eval HTML report: mean accuracy 0.978 across 15 cases, with case_12, the top-up question, at the top with 0.667 and the other cases at 1.000](images/planted-bugs-build-eval/build-eval-report.png)
 
 ## Final thoughts
 
-`build-eval` found all 5 bugs I planted, 4 of them before running the app once. Here is when I would reach for it.
+In this experiment, `build-eval` found all 5 bugs, but what I liked most is that it asked before changing anything. Each fix came with an option to keep things as they were, in case a "bug" was on purpose. The report then showed exactly where the remaining errors were.
 
-**Use it when:**
+If you're building an eval, or unsure about one you have, run `build-eval` on it first.
 
-- You have an eval you built yourself and never checked. It found 4 of the 5 bugs just by reading the files.
-- Your grader is an LLM judge. It read the judge, named both problems, and replaced it with an exact match.
-- Your cases came from a public dataset or sit in your prompt. It caught the mislabeled Banking77 case and the 3 cases copied into the prompt.
-- You are about to tune a prompt against the score. It told me the fixed eval was too close to 100% to show an improvement.
-
-**Expect it to:**
-
-- Change your eval. Here it relabeled 1 case, replaced 3, swapped the grader, and ran every case 3 times.
-- Ask you questions throughout. The run took 32 minutes, with stops to approve the inputs, the grader, and the runner.
-
-**Use something else when:**
-
-- There is no fixed set of cases to score, such as a one-off demo of what a tool can do.
-- Your app does not call Claude. The skill is written for Claude apps, and I did not test other providers.
-- You need to know how reliably it catches a kind of bug. I ran it once on one eval, and all 5 bugs are the kind its checklist names.
+## Try it yourself
 
 To try it yourself, copy the broken eval out of the [companion folder](https://github.com/khuyentran1401/codecut-articles/tree/main/notebooks/planted-bugs-build-eval) and run the command in a fresh Claude Code session:
 
@@ -260,8 +202,6 @@ cd ~/router-eval
 python3 run_eval.py         # the starting score, about 0.60
 claude                      # then run /claude-api build-eval
 ```
-
-Every model call goes through `claude -p`, so it runs on a Claude subscription without an API key. Compare what it finds against `answer_key.md` in the companion folder.
 
 ## References
 
