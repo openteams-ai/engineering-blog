@@ -1,5 +1,6 @@
 // The social brief: four short answers about a post, written by its author,
-// that seed its LinkedIn post. One social/<slug>.yml per post.
+// that seed its LinkedIn post. One social/<slug>.yml per post. It is optional:
+// a missing or untouched brief passes, but a started one must be finished.
 //
 // The questions are what authors (and their AI assistants) see as comments in
 // the brief, so they are written for a human reader.
@@ -35,6 +36,13 @@ export const COMMENT_HEADER = "### Social brief";
 export const UNANSWERED = "Its 4 questions are unanswered.";
 // Likewise for a missing brief: the comment links straight to creating it.
 export const MISSING = "The brief is missing.";
+
+/** True when a brief was skipped: missing, or the untouched template. */
+export const isSkipped = (problems: string[]) =>
+	problems.length === 1 && (problems[0] === MISSING || problems[0] === UNANSWERED);
+
+/** True when a brief fails the check: started, but with answers that need work. */
+export const fails = (problems: string[]) => problems.length > 0 && !isSkipped(problems);
 
 /** social/<slug>.yml for a post, by its frontmatter slug, else its file name. */
 export function briefPath(postPath: string, markdown: string): string {
@@ -142,11 +150,12 @@ export function renderComment(results: Result[], env: Env): string {
 	// so the README link has to be absolute.
 	const readme = githubUrl("blob/main/README.md#social-brief", env);
 	const guide = readme ? `[Social Brief](${readme})` : "Social Brief";
+	const started = pending.some((r) => fails(r.problems));
 	const lines = [
-		`${COMMENT_HEADER} needed`,
+		started ? `${COMMENT_HEADER} needs more detail` : `${COMMENT_HEADER} (optional)`,
 		"",
-		"Before this PR can merge, please answer 4 short questions about your post. " +
-			"We use them to write its LinkedIn post.",
+		"Answering 4 short questions about your post is optional, but it helps us write its LinkedIn post." +
+			(started ? ` You've started, so each answer needs at least ${MIN_WORDS} words before this check passes.` : ""),
 		"",
 	];
 	for (const { post, brief, problems } of pending) {
