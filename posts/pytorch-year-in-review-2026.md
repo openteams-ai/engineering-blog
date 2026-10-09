@@ -109,7 +109,7 @@ The infrastructure landed in 2025 with an initial batch of modules. Each test fi
 CPython 3.13 test, tagged with the CPython release it came from, and every test that doesn't pass yet is tracked as an
 expected failure. That makes it a ratchet: when a change makes a test start passing, CI tells you, and the xfail gets
 removed, from that point on it gives coverage preventing regression. It also feeds a
-[dashboard](https://dynamo-skips-stokfmqs6saxc7ys4tqojw.streamlit.app/) that tracks the results over time. At the start
+[dashboard](https://guilhermeleobas.github.io/dynamo-skips/) that tracks the results over time. At the start
 of 2026 we were running 32 CPython test modules, about 2,500 tests, with roughly 1,070 passing. Today it is 83 modules
 and nearly 6,800 tests, with over 3,650 passing.
 
