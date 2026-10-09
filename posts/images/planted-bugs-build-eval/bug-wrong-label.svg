@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 300" role="img" aria-label="Bug 1, a wrong label. In the eval, the input is 'I forgot my password' and the expected answer is billing, but it should be account.">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 300" role="img" aria-label="Bug 1, a wrong label. In the eval, the input is 'I forgot my password' and the expected answer is billing, but it should be account. The router answers account, the right queue, and the grader marks it as a fail.">
 	<defs>
 		<marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
 			<path d="M0 0L10 5L0 10Z" fill="#c3d2f4"/>
@@ -33,12 +33,10 @@
 	<text x="40" y="137" class="row" style="fill:#FF8A69">expected</text>
 	<text x="172" y="137" class="b">billing</text>
 
-	<g opacity="0.35">
-		<text x="40" y="191" class="row">run</text>
-		<text x="172" y="191">router</text>
-		<text x="40" y="245" class="row">check</text>
-		<text x="172" y="245">LLM judge</text>
-	</g>
+	<text x="40" y="191" class="row">actual</text>
+	<text x="172" y="191">router <tspan class="muted">→</tspan> account <tspan class="ok">✓</tspan></text>
+	<text x="40" y="245" class="row">check</text>
+	<text x="172" y="245">grader <tspan class="muted">→</tspan> <tspan class="bad">fail</tspan></text>
 
 	<line x1="586" y1="137" x2="524" y2="137" class="note" marker-end="url(#head)"/>
 	<circle cx="606" cy="137" r="14" class="badge"/><text x="606" y="137" class="num">1</text>

@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 380" role="img" aria-label="One unit test and one eval case side by side. Input: add(2, 3) versus the question 'I forgot my password'. Expected: 5 versus account. Run: the code returns 5 versus the LLM app returns account. Check: an assert passes versus a grader passes.">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 380" role="img" aria-label="One unit test and one eval case side by side. Input: add(2, 3) versus the question 'I forgot my password'. Expected: 5 versus account. Actual: the code returns 5 versus the LLM app returns account. Check: an assert passes versus a grader passes.">
 	<style>
 		text { font-family: "IBM Plex Sans", "Inter Tight", Helvetica, Arial, sans-serif; fill: #e8edff; font-size: 18px; dominant-baseline: central; }
 		.code { font-family: "Fira Code", Menlo, Consolas, monospace; font-size: 17px; }
@@ -35,8 +35,8 @@
 	<text x="200" y="182" class="code">5</text>
 	<text x="470" y="182">account</text>
 
-	<!-- run -->
-	<text x="40" y="250" class="row">run</text>
+	<!-- actual -->
+	<text x="40" y="250" class="row">actual</text>
 	<text x="200" y="250">code <tspan class="arrow">→</tspan> <tspan class="code">5</tspan></text>
 	<text x="470" y="250">LLM app <tspan class="arrow">→</tspan> account</text>
 

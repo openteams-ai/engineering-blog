@@ -14,30 +14,31 @@ meta_description: "I hid 5 bugs in an LLM eval and ran Claude Code's build-eval 
 focus_keyword: "build-eval"
 ---
 
-Have you ever built an eval to measure how good your LLM app is, then tuned your prompt until the score went up?
+What if your eval score went up, not because your app got better, but because your eval was wrong?
 
-A high score might not mean your app is good if the eval itself is not correct. A wrong label, an unfair grader, or test cases that are too easy can make a weak app look strong, or a strong one look weak.
+A wrong label, an unfair grader, or test cases that are too easy can make a weak app look strong, or a strong one look weak. Claude Code recently added `/claude-api build-eval`, a command that checks an eval for these problems.
 
-Claude Code recently added a command, `/claude-api build-eval`, that checks an eval for these problems. I wanted to know how much it would actually catch.
+To see how well it works, I built a small eval for an email router, hid 5 bugs in it, and ran the command. This article shows what it found and what it was like to use.
 
-To find out, I built a small eval for an email router, hid 5 bugs in it, and ran the command on it without telling it about any of them.
-
-This article shows what it found, and when you should run it on your own eval.
-
-> 💻 **Get the Code**: The broken eval, the answer key, and the eval the skill left behind are in the [companion folder](https://github.com/khuyentran1401/codecut-articles/tree/main/notebooks/planted-bugs-build-eval).
+The code for this experiment is in the [companion folder](https://github.com/khuyentran1401/codecut-articles/tree/main/notebooks/planted-bugs-build-eval).
 
 ## What makes an eval good
 
-An eval is the LLM version of a unit test suite: inputs paired with expected answers, a grader that scores each output, and a script that runs them all.
+An eval is the LLM version of a unit test suite. Each part has a unit-test counterpart:
+
+- **Inputs**, such as customer emails, are the test inputs.
+- **Expected answers** are the expected outputs.
+- **The LLM's responses** are the actual outputs.
+- **A grader** decides whether each response is right, like an assertion.
 
 ![One unit test and one eval case side by side: add(2, 3) expects 5 and an assert passes; "I forgot my password" expects account and a grader passes](images/planted-bugs-build-eval/unit-test-vs-eval.svg)
 
-An eval can have bugs too, and with hundreds of cases you can't read them all. The [post that introduced build-eval](https://claude.dev/blog/automating-eval-design-and-hillclimbing/) gives 4 signs of a well-designed eval instead. In plain words:
+So what makes an eval good? The [Claude blog post that introduced build-eval](https://claude.dev/blog/automating-eval-design-and-hillclimbing/) gives 4 signs of a well-designed eval that you should look for:
 
-1. **The test cases look like what users send.** If the cases are easier than real ones, a high score only proves the app can handle easy cases.
-2. **Better models score higher.** A stronger model should do better. When it doesn't, the problem is often the eval, not the model.
-3. **Leave room to improve.** Include cases hard enough that even the best model scores well below 100%. Otherwise a better prompt can't raise the score.
-4. **The same answer gets the same verdict.** Scores shouldn't jump between runs. When they do, the cause is often an unclear case or a grader that scores the same answer differently each time.
+1. **The test cases look like what users send.** If the cases are easier than real ones, a high score does not show how well the app handles real users' emails.
+2. **Better models score higher.** A stronger model should do better than a weaker one. When it doesn't, there is likely a problem with the eval.
+3. **There is room to improve.** Include cases hard enough that even the best model scores well below 100%. Otherwise a better prompt can't raise the score.
+4. **The same answer gets the same verdict.** The grader should score the same answer the same way on every run. Otherwise, a change in the score may be just noise, not a sign that the app got better.
 
 ![Score against effort for three model sizes: the strongest model scores highest but stays below a perfect score, and each score has a short error bar](images/planted-bugs-build-eval/eval-signs.svg)
 
@@ -47,58 +48,62 @@ This article tests the first, third, and fourth signs.
 
 ## Meet build-eval
 
-`build-eval` is part of [claude-api](https://github.com/anthropics/skills/tree/main/skills/claude-api), the built-in Claude Code skill for apps built on the Claude API.
+`build-eval` is part of [claude-api](https://github.com/anthropics/skills/tree/main/skills/claude-api), the Claude Code skill for apps that use the Claude API.
 
 To run it, open Claude Code in your app's folder and type:
 
-```bash
+```text
 /claude-api build-eval
 ```
 
-If you already have an eval, it reads your cases and grader, suggests a fix for each problem it finds, and applies the ones you approve.
+If you already have an eval, it:
+
+- Checks your test cases and grader for problems
+- Fixes the ones you approve
+- Runs the eval and reports the score
 
 ## Setup
 
-I tested an email router for a bank's support team. It reads a customer email and sends it to one of 5 queues: cards, billing, account, transfers, or top-up.
+I tested an email router for a bank's support team. It reads a customer email and sends it to one of 5 queues: `cards`, `billing`, `account`, `transfers`, or `top-up`.
 
-My eval has 15 questions from the [Banking77](https://huggingface.co/datasets/PolyAI/banking77) dataset, each labeled with one of the 5 queues. 15 is the smallest set the skill accepts.
+![The router reads a customer email, "Why did my transfer fail?", and sends it to one of 5 queues: cards, billing, account, transfers, or top-up. It picks transfers](images/planted-bugs-build-eval/router-five-queues.svg)
 
-These are the 5 bugs I planted.
+To test it, I took 15 customer emails from the [Banking77](https://huggingface.co/datasets/PolyAI/banking77) dataset and labeled each with a queue. Then I planted 5 bugs in the eval.
+
+I used two models:
+
+- Claude Haiku 4.5 for the router and the eval's original grader
+- Claude Opus 5.5 to run `build-eval`
 
 ### Bug 1: the wrong label
 
-I labeled "I forgot my password" as billing instead of account. When the router correctly sends it to account, the eval marks it wrong.
+"I forgot my password" belongs in the `account` queue, but I labeled it `billing`. So when the router gets it right and picks `account`, the eval marks it wrong.
 
 ![Bug 1: the input "I forgot my password" is labeled billing, but it should be account](images/planted-bugs-build-eval/bug-wrong-label.svg)
 
-### Bug 2: a question with two right queues
+### Bug 2: an email with two right queues
 
-I added a question that could be routed to either billing or top-up. The label accepts only top-up, so a router that picks billing is marked wrong.
+I added an email that could be routed to either `billing` or `top-up`. The label accepts only `top-up`, so a router that picks `billing` is marked wrong.
 
-![Bug 2: a question about being charged when adding money with a US card fits both billing and top-up, but the label says top-up only](images/planted-bugs-build-eval/bug-two-queues.svg)
+![Bug 2: an email about being charged when adding money with a US card fits both billing and top-up, but the label says top-up only](images/planted-bugs-build-eval/bug-two-queues.svg)
 
-### Bug 3: questions that are too easy
+### Bug 3: emails that are too easy
 
-I filled the eval with easy questions. 12 of the 15 name their queue outright, like "How do I track my card?", so a router that just matches keywords scores high.
+I filled the eval with easy emails. In 12 of the 15, a single word gives away the queue, like "card" in "How do I track my card?". A router that just matches keywords scores high.
 
 ![Bug 3: in "How do I track my card?", the word card gives away the queue, cards](images/planted-bugs-build-eval/bug-too-easy.svg)
 
 ### Bug 4: a grader that changes its verdict
 
-I wrote a strict grader: an LLM scores each answer from 1 to 5, and only a 5 passes. The same answer can score 5 on one run and 4 on the next, so you can't tell whether a prompt change helped or it's just noise.
+I wrote a strict grader: an LLM scores each answer from 1 to 5, and only a 5 passes. The same answer can get a 5 one run and a 4 the next.
 
 ![Bug 4: the router's right answer, account, scores 5 and passes when graded once, then scores 4 and fails when graded again](images/planted-bugs-build-eval/bug-grade-flips.svg)
 
 ### Bug 5: answers in the prompt
 
-I copied 3 of the 15 test emails into the router's prompt as examples, answers included. The router already knows those answers, so passing them proves nothing.
+I leaked test data into the router's prompt: 3 of the 15 test emails appear there as examples, answers included. The router already knows those answers, so passing them is cheating.
 
 ![Bug 5: "My top up is pending." appears both as an example in the router's prompt and as a test case, so it passes only because the router saw the answer](images/planted-bugs-build-eval/bug-answer-in-prompt.svg)
-
-I ran it with:
-
-- Claude Opus 5.5 runs `build-eval`, which checks the eval
-- Claude Haiku 4.5 is both the router being tested and the original LLM judge, called through `claude -p`
 
 
 ## What build-eval found
@@ -107,7 +112,7 @@ I ran it with:
 
 ### It fixed the wrong label
 
-It started with [bug 1](#bug-1-the-wrong-label), named the mislabeled password question, and recommended relabeling it from billing to account:
+It started with [bug 1](#bug-1-the-wrong-label), named the mislabeled password email, and recommended relabeling it from `billing` to `account`:
 
 ```text
 case_09 "I forgot my password" is labeled billing. Change it?
@@ -129,9 +134,9 @@ How should I handle them?
 3. Change the prompt examples
 ```
 
-### It flagged the two-queue question
+### It flagged the two-queue email
 
-Then it found [bug 2](#bug-2-a-question-with-two-right-queues) and named 2 questions that could reasonably go to two queues:
+Then it found [bug 2](#bug-2-an-email-with-two-right-queues) and named 2 emails that could reasonably go to two queues:
 
 ```text
 2 cases where the right queue could be argued:
@@ -155,7 +160,7 @@ How should the queue choice be graded?
    Non-deterministic and blends queue with reason quality.
 ```
 
-A queue name is either right or wrong, so a code check is enough. It gives the same verdict every time and doesn't need a model.
+A code check works better than an LLM judge here. It only compares the queue name with the expected one, so it gives the same verdict every time.
 
 Here is a simplified version of the new check:
 
@@ -167,7 +172,7 @@ passed = queue == expected                                           # exact mat
 
 ### It warned the eval was too easy
 
-Last, it ran the router on all 15 emails and found [bug 3](#bug-3-questions-that-are-too-easy). The router scored 98%, so the eval had almost no room to show an improvement:
+Last, it ran the router on all 15 emails and found [bug 3](#bug-3-emails-that-are-too-easy). The router scored 98%, so a better prompt would have almost no room to show up in the score:
 
 ```text
 This eval is close to its ceiling. There are 2 points of room above the
@@ -178,17 +183,19 @@ change the prompt or model. It can't show a change that makes routing better.
 
 ## Before and after build-eval
 
-When `build-eval` finished, the score had jumped from 0.60 to 0.98. Since the router's prompt and model never changed, the gain came from fixing the eval.
+When `build-eval` finished, the score had jumped from 0.60 to 0.98. Since the router's prompt and model never changed, the gain must have come from fixing the eval.
 
 ![The eval score went from 0.60 to 0.98 after build-eval fixed the wrong label, replaced the copied cases, and swapped in a fair grader, with the router unchanged](images/planted-bugs-build-eval/score-before-after.svg)
 
-It also built an HTML report of the run. It shows the overall score, each case's score across its 3 runs, and a link to every transcript, so you can see which case failed and read why:
+It also built an HTML report of the run that shows the overall score, each case's score across its 3 runs, and a link to every transcript, so you can see which case failed and read why:
 
-![The build-eval HTML report: mean accuracy 0.978 across 15 cases, with case_12, the top-up question, at the top with 0.667 and the other cases at 1.000](images/planted-bugs-build-eval/build-eval-report.png)
+![The build-eval HTML report: mean accuracy 0.978 across 15 cases, with case_12, the top-up email, at the top with 0.667 and the other cases at 1.000](images/planted-bugs-build-eval/build-eval-report.png)
 
 ## Final thoughts
 
-In this experiment, `build-eval` found all 5 bugs, but what I liked most is that it asked before changing anything. Each fix came with an option to keep things as they were, in case a "bug" was on purpose. The report then showed exactly where the remaining errors were.
+In this experiment, `build-eval` found all 5 bugs, but what I liked most is that it asked before changing anything. Each problem came with a recommended fix and an option to keep things as they were, in case a "bug" was on purpose.
+
+The report then let me go through each case and see exactly what the router did.
 
 If you're building an eval, or unsure about one you have, run `build-eval` on it first.
 
@@ -206,5 +213,3 @@ claude                      # then run /claude-api build-eval
 ## References
 
 - **[Automating eval design and hillclimbing with Claude](https://claude.dev/blog/automating-eval-design-and-hillclimbing/)** (Lance Martin, 2026): introduces `build-eval` and the checks it runs; every example in it starts from an eval the authors trusted.
-- **[claude-api skill](https://github.com/anthropics/skills/tree/main/skills/claude-api)** (Anthropic, 2026): `build-eval.md` runs the `eval-audit.md` checklist on existing cases, runner, and grader.
-- **[Banking77](https://huggingface.co/datasets/PolyAI/banking77)** (PolyAI, CC-BY-4.0): the source of the 15 customer questions.
