@@ -55,7 +55,7 @@ export function renderTemplate(postPath: string): string {
 	const lines = [
 		`# The social brief for ${postPath}. It's used to write the LinkedIn post.`,
 		"# Answer each question yourself or with your AI assistant (see Social Brief in",
-		"# README.md). The PR can merge once all four are answered.",
+		"# README.md). It's optional, but recommended.",
 	];
 	for (const q of QUESTIONS) {
 		lines.push("", `# ${q.text}`);
@@ -150,12 +150,11 @@ export function renderComment(results: Result[], env: Env): string {
 	// so the README link has to be absolute.
 	const readme = githubUrl("blob/main/README.md#social-brief", env);
 	const guide = readme ? `[Social Brief](${readme})` : "Social Brief";
-	const started = pending.some((r) => fails(r.problems));
 	const lines = [
-		started ? `${COMMENT_HEADER} needs more detail` : `${COMMENT_HEADER} (optional)`,
+		COMMENT_HEADER,
 		"",
-		"Answering 4 short questions about your post is optional, but it helps us write its LinkedIn post." +
-			(started ? ` You've started, so each answer needs at least ${MIN_WORDS} words before this check passes.` : ""),
+		"Fill in the social brief to help us write an accurate LinkedIn post for this article. " +
+			"It's optional, but recommended.",
 		"",
 	];
 	for (const { post, brief, problems } of pending) {

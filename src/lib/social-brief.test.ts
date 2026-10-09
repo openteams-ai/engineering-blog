@@ -89,16 +89,9 @@ describe("isSkipped and fails", () => {
 });
 
 describe("renderComment", () => {
-	it("says the brief is optional while it is skipped", () => {
+	it("recommends the brief without requiring it", () => {
 		const comment = renderComment([{ post: POST, brief: "social/my-post.yml", problems: [MISSING] }], CI);
-		expect(comment).toContain("### Social brief (optional)");
-		expect(comment).not.toContain("before this check passes");
-	});
-
-	it("asks for more detail once a brief is started", () => {
-		const comment = renderComment([{ post: POST, brief: "social/my-post.yml", problems: ["`problem` is empty."] }], CI);
-		expect(comment).toContain("### Social brief needs more detail");
-		expect(comment).toContain("before this check passes");
+		expect(comment).toContain("It's optional, but recommended.");
 	});
 
 	it("thanks the author once every brief passes", () => {
