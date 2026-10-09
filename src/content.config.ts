@@ -28,7 +28,7 @@ const posts = defineCollection({
 		ctx.addIssue({
 			code: "custom",
 			path: ["slug"],
-			message: `no thumbnail: add src/components/art/${post.slug}.astro (run /draw-card-art)`,
+			message: `no thumbnail: add src/components/art/${post.slug}.astro (run /draw-featured-image)`,
 		});
 	}),
 });

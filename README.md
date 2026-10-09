@@ -46,7 +46,7 @@ social/                             # One social brief per post
 3. Write a title, slug and meta description.\
    With Claude Code: `/seo-meta-description posts/your-article.md`
 4. Draw a thumbnail in `src/components/art/<slug>.astro`, using an existing one as a model.\
-   With Claude Code: `/draw-card-art posts/your-article.md`
+   With Claude Code: `/draw-featured-image posts/your-article.md`
 5. Answer the [social brief](#social-brief) in `social/<slug>.yml`.\
    With Claude Code: `/fill-social-brief posts/your-article.md`
 6. Open a PR from a branch in this repo rather than a fork.
@@ -164,7 +164,7 @@ Place images in `posts/images/<post-slug>/` and reference them with relative pat
 
 Your post's thumbnail is a small drawing that shows its main idea.
 
-- **Draw it:** with Claude Code, run `/draw-card-art posts/your-article.md`, or manually edit `src/components/art/<slug>.astro`.
+- **Draw it:** with Claude Code, run `/draw-featured-image posts/your-article.md`, or manually edit `src/components/art/<slug>.astro`.
 - **See it:** run `npm run dev` and open <http://localhost:4321/engineering-blog/card-preview/your-post-slug/>. The page reloads when you save.
 
 ### Markdown Syntax Reference
