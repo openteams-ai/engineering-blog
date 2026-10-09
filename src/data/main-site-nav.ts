@@ -34,7 +34,7 @@ export const mainSiteNav: NavMenu[] = [
 					{
 						links: [
 							{ label: "Our Capabilities", url: u("/capabilities/"), icon: "ph:cpu", description: "Rooted in open source expertise" },
-							{ label: "Python Security Remediation", url: u("/python-security-remediation/"), icon: "ph:file-py", description: "Bring accountability to your AI stack." },
+							{ label: "Open Source Supply Chain Security", url: u("/open-source-supply-chain-security/"), icon: "ph:file-code", description: "Bring security to your AI stack." },
 							{ label: "Government", url: u("/government/"), icon: "ph:bank", description: "AI infrastructure your agency owns." },
 						],
 					},
