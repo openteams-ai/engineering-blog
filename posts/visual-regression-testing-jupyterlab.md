@@ -7,6 +7,7 @@ authors:
   - michal-krassowski
 meta_description: "See how JupyterLab made visual regression testing reproducible on Linux machines, cut CI from 55 to 15 minutes and let contributors update snapshots."
 focus_keyword: "visual regression testing"
+wordpress_url: https://openteams.com/visual-regression-testing-jupyterlab/
 ---
 
 JupyterLab uses visual regression testing to catch unintended changes to the interface before a release: it compares about 350 reference screenshots (snapshots, in Playwright's terms) on every pull request. The tests use [Galata](https://github.com/jupyterlab/jupyterlab/tree/main/galata), JupyterLab's test framework built on Playwright. Until February 2026 the suite took 55 minutes, and now it takes 14 to 16. Flaky tests, which fail once and pass on retry, went from 17 per run in January to 2.4 in August. Any contributor can now request new reference images with a comment. A local run on Linux with the CI fonts produces the same pixels as CI, and on Fedora 44 with its default fonts, 85% of the screenshots match.
