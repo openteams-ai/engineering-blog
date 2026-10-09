@@ -17,7 +17,14 @@ Suggest three ideas for one post's card art, then draw the one the author picks 
 - Read the whole post, including the frontmatter. The art is named by the frontmatter `slug`, which can differ from the filename.
 - If `social/<slug>.yml` has answers, read `remember_one_thing`: it is often the idea the card should show.
 
-## Step 2: Suggest three ideas and let the author choose
+## Step 2: Study the existing cards
+
+Do this before suggesting anything, so the ideas fit the set rather than being redesigned later.
+
+- Read the rules at the top of `src/components/art/style.ts`: the background families, inks, fonts and minimum text sizes. Import colors, fonts and `sparkle` from there instead of writing new hex values.
+- Read at least five cards in `src/components/art/`, across different background families. Note what they have in common: how much text, how big the shapes are, how they show a number, a comparison or a mechanism, and which families recent cards used, so the new one doesn't repeat its neighbor's color.
+
+## Step 3: Suggest three ideas and let the author choose
 
 A card shows one thing: the post's headline number, its main comparison, or the mechanism it explains. Examples from existing cards:
 
@@ -27,7 +34,7 @@ A card shows one thing: the post's headline number, its main comparison, or the 
 
 Every label and number must come from the post. Use at most four short labels, since the card is drawn as small as 266 by 150 pixels.
 
-Suggest three different ideas, each as an ASCII sketch of the card with one line on what it shows and which part of the post it comes from. Make them differ in kind (for example a number, a comparison and a mechanism), not three layouts of one idea. Name the background family each would use. For example:
+Suggest three different ideas, each as an ASCII sketch of the card with one line on what it shows and which part of the post it comes from. Make them differ in kind (for example a number, a comparison and a mechanism), not three layouts of one idea. Name the background family each would use, and the existing card it is closest to in style. For example:
 
 ```text
 A. The headline number                        soft blue
@@ -43,16 +50,11 @@ Same pixels locally and on CI, and the suite's run time ("Before and after").
 
 Then stop and ask the author to pick one, combine them, or ask for others. Don't draw until they choose.
 
-## Step 3: Learn the style
-
-- Read the rules at the top of `src/components/art/style.ts`: the background families, inks, fonts and minimum text sizes. Import colors, fonts and `sparkle` from there instead of writing new hex values.
-- Read two or three cards in `src/components/art/` that are close to the chosen idea, and match their structure.
-
 ## Step 4: Write the card
 
 Create `src/components/art/<slug>.astro`. The site picks it up by its file name, so nothing else needs changing.
 
-- Start from a copy of a similar card, so the `<svg>` root keeps the same attributes: `viewBox="0 0 720 380"`, `class="h-full w-full"`, `preserveAspectRatio="xMidYMid meet"` and `role="img"`.
+- Start from a copy of the card you named as closest in Step 3, so the `<svg>` root keeps the same attributes: `viewBox="0 0 720 380"`, `class="h-full w-full"`, `preserveAspectRatio="xMidYMid meet"` and `role="img"`.
 - Write an `aria-label` that describes what the card shows.
 - Fill the background with the oversized rect the other cards use, so the color reaches the edges at every card shape.
 - Keep the drawing within the middle of the canvas, with about 40 units of margin.
@@ -64,7 +66,7 @@ Create `src/components/art/<slug>.astro`. The site picks it up by its file name,
 node scripts/card-preview.ts <slug> /tmp/card-<slug>.png
 ```
 
-It starts the dev server, screenshots the card at the four sizes the site uses (featured on desktop and on a phone, grid, related) and stops the server. Read the PNG and check:
+It reuses the dev server on port 4321 if one is running and starts one otherwise, then screenshots the card at the four sizes the site uses (featured on desktop and on a phone, grid, related). Read the PNG and check:
 
 - Every label is readable on the related card (266 pixels wide). If not, make it larger or remove it.
 - Nothing overlaps, and no arrow misses its target.
