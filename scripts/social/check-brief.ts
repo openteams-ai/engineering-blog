@@ -1,4 +1,5 @@
-// Fail unless every given post has a fully answered social/<slug>.yml.
+// Fail when a given post's social/<slug>.yml was started but not finished.
+// The brief is optional: a missing or untouched one passes.
 //
 // Runs as the `social-brief` check on pull requests that add a post. Inside
 // GitHub Actions each problem is also an error annotation on the brief file,
@@ -9,7 +10,7 @@
 //   node scripts/social/check-brief.ts --comment comment.md posts/my-post.md
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
-import { MISSING, briefPath, createUrl, editUrl, findProblems, renderComment, type Result } from "../../src/lib/social-brief.ts";
+import { MISSING, briefPath, createUrl, editUrl, fails, findProblems, isSkipped, renderComment, type Result } from "../../src/lib/social-brief.ts";
 
 const { values, positionals } = parseArgs({ options: { comment: { type: "string" } }, allowPositionals: true });
 const env = process.env;
@@ -24,6 +25,10 @@ for (const { post, brief, problems } of results) {
 		console.log(`✅ ${brief}`);
 		continue;
 	}
+	if (isSkipped(problems)) {
+		console.log(`⏭️ ${brief}: skipped (the brief is optional)`);
+		continue;
+	}
 	const link = problems.includes(MISSING) ? createUrl(post, brief, env) : editUrl(brief, env);
 	for (const problem of problems) {
 		const message = `${brief}: ${problem}` + (link ? ` Fix it here: ${link}` : "");
@@ -33,4 +38,4 @@ for (const { post, brief, problems } of results) {
 }
 
 if (values.comment && results.length > 0) writeFileSync(values.comment, renderComment(results, env));
-process.exitCode = results.some((r) => r.problems.length > 0) ? 1 : 0;
+process.exitCode = results.some((r) => fails(r.problems)) ? 1 : 0;

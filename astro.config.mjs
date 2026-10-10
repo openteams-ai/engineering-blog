@@ -35,7 +35,7 @@ export default defineConfig({
 			include: {
 				ph: [
 					"bank", "brain", "briefcase", "caret-down-fill", "chart-line-up", "cpu", "dna",
-					"envelope-simple", "facebook-logo", "file-py", "github-logo", "globe", "instagram-logo", "lightning",
+					"envelope-simple", "facebook-logo", "file-code", "github-logo", "globe", "instagram-logo", "lightning",
 					"linkedin-logo", "link", "check", "list", "medium-logo", "megaphone", "microphone", "moon",
 					"newspaper", "notepad", "pen-nib", "rocket", "rss", "share-network", "shield",
 					"sparkle", "sun", "users-three", "x", "x-logo", "youtube-logo",
