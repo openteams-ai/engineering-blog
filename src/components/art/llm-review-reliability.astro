@@ -1,25 +1,47 @@
 ---
-import { plex, navy, solidBlue, check } from "./style";
+import { plex, darkNavy, check } from "./style";
+
+// One summary before and after review. The reviewer keeps the unsupported
+// line (salmon) and deletes a supported one, leaving a dashed gap.
+const rows = [
+	{ y: 112, w: 128 },
+	{ y: 172, w: 112, bad: true },
+	{ y: 232, w: 120 },
+];
+const lineBlue = "#8aa2ff";
+const salmon = "#ff8f73";
+const mark = (x: number, y: number, bad?: boolean) =>
+	bad
+		? `M${x - 7} ${y - 7} l14 14 M${x + 7} ${y - 7} l-14 14`
+		: `M${x - 8} ${y} l5 6 l11 -12`;
 ---
 
-<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A reviewer LLM approves an unsupported claim in another LLM's summary">
-	<rect x="-300" y="-300" width="1320" height="980" fill={solidBlue}/>
-	<rect x="170" y="56" width="290" height="248" rx="16" fill="#ffffff"/>
-	{[
-		{ y: 96, w: 220 },
-		{ y: 134, w: 190 },
-		{ y: 226, w: 206 },
-		{ y: 262, w: 140 },
-	].map((l) => <rect x="204" y={l.y} width={l.w} height="14" rx="7" fill="#d6e4fa"/>)}
-	<rect x="204" y="174" width="222" height="18" rx="9" fill="#ff8f73"/>
-	<circle cx="368" cy="183" r="66" fill="none" stroke={navy} stroke-width="9"/>
-	<path d="M416 231 L476 291" stroke={navy} stroke-width="16" stroke-linecap="round"/>
-	<g transform="translate(418 132)">
-		<circle r="24" fill={check} stroke="#ffffff" stroke-width="4"/>
-		<path d="M-10 0 L-3 7 L11 -8" stroke="#ffffff" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-	</g>
-	<g font-family={plex} font-size="24" fill="#cfe1fb" text-anchor="middle">
-		<text x="315" y="346">LLM summary</text>
-		<text x="580" y="191">LLM reviewer</text>
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A reviewer pass keeps an unsupported claim and deletes a supported one">
+	<rect x="-300" y="-300" width="1320" height="980" fill={darkNavy}/>
+	<g font-family={plex} font-size="26" font-weight="500" transform="translate(-14 0)">
+		<!-- draft summary, each line marked supported or not -->
+		<rect x="60" y="72" width="220" height="216" rx="16" fill="#0b1c44" stroke={lineBlue} stroke-width="2"/>
+		{rows.map((r) => (
+			<>
+				<rect x="86" y={r.y} width={r.w} height="18" rx="9" fill={r.bad ? salmon : lineBlue}/>
+				<circle cx="246" cy={r.y + 9} r="15" fill={r.bad ? salmon : check}/>
+				<path d={mark(246, r.y + 9, r.bad)} stroke={darkNavy} stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+			</>
+		))}
+		<text x="170" y="332" text-anchor="middle" fill="#cfe1fb">summary</text>
+
+		<!-- reviewer pass -->
+		<path d="M300 180 H350" stroke="#cfe1fb" stroke-width="4" stroke-linecap="round"/>
+		<path d="M346 169 L364 180 L346 191 Z" fill="#cfe1fb"/>
+
+		<!-- reviewed summary: bad line kept, a true line gone -->
+		<rect x="384" y="72" width="180" height="216" rx="16" fill="#0b1c44" stroke={lineBlue} stroke-width="2"/>
+		<rect x="410" y={rows[0].y} width={rows[0].w} height="18" rx="9" fill={lineBlue}/>
+		<rect x="410" y={rows[1].y} width={rows[1].w} height="18" rx="9" fill={salmon}/>
+		<rect x="410" y={rows[2].y} width={rows[2].w} height="18" rx="9" fill="none" stroke={lineBlue} stroke-width="2" stroke-dasharray="6 6"/>
+		<text x="474" y="332" text-anchor="middle" fill="#cfe1fb">reviewed</text>
+
+		<text x="580" y={rows[1].y + 19} font-size="30" fill={salmon}>survived</text>
+		<text x="580" y={rows[2].y + 19} font-size="30" fill={lineBlue}>deleted</text>
 	</g>
 </svg>
