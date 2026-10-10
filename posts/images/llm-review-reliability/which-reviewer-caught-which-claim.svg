@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 320" role="img" aria-label="Grid of 12 unsupported claims across five reviewer models, with a filled dot where the reviewer removed that claim. Claims C6 and C9 were caught by every reviewer and C11 by none. Totals: qwen3:8b 3, qwen2.5:14b 6, llama3.1:8b 9, qwen3.8:27b-mlx 10, qwen3:30b-a3b 10, and the last two rows are identical.">
+  <defs>
+    <style>
+      text { font-family: "IBM Plex Sans", "Inter Tight", Helvetica, Arial, sans-serif; font-size: 18px; fill: #e8edff; }
+      .mut { fill: #9aa8c7; }
+      .mid { text-anchor: middle; }
+      .end { text-anchor: end; }
+      .b { font-weight: 700; }
+      .hit { fill: #72FCDB; }
+      .miss { fill: #5b6b94; }
+      .rule { stroke: #1d2b55; stroke-width: 1.5; }
+    </style>
+  </defs>
+  <rect width="780" height="320" rx="12" fill="#041437"/>
+  <!-- header -->
+  <text class="mut mid" x="204" y="58">C6</text>
+  <text class="mut mid" x="240" y="58">C9</text>
+  <text class="mut mid" x="294" y="58">C3</text>
+  <text class="mut mid" x="330" y="58">C4</text>
+  <text class="mut mid" x="366" y="58">C8</text>
+  <text class="mut mid" x="402" y="58">C1</text>
+  <text class="mut mid" x="438" y="58">C2</text>
+  <text class="mut mid" x="474" y="58">C5</text>
+  <text class="mut mid" x="510" y="58">C7</text>
+  <text class="mut mid" x="548" y="58">C10</text>
+  <text class="mut mid" x="591" y="58">C12</text>
+  <text class="mut mid" x="651" y="58">C11</text>
+  <text class="b end" x="746" y="58">caught</text>
+  <line class="rule" x1="33" y1="74" x2="746" y2="74"/>
+  <!-- qwen3:8b -->
+  <text x="33" y="102">qwen3:8b</text>
+  <circle class="hit" cx="204" cy="96" r="7"/>
+  <circle class="hit" cx="240" cy="96" r="7"/>
+  <circle class="hit" cx="294" cy="96" r="7"/>
+  <circle class="miss" cx="330" cy="96" r="2.5"/>
+  <circle class="miss" cx="366" cy="96" r="2.5"/>
+  <circle class="miss" cx="402" cy="96" r="2.5"/>
+  <circle class="miss" cx="438" cy="96" r="2.5"/>
+  <circle class="miss" cx="474" cy="96" r="2.5"/>
+  <circle class="miss" cx="510" cy="96" r="2.5"/>
+  <circle class="miss" cx="548" cy="96" r="2.5"/>
+  <circle class="miss" cx="591" cy="96" r="2.5"/>
+  <circle class="miss" cx="651" cy="96" r="2.5"/>
+  <text class="end" x="746" y="102">3</text>
+  <line class="rule" x1="33" y1="117" x2="746" y2="117"/>
+  <!-- qwen2.5:14b -->
+  <text x="33" y="145">qwen2.5:14b</text>
+  <circle class="hit" cx="204" cy="139" r="7"/>
+  <circle class="hit" cx="240" cy="139" r="7"/>
+  <circle class="hit" cx="294" cy="139" r="7"/>
+  <circle class="hit" cx="330" cy="139" r="7"/>
+  <circle class="hit" cx="366" cy="139" r="7"/>
+  <circle class="miss" cx="402" cy="139" r="2.5"/>
+  <circle class="miss" cx="438" cy="139" r="2.5"/>
+  <circle class="miss" cx="474" cy="139" r="2.5"/>
+  <circle class="miss" cx="510" cy="139" r="2.5"/>
+  <circle class="hit" cx="548" cy="139" r="7"/>
+  <circle class="miss" cx="591" cy="139" r="2.5"/>
+  <circle class="miss" cx="651" cy="139" r="2.5"/>
+  <text class="end" x="746" y="145">6</text>
+  <line class="rule" x1="33" y1="160" x2="746" y2="160"/>
+  <!-- llama3.1:8b -->
+  <text x="33" y="188">llama3.1:8b</text>
+  <circle class="hit" cx="204" cy="182" r="7"/>
+  <circle class="hit" cx="240" cy="182" r="7"/>
+  <circle class="miss" cx="294" cy="182" r="2.5"/>
+  <circle class="hit" cx="330" cy="182" r="7"/>
+  <circle class="hit" cx="366" cy="182" r="7"/>
+  <circle class="hit" cx="402" cy="182" r="7"/>
+  <circle class="hit" cx="438" cy="182" r="7"/>
+  <circle class="hit" cx="474" cy="182" r="7"/>
+  <circle class="hit" cx="510" cy="182" r="7"/>
+  <circle class="hit" cx="548" cy="182" r="7"/>
+  <circle class="miss" cx="591" cy="182" r="2.5"/>
+  <circle class="miss" cx="651" cy="182" r="2.5"/>
+  <text class="end" x="746" y="188">9</text>
+  <line class="rule" x1="33" y1="203" x2="746" y2="203"/>
+  <!-- qwen3.8:27b-mlx -->
+  <text x="33" y="231">qwen3.8:27b-mlx</text>
+  <circle class="hit" cx="204" cy="225" r="7"/>
+  <circle class="hit" cx="240" cy="225" r="7"/>
+  <circle class="hit" cx="294" cy="225" r="7"/>
+  <circle class="hit" cx="330" cy="225" r="7"/>
+  <circle class="hit" cx="366" cy="225" r="7"/>
+  <circle class="hit" cx="402" cy="225" r="7"/>
+  <circle class="hit" cx="438" cy="225" r="7"/>
+  <circle class="hit" cx="474" cy="225" r="7"/>
+  <circle class="hit" cx="510" cy="225" r="7"/>
+  <circle class="miss" cx="548" cy="225" r="2.5"/>
+  <circle class="hit" cx="591" cy="225" r="7"/>
+  <circle class="miss" cx="651" cy="225" r="2.5"/>
+  <text class="end" x="746" y="231">10</text>
+  <line class="rule" x1="33" y1="246" x2="746" y2="246"/>
+  <!-- qwen3:30b-a3b -->
+  <text x="33" y="274">qwen3:30b-a3b</text>
+  <circle class="hit" cx="204" cy="268" r="7"/>
+  <circle class="hit" cx="240" cy="268" r="7"/>
+  <circle class="hit" cx="294" cy="268" r="7"/>
+  <circle class="hit" cx="330" cy="268" r="7"/>
+  <circle class="hit" cx="366" cy="268" r="7"/>
+  <circle class="hit" cx="402" cy="268" r="7"/>
+  <circle class="hit" cx="438" cy="268" r="7"/>
+  <circle class="hit" cx="474" cy="268" r="7"/>
+  <circle class="hit" cx="510" cy="268" r="7"/>
+  <circle class="miss" cx="548" cy="268" r="2.5"/>
+  <circle class="hit" cx="591" cy="268" r="7"/>
+  <circle class="miss" cx="651" cy="268" r="2.5"/>
+  <text class="end" x="746" y="274">10</text>
+  <line class="rule" x1="33" y1="289" x2="746" y2="289"/>
+</svg>

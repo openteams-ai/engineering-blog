@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 440" role="img" aria-label="Confusion table for a reviewer scoring 30 claims. Unsupported row: 8 removed, 2 kept, 10 total. Supported row: 4 removed, 16 kept, 20 total. Removed column total 12, kept 18. Recall is 8 of 10, or 80 percent, across the unsupported row. Precision is 8 of 12, or 67 percent, down the removed column.">
+  <defs>
+    <style>
+      text { font-family: "IBM Plex Sans", "Inter Tight", Helvetica, Arial, sans-serif; font-size: 18px; fill: #e8edff; }
+      .mut { fill: #9aa8c7; }
+      .b { font-weight: 700; }
+      .blue { fill: #72FCDB; }
+      .salmon { fill: #FF8A69; }
+      .mid { text-anchor: middle; }
+      .end { text-anchor: end; }
+    </style>
+    <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#72FCDB"/></marker>
+    <marker id="as" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#FF8A69"/></marker>
+  </defs>
+  <rect width="780" height="440" rx="12" fill="#041437"/>
+
+  <!-- column and row tints -->
+  <rect x="108" y="120" width="564" height="60" fill="#72FCDB" fill-opacity="0.12"/>
+  <rect x="277" y="110" width="148" height="172" fill="#FF8A69" fill-opacity="0.18"/>
+  <line x1="108" y1="120" x2="672" y2="120" stroke="#72FCDB" stroke-width="2"/>
+  <line x1="108" y1="180" x2="672" y2="180" stroke="#72FCDB" stroke-width="2"/>
+  <line x1="277" y1="110" x2="277" y2="282" stroke="#FF8A69" stroke-width="2"/>
+  <line x1="425" y1="110" x2="425" y2="282" stroke="#FF8A69" stroke-width="2"/>
+
+  <!-- header -->
+  <text class="mut mid" x="426" y="66">the reviewer</text>
+  <line x1="276" y1="78" x2="576" y2="78" stroke="#5b6b94" stroke-width="1"/>
+  <text class="b mid" x="351" y="105">removed</text>
+  <text class="b mid" x="500" y="105">kept</text>
+
+  <!-- unsupported row -->
+  <text class="b end" x="255" y="157">unsupported</text>
+  <text class="b blue mid" x="351" y="157">8</text>
+  <text class="mid" x="500" y="157">2</text>
+  <text class="b blue mid" x="605" y="157">10</text>
+
+  <!-- supported row -->
+  <text class="end" x="255" y="217">supported</text>
+  <text class="b salmon mid" x="351" y="217">4</text>
+  <text class="mid" x="500" y="217">16</text>
+  <text class="mid" x="605" y="217">20</text>
+
+  <!-- column totals -->
+  <line x1="277" y1="249" x2="576" y2="249" stroke="#5b6b94" stroke-width="1"/>
+  <text class="b salmon mid" x="351" y="277">12</text>
+  <text class="mid" x="500" y="277">18</text>
+
+  <!-- legend -->
+  <line x1="108" y1="330" x2="144" y2="330" stroke="#72FCDB" stroke-width="2" marker-end="url(#ab)"/>
+  <text class="b blue" x="158" y="336">recall</text>
+  <text class="b" x="266" y="336">8 of 10 = 80%</text>
+  <text class="mut" x="432" y="336">across the unsupported row</text>
+
+  <line x1="125" y1="392" x2="125" y2="360" stroke="#FF8A69" stroke-width="2" marker-end="url(#as)"/>
+  <text class="b salmon" x="158" y="382">precision</text>
+  <text class="b" x="266" y="382">8 of 12 = 67%</text>
+  <text class="mut" x="432" y="382">down the removed column</text>
+</svg>
