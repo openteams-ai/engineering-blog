@@ -1,9 +1,10 @@
 import { unified } from "@astrojs/markdown-remark";
 import tailwindcss from "@tailwindcss/vite";
 import icon from "astro-iconset";
-import { defineConfig, fontProviders } from "astro/config";
+import { defineConfig } from "astro/config";
 import { writeFileSync } from "node:fs";
 import { BLOG_PATH } from "./src/lib/blog-path.ts";
+import { fonts } from "./src/lib/fonts.ts";
 import { postMoves, redirectsFile } from "./src/lib/old-addresses.ts";
 import remarkPostCleanup from "./src/lib/remark-post-cleanup.ts";
 
@@ -43,13 +44,5 @@ export default defineConfig({
 			},
 		}),
 	],
-	fonts: [
-		{ provider: fontProviders.google(), name: "Inter", subsets: ["latin", "latin-ext"], cssVariable: "--font-body", weights: [400, 500, 600, 700, 800], fallbacks: ["sans-serif"] },
-		{ provider: fontProviders.google(), name: "Fira Code", cssVariable: "--font-mono", weights: [400, 500], fallbacks: ["monospace"] },
-		// Post titles and article text.
-		{ provider: fontProviders.google(), name: "IBM Plex Sans", subsets: ["latin", "latin-ext"], cssVariable: "--font-post", weights: ["400 700"], fallbacks: ["sans-serif"] },
-		// OG card only.
-		{ provider: fontProviders.google(), name: "Sora", cssVariable: "--font-sora", weights: [700], fallbacks: ["sans-serif"] },
-		{ provider: fontProviders.google(), name: "IBM Plex Sans", subsets: ["latin", "latin-ext"], cssVariable: "--font-nav", weights: [500], fallbacks: ["sans-serif"] },
-	],
+	fonts,
 });
