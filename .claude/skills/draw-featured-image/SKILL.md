@@ -15,7 +15,7 @@ Suggest three ideas for one post's card art, then draw the one the author picks 
 
 - Resolve a bare slug to `posts/<slug>.md`.
 - Read the whole post, including the frontmatter. The art is named by the frontmatter `slug`, which can differ from the filename.
-- If `social/<slug>.yml` has answers, read `remember_one_thing`: it is often the idea the card should show.
+- Note the one thing a reader should remember from the post, usually in its TL;DR or conclusion: it is often the idea the card should show.
 
 ## Step 2: Study the existing cards
 
