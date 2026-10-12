@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 460" role="img" aria-label="Side-by-side comparison of what each reviewer is asked. Both receive the full transcript. The general reviewer also receives a draft summary with several claims, is asked to rewrite it and remove unsupported claims, and returns a new summary. bespoke-minicheck:7b receives one claim, The council voted to oppose Proposition Six, is asked whether the transcript supports it, and returns supported or unsupported.">
+  <defs>
+    <style>
+      text { font-family: "IBM Plex Sans", "Inter Tight", Helvetica, Arial, sans-serif; font-size: 18px; fill: #e8edff; }
+      .mut { fill: #9aa8c7; }
+      .b { font-weight: 700; }
+      .blue { fill: #72FCDB; }
+      .salmon { fill: #FF8A69; }
+      .rule { stroke: #1d2b55; stroke-width: 1.5; }
+    </style>
+  </defs>
+  <rect width="780" height="460" rx="12" fill="#041437"/>
+
+  <!-- header -->
+  <text class="b salmon" x="115" y="58">general reviewer</text>
+  <text class="b blue" x="460" y="58">bespoke-minicheck:7b</text>
+  <line class="rule" x1="40" y1="78" x2="740" y2="78"/>
+
+  <!-- input -->
+  <text class="mut" x="40" y="108">input</text>
+  <text class="mut" x="115" y="108">Transcript:</text>
+  <text class="mut" x="115" y="131">{full transcript}</text>
+  <text class="mut" x="460" y="108">Transcript:</text>
+  <text class="mut" x="460" y="131">{full transcript}</text>
+  <line class="rule" x1="40" y1="152" x2="740" y2="152"/>
+
+  <!-- plus -->
+  <text class="mut" x="40" y="182">plus</text>
+  <text class="b" x="115" y="182">Draft summary:</text>
+  <text class="b" x="115" y="205">Decisions</text>
+  <text class="b" x="115" y="228">- The council voted to oppose</text>
+  <text class="b" x="115" y="251">Proposition Six.</text>
+  <text class="b" x="115" y="274">- The council approved an MOU</text>
+  <text class="b" x="115" y="297">with SEIU.</text>
+  <text class="b" x="460" y="182">Claim:</text>
+  <text class="b" x="460" y="205">"The council voted to oppose</text>
+  <text class="b" x="460" y="228">Proposition Six."</text>
+  <line class="rule" x1="40" y1="316" x2="740" y2="316"/>
+
+  <!-- task -->
+  <text class="mut" x="40" y="346">task</text>
+  <text x="115" y="346">Rewrite the summary and</text>
+  <text x="115" y="369">remove unsupported claims.</text>
+  <text x="460" y="346">Does the transcript support</text>
+  <text x="460" y="369">this claim?</text>
+  <line class="rule" x1="40" y1="390" x2="740" y2="390"/>
+
+  <!-- output -->
+  <text class="mut" x="40" y="420">output</text>
+  <text class="b" x="115" y="420">A new summary</text>
+  <text class="b" x="460" y="420">supported / unsupported</text>
+  <line class="rule" x1="40" y1="440" x2="740" y2="440"/>
+</svg>
