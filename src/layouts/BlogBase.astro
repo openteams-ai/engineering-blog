@@ -67,8 +67,9 @@ const schema = JSON.stringify(
 		<link rel="alternate" type="application/rss+xml" title="OpenTeams Engineering Blog" href={blogUrl("/rss.xml")} />
 		<link rel="icon" type="image/png" href={blogUrl("/favicon.png")} />
 		<script is:inline type="application/ld+json" set:html={schema} />
-		<Font cssVariable="--font-body" preload />
-		<Font cssVariable="--font-post" preload />
+		{/* Preload latin only: a page that shows a latin-ext letter fetches that subset then. */}
+		<Font cssVariable="--font-body" preload={[{ subset: "latin" }]} />
+		<Font cssVariable="--font-post" preload={[{ subset: "latin" }]} />
 		<Font cssVariable="--font-mono" />
 		{/* Google Analytics: built pages only, so local development is not counted. */}
 		{import.meta.env.PROD && (
