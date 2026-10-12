@@ -34,7 +34,6 @@ posts/
     └── scaling-with-duckdb/
         └── benchmark.png
 authors.json                        # Author names, bios and photos
-social/                             # One social brief per post
 ```
 
 ## Writing Guide
@@ -47,9 +46,7 @@ social/                             # One social brief per post
    With Claude Code: `/seo-meta-description posts/your-article.md`
 4. Draw a thumbnail in `src/components/art/<slug>.astro`, using an existing one as a model.\
    With Claude Code: `/draw-featured-image posts/your-article.md`
-5. Optionally, answer the [social brief](#social-brief) in `social/<slug>.yml`.\
-   With Claude Code: `/fill-social-brief posts/your-article.md`
-6. Open a PR from a branch in this repo rather than a fork.
+5. Open a PR from a branch in this repo rather than a fork.
 
 The PR's checks fail until your post has a thumbnail and authors listed in `authors.json`.
 
@@ -100,57 +97,6 @@ If this is your first post, add yourself to `authors.json`:
 The easiest `avatarUrl` is your GitHub avatar's address. To use a photo file instead, put it in `public/authors/<slug>.jpg` (about 264px wide) and set `avatarUrl` to `/authors/<slug>.jpg`.
 
 `links` is optional: `github`, `linkedin`, `x`, `bluesky` or `website`, each a full address. They show as icons on your author page and under your posts.
-
-### Social Brief
-
-A short social brief helps us write your post's LinkedIn post. It's optional but recommended. It lives in `social/<slug>.yml`, and the PR comment links to creating it.
-
-The comment above each field is its question, and the allowed values are listed for `audience`. If you answer it, the three written answers need at least 8 words each. Good answers:
-
-- **`problem`:** What problem does this article solve? (1-2 sentences)
-- **`what_it_does`:** What does the article build, test, compare, or argue? (1-2 sentences)
-- **`remember_one_thing`:** If readers remember one thing, what should it be? (1 sentence)
-- **`audience`:** Who should read this? Pick one or more, usually the 1-3 groups the article is written for:
-  - `data-scientists`
-  - `ml-ai-engineers`
-  - `python-developers`
-  - `platform-devops-engineers`
-  - `security-compliance-engineers`
-  - `oss-maintainers`
-  - `engineering-leaders`
-
-You can either answer the questions yourself or with your AI assistant. To have your AI assistant answer them, run `/fill-social-brief posts/your-article.md`.
-
-#### Examples
-
-Here are some examples of social briefs from real posts in this repo:
-
-**An experiment** (`posts/llm-review-reliability.md`):
-
-```yaml
-problem: "Using a second model to review a first model's output might not be a reliable safety layer, as the second model can also be wrong."
-what_it_does: "Tests six local reviewer models on 35 hand-labeled claims from MeetingBank summaries, scoring how many unsupported claims each catches and how many true claims it wrongly deletes."
-remember_one_thing: "Ensure you test a reviewer model on a few samples yourself before relying on it as a safety layer in production."
-audience: ["ml-ai-engineers", "data-scientists"]
-```
-
-**An essay** (`posts/slow-down-youre-already-shipping-faster.md`):
-
-```yaml
-problem: "AI coding tools speed developers up so much that you might miss subtle bugs and security gaps."
-what_it_does: "Argues for a handful of habits: start from a reviewed plan, keep PRs small, make small edits by hand, keep instruction files lean, and have a different agent review the PR."
-remember_one_thing: "It is worth it to spend some time to ensure the AI did a good job instead of spending more time fixing the mistakes it makes later."
-audience: ["ml-ai-engineers", "engineering-leaders"]
-```
-
-**A benchmark** (`posts/benchmark-python-package-managers.md`):
-
-```yaml
-problem: "ML projects need packages from both conda-forge and PyPI, and conda is slow to solve while pip and poetry can't use conda-forge at all."
-what_it_does: "Benchmarks six package managers on one ML project with 25 direct dependencies split across conda-forge and PyPI, timing installs and lockfile generation."
-remember_one_thing: "Which tool is fastest depends on your project needs."
-audience: ["ml-ai-engineers", "python-developers"]
-```
 
 ### Images
 

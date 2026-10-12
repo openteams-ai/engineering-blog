@@ -24,6 +24,12 @@ describe("ogCards", () => {
 		expect(cards.find((c) => c.key === "author-bob")?.byline).toBe("OpenTeams · 1 post");
 	});
 
+	it("gives a post card its card art, and author cards none", () => {
+		const cards = ogCards([{ slug: "rocky-linux-image-mode-artifact-keeper", title: "Rocky", minutes: 5, authors: [alice] }]);
+		expect(cards.find((c) => c.key === "rocky-linux-image-mode-artifact-keeper")?.art).toContain("<svg");
+		expect(cards.find((c) => c.key === "author-alice")?.art).toBeUndefined();
+	});
+
 	it("names every author of a post on its card", () => {
 		expect(ogCards(posts).find((c) => c.key === "second")?.byline).toBe("Alice Smith & Bob Jones · 7 min read");
 	});
@@ -34,6 +40,10 @@ describe("ogFile", () => {
 
 	it("names the file after the card and a fingerprint of its content", () => {
 		expect(ogFile(card)).toMatch(/^\/og\/og-first-[0-9a-f]{8}\.png$/);
+	});
+
+	it("renames the file when the card art changes", () => {
+		expect(ogFile({ ...card, art: "<svg>new</svg>" })).not.toBe(ogFile({ ...card, art: "<svg>old</svg>" }));
 	});
 
 	it("keeps the same name while the content is the same", () => {

@@ -6,6 +6,7 @@ import { Font } from "astro:assets";
 import { blogUrl } from "../../lib/blog-path";
 import { getPosts } from "../../lib/posts";
 import { ogCards } from "../../lib/og-cards";
+import type { AstroComponentFactory } from "astro/runtime/server/index.js";
 
 export async function getStaticPaths() {
 	if (import.meta.env.PROD) return [];
@@ -15,6 +16,11 @@ export async function getStaticPaths() {
 const { slug } = Astro.params;
 const isHome = slug === "home";
 const { title, byline, avatar } = Astro.props as { title: string; byline: string; avatar: string | null };
+
+// A post shares its card art, full-bleed: link previews already show the title
+// as text, and a small square crop of a title card cuts the words off.
+const arts = import.meta.glob<AstroComponentFactory>("../../components/art/*.astro", { eager: true, import: "default" });
+const Art: AstroComponentFactory | undefined = arts[`../../components/art/${slug}.astro`];
 
 const titleSize = title.length > 70 ? 52 : title.length > 45 ? 60 : 68;
 
@@ -35,6 +41,8 @@ const grid = (m: number) =>
 		<Font cssVariable="--font-sora" preload />
 		<Font cssVariable="--font-nav" preload />
 		<Font cssVariable="--font-body" preload />
+		<Font cssVariable="--font-post" preload />
+		<Font cssVariable="--font-mono" preload />
 	</head>
 	<body>
 		{isHome ? (
@@ -76,6 +84,10 @@ const grid = (m: number) =>
 					<div class="home-title">Engineering Blog</div>
 				</div>
 			</div>
+		) : Art ? (
+			<div class="card art">
+				<Art />
+			</div>
 		) : (
 			<div class="card">
 				<svg class="blob" width="700" height="700" viewBox="0 0 700 700">
@@ -110,6 +122,16 @@ const grid = (m: number) =>
 		padding: 64px 80px;
 		display: flex;
 		flex-direction: column;
+	}
+
+	/* A post's card art fills the card; its own background reaches the edges. */
+	.card.art {
+		padding: 0;
+	}
+
+	.card.art :global(svg) {
+		width: 100%;
+		height: 100%;
 	}
 
 	.blob {

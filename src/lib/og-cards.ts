@@ -8,11 +8,17 @@ import { authorsOf } from "./authors";
 import { authorRole, bylineNames } from "./byline";
 import type { Author } from "./posts";
 
+// Each post's card art source, so a post's share card shows its art and the
+// card's fingerprint changes when the art does.
+const artSources = import.meta.glob<string>("../components/art/*.astro", { query: "?raw", import: "default", eager: true });
+
 export interface OgCard {
 	key: string;
 	title: string;
 	byline: string;
 	avatar: string | null;
+	/** The post's card art source; set for posts, which share their art instead of a title card. */
+	art?: string;
 }
 
 interface CardPost {
@@ -36,6 +42,7 @@ export function ogCards(posts: CardPost[]): OgCard[] {
 			title: p.title,
 			byline: p.authors.length ? `${bylineNames(p.authors)} · ${p.minutes} min read` : `${p.minutes} min read`,
 			avatar: p.authors[0]?.avatarUrl ?? null,
+			art: artSources[`../components/art/${p.slug}.astro`],
 		})),
 	];
 }
