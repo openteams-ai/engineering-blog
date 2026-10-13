@@ -1,11 +1,14 @@
 import AxeBuilder from "@axe-core/playwright";
 import { chromium, type BrowserContext, type BrowserContextOptions, type Page } from "playwright";
 import { afterAll, describe, it } from "vitest";
+import authors from "../authors.json";
+import { inSystemFonts } from "../scripts/system-fonts";
 import { BLOG_PATH } from "../src/lib/blog-path";
 import { bylineNames } from "../src/lib/byline";
 import { PORT } from "./server";
 
 const ORIGIN = process.env.E2E_ORIGIN ?? `http://localhost:${PORT}`;
+const NAMES = authors.map((a) => a.name);
 
 // Remote author photos get a 1x1 PNG and Google Fonts an empty stylesheet, so
 // pages load without waiting on the internet. The mermaid CDN is let through
@@ -132,6 +135,7 @@ async function check(page: Page, path: string): Promise<string[]> {
 	}
 
 	problems.push(...(await a11yProblems(page)));
+	problems.push(...(await inSystemFonts(page, NAMES)));
 
 	await page.setViewportSize({ width: 390, height: 844 });
 	const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
@@ -317,7 +321,7 @@ describe.concurrent("site", () => {
 
 describe.concurrent("pages", () => {
 	for (const path of pages) {
-		it(`${path} loads cleanly, fits a phone, has no a11y issues`, async ({ expect }) => {
+		it(`${path} loads cleanly, draws author names in its own fonts, fits a phone, has no a11y issues`, async ({ expect }) => {
 			expect(await withPage((page) => check(page, path))).toEqual([]);
 		});
 	}
