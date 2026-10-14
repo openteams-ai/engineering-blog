@@ -74,7 +74,7 @@ meta_description: "A short summary for search and link previews (150-160 chars).
 | `title` | ✅ | |
 | `slug` | ✅ | The post's address. Don't change it once the post is live. |
 | `date` | ✅ | |
-| `topic` | ✅ | One of `llms-inference`, `ai-engineering`, `python-tooling`, `practices` |
+| `topic` | ✅ | One of `llms-inference`, `ai-engineering`, `python-tooling`, `code-quality` |
 | `authors` | ✅ | Slugs from [`authors.json`](#author-profile). The first is the main author. |
 | `meta_description` | Recommended | 150–160 characters for search and link previews |
 

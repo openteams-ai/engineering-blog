@@ -2,7 +2,7 @@
 title: Slow Down — Simple Lessons for Guiding AI and Shipping Better Code
 slug: slow-down-ship-better-code
 date: 2026-04-23T01:32:20-07:00
-topic: practices
+topic: code-quality
 authors:
 - johnny-bouder
 meta_description: Practical lessons for shipping better code, staying in control, keeping your skills sharp, and getting real value from AI coding tools without losing yourself in the hype.
