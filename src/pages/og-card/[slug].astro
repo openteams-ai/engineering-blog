@@ -17,12 +17,17 @@ const { slug } = Astro.params;
 const isHome = slug === "home";
 const { title, byline, avatar } = Astro.props as { title: string; byline: string; avatar: string | null };
 
-// A post shares its card art, full-bleed: link previews already show the title
-// as text, and a small square crop of a title card cuts the words off.
-const arts = import.meta.glob<AstroComponentFactory>("../../components/art/*.astro", { eager: true, import: "default" });
-const Art: AstroComponentFactory | undefined = arts[`../../components/art/${slug}.astro`];
+// Laid out for the full 1200x630 card that LinkedIn and X show: title on
+// the left, the post's art on the right.
+const titleSize = title.length > 70 ? 42 : title.length > 45 ? 48 : 54;
 
-const titleSize = title.length > 70 ? 52 : title.length > 45 ? 60 : 68;
+// The post's card art (components/art/<slug>.astro), when it has one.
+// Author cards have none and center the photo, name and role instead.
+const art = import.meta.glob<AstroComponentFactory>("../../components/art/*.astro", { eager: true, import: "default" });
+const Art: AstroComponentFactory | undefined = art[`../../components/art/${slug}.astro`];
+
+// "Names · 9 min read" stacks into two lines next to the photo.
+const [bylineNames, ...bylineRest] = byline.split(" · ");
 
 // Deterministic matmul cell intensities, same recipe as the hero splash.
 const val = (m: number, i: number, j: number) =>
@@ -41,8 +46,8 @@ const grid = (m: number) =>
 		<Font cssVariable="--font-sora" preload />
 		<Font cssVariable="--font-nav" preload />
 		<Font cssVariable="--font-body" preload />
-		<Font cssVariable="--font-post" preload />
 		<Font cssVariable="--font-mono" preload />
+		<Font cssVariable="--font-post" preload />
 	</head>
 	<body>
 		{isHome ? (
@@ -84,24 +89,32 @@ const grid = (m: number) =>
 					<div class="home-title">Engineering Blog</div>
 				</div>
 			</div>
-		) : Art ? (
-			<div class="card art">
-				<Art />
-			</div>
 		) : (
-			<div class="card">
-				<svg class="blob" width="700" height="700" viewBox="0 0 700 700">
-					<circle cx="350" cy="350" r="350" fill="#0a2158"></circle>
-				</svg>
+			<div class="card post">
 				<div class="brand">
-					<img class="logo" src={blogUrl("/openteams-white-horizontal.png")} alt="OpenTeams" />
+					<img class="logo" src={blogUrl("/openteams-horizontal.png")} alt="OpenTeams" />
 					<span class="section">Engineering</span>
 				</div>
-				<div class="title">{title}</div>
-				<div class="author">
-					{avatar && <img class="avatar" src={avatar} alt="" />}
-					<div class="byline">{byline}</div>
-				</div>
+				{Art ? (
+					<>
+						<div class="title-col"><div class="title left">{title}</div></div>
+						<div class="art"><Art /></div>
+						<div class="author">
+							{avatar && <img class="avatar" src={avatar} alt="" />}
+							<div class="byline">
+								<span class="names">{bylineNames}</span>
+								{bylineRest.length > 0 && <span class="meta">{bylineRest.join(" · ")}</span>}
+							</div>
+						</div>
+					</>
+				) : (
+					<div class="center">
+						{avatar && <img class="avatar large" src={avatar} alt="" />}
+						<div class="title">{title}</div>
+						<div class="byline centered">{byline}</div>
+					</div>
+				)}
+				<div class="accent"></div>
 			</div>
 		)}
 	</body>
@@ -124,81 +137,147 @@ const grid = (m: number) =>
 		flex-direction: column;
 	}
 
-	/* A post's card art fills the card; its own background reaches the edges. */
-	.card.art {
+	/* Post and author cards: white background. */
+	.card.post {
+		background: #ffffff;
 		padding: 0;
 	}
 
-	.card.art :global(svg) {
-		width: 100%;
-		height: 100%;
-	}
-
-	.blob {
-		position: absolute;
-		right: -260px;
-		bottom: -300px;
-	}
-
-	/* "OpenTeams | Engineering", as in the site header. */
+	/* "OpenTeams | Engineering", top left. */
 	.brand {
-		position: relative;
-		align-self: flex-start;
+		position: absolute;
+		top: 44px;
+		left: 64px;
 		display: flex;
 		align-items: center;
-		gap: 22px;
+		gap: 20px;
 	}
 
 	.logo {
-		height: 44px;
+		height: 56px;
 		width: auto;
 	}
 
 	.section {
-		border-left: 2px solid rgba(255, 255, 255, 0.25);
-		padding-left: 22px;
+		border-left: 2px solid rgba(9, 30, 66, 0.2);
+		padding-left: 20px;
 		font-family: var(--font-body), ui-sans-serif, sans-serif;
-		font-size: 30px;
+		font-size: 26px;
 		font-weight: 500;
-		line-height: 40px;
-		color: rgba(255, 255, 255, 0.75);
+		line-height: 36px;
+		color: #44546f;
+	}
+
+	/* Post cards: title column between the brand row and the byline. */
+	.title-col {
+		position: absolute;
+		top: 112px;
+		bottom: 132px;
+		left: 64px;
+		width: 560px;
+		display: flex;
+		align-items: center;
+	}
+
+	.title.left {
+		max-width: none;
+		text-align: left;
+	}
+
+	/* Author cards: photo, name and role in a centered column. */
+	.center {
+		position: absolute;
+		top: 104px;
+		bottom: 40px;
+		left: 285px;
+		width: 630px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 28px;
 	}
 
 	.title {
-		position: relative;
-		margin-top: auto;
-		margin-bottom: auto;
-		max-width: 940px;
+		max-width: 600px;
+		text-align: center;
 		font-family: var(--font-sora), ui-sans-serif, sans-serif;
 		font-size: var(--titleSize);
-		line-height: 1.18;
+		line-height: 1.15;
 		font-weight: 700;
 		letter-spacing: -0.01em;
-		color: #ffffff;
+		color: #091e42;
+	}
+
+	/* Same 720x380 proportions as the art's viewBox, centered on the right. */
+	.art {
+		position: absolute;
+		right: 64px;
+		top: 187px;
+		width: 486px;
+		height: 256px;
+		border-radius: 16px;
+		overflow: hidden;
+	}
+
+	.art :global(svg) {
+		display: block;
+		width: 100%;
+		height: 100%;
 	}
 
 	.author {
-		position: relative;
+		position: absolute;
+		left: 64px;
+		bottom: 52px;
 		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
+		align-items: center;
 		gap: 16px;
 	}
 
 	.avatar {
-		width: 76px;
-		height: 76px;
+		width: 64px;
+		height: 64px;
 		border-radius: 50%;
 		object-fit: cover;
-		box-shadow: 0 0 0 3px rgba(138, 162, 255, 0.45);
+	}
+
+	/* Author cards have no art: photo, name and role centered. */
+	.avatar.large {
+		width: 140px;
+		height: 140px;
+	}
+
+	.byline.centered {
+		font-size: 28px;
+		color: #5d6575;
 	}
 
 	.byline {
-		position: relative;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
 		font-family: var(--font-nav), ui-sans-serif, sans-serif;
-		font-size: 27px;
+		font-size: 22px;
 		font-weight: 500;
-		color: #8aa2ff;
+	}
+
+	.names {
+		color: #091e42;
+	}
+
+	.meta {
+		color: #5d6575;
+	}
+
+	/* Brand colors along the bottom edge. */
+	.accent {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 12px;
+		background: linear-gradient(90deg, #4d75fe 0 60%, #faa944 60% 80%, #ff8a69 80%);
 	}
 
 	/* Home card: centered lockup over a faint matrix-multiplication motif,

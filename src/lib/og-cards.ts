@@ -8,17 +8,11 @@ import { authorsOf } from "./authors";
 import { authorRole, bylineNames } from "./byline";
 import type { Author } from "./posts";
 
-// Each post's card art source, so a post's share card shows its art and the
-// card's fingerprint changes when the art does.
-const artSources = import.meta.glob<string>("../components/art/*.astro", { query: "?raw", import: "default", eager: true });
-
 export interface OgCard {
 	key: string;
 	title: string;
 	byline: string;
 	avatar: string | null;
-	/** The post's card art source; set for posts, which share their art instead of a title card. */
-	art?: string;
 }
 
 interface CardPost {
@@ -42,17 +36,19 @@ export function ogCards(posts: CardPost[]): OgCard[] {
 			title: p.title,
 			byline: p.authors.length ? `${bylineNames(p.authors)} · ${p.minutes} min read` : `${p.minutes} min read`,
 			avatar: p.authors[0]?.avatarUrl ?? null,
-			art: artSources[`../components/art/${p.slug}.astro`],
 		})),
 	];
 }
 
+// Post cards draw the post's art, so its source is part of the fingerprint.
+const artSources = import.meta.glob<string>("../components/art/*.astro", { query: "?raw", import: "default", eager: true });
+
 /**
- * The card's file, named with a fingerprint of everything drawn on it and of
- * the card template. Same content, same file: deploys reuse it. Any change,
+ * The card's file, named with a fingerprint of everything drawn on it, of
+ * the card template and of the post's art. Same content, same file: deploys reuse it. Any change,
  * new file: it gets rendered, and link previews that cache by URL refresh.
  */
 export function ogFile(card: OgCard): string {
-	const hash = createHash("sha256").update(JSON.stringify([card, template])).digest("hex").slice(0, 8);
+	const hash = createHash("sha256").update(JSON.stringify([card, template, artSources[`../components/art/${card.key}.astro`] ?? null])).digest("hex").slice(0, 8);
 	return `/og/og-${card.key}-${hash}.png`;
 }

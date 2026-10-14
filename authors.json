@@ -1,5 +1,15 @@
 [
 	{
+		"slug": "andrew-james",
+		"name": "Andrew James",
+		"bio": "Director -- Performance Engineering at OpenTeams. PyTorch Lead",
+		"avatarUrl": "/authors/andrew-james.jpg",
+		"links": {
+			"github": "https://github.com/amjames",
+			"linkedin": "https://www.linkedin.com/in/andrew-m-james-8312b9138/"
+		}
+	},
+	{
 		"slug": "anuj-kumar-singh",
 		"name": "Anuj Kumar Singh",
 		"bio": "OSS Intern at OpenTeams. Works on Project Jupyter.",

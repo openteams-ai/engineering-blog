@@ -1,0 +1,57 @@
+---
+import { blogUrl } from "../../lib/blog-path";
+import { plex, navy, darkNavy, softBlue, lightGreen, peach, gold } from "./style";
+
+// A highlight reel: one film frame per area of the year, none of them the
+// headline. Frames, left to right: compile (an FX graph), Apple Silicon (a
+// chip), build and packaging (a box), TorchAO kernels (tiles), TorchAudio
+// (a waveform).
+const strip = { y: 40, h: 206 };
+const frame = { w: 116, h: 128, gap: 12, y: 79 };
+const x0 = (720 - (5 * frame.w + 4 * frame.gap)) / 2;
+const fills = [softBlue, lightGreen, peach, softBlue, lightGreen];
+const cx = (i: number) => x0 + i * (frame.w + frame.gap) + frame.w / 2;
+const cy = frame.y + frame.h / 2;
+const holes = Array.from({ length: 22 }, (_, i) => i * 36 - 6);
+const wave = [14, 30, 46, 22, 38, 54, 28, 16];
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A film strip of five frames, one for each area of PyTorch work in 2026">
+	<rect x="-300" y="-300" width="1320" height="980" fill={darkNavy}/>
+	<rect x="-300" y={strip.y} width="1320" height={strip.h} fill="#13285a"/>
+	<g fill={darkNavy}>
+		{holes.map((x) => <rect x={x} y={strip.y + 12} width="18" height="14" rx="3"/>)}
+		{holes.map((x) => <rect x={x} y={strip.y + strip.h - 26} width="18" height="14" rx="3"/>)}
+	</g>
+	{fills.map((f, i) => (
+		<rect x={cx(i) - frame.w / 2} y={frame.y} width={frame.w} height={frame.h} rx="8" fill={f}/>
+	))}
+	<g fill="none" stroke={navy} stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+		<!-- compile: an FX graph -->
+		<path d={`M${cx(0) - 26} ${cy - 30} L${cx(0)} ${cy} L${cx(0) + 26} ${cy - 30} M${cx(0)} ${cy} V${cy + 32}`}/>
+		<!-- Apple Silicon: a chip -->
+		<rect x={cx(1) - 28} y={cy - 28} width="56" height="56" rx="6"/>
+		<path d={`M${cx(1) - 14} ${cy - 28} v-12 M${cx(1)} ${cy - 28} v-12 M${cx(1) + 14} ${cy - 28} v-12
+			M${cx(1) - 14} ${cy + 28} v12 M${cx(1)} ${cy + 28} v12 M${cx(1) + 14} ${cy + 28} v12
+			M${cx(1) - 28} ${cy - 14} h-12 M${cx(1) - 28} ${cy} h-12 M${cx(1) - 28} ${cy + 14} h-12
+			M${cx(1) + 28} ${cy - 14} h12 M${cx(1) + 28} ${cy} h12 M${cx(1) + 28} ${cy + 14} h12`}/>
+		<!-- build: a package box -->
+		<path d={`M${cx(2)} ${cy - 40} L${cx(2) + 36} ${cy - 22} V${cy + 22} L${cx(2)} ${cy + 40} L${cx(2) - 36} ${cy + 22} V${cy - 22} Z
+			M${cx(2) - 36} ${cy - 22} L${cx(2)} ${cy - 4} L${cx(2) + 36} ${cy - 22} M${cx(2)} ${cy - 4} V${cy + 40}`}/>
+		<!-- TorchAudio: a waveform -->
+		{wave.map((h, j) => <path d={`M${cx(4) - 35 + j * 10} ${cy - h / 2} V${cy + h / 2}`}/>)}
+	</g>
+	<g fill={navy}>
+		<circle cx={cx(0) - 26} cy={cy - 30} r="10"/>
+		<circle cx={cx(0) + 26} cy={cy - 30} r="10"/>
+		<circle cx={cx(0)} cy={cy} r="10"/>
+		<circle cx={cx(0)} cy={cy + 34} r="10"/>
+		<rect x={cx(1) - 12} y={cy - 12} width="24" height="24" rx="3"/>
+		<!-- TorchAO: kernel tiles, one lit -->
+		{[0, 1, 2].flatMap((r) => [0, 1, 2].map((c) => (
+			<rect x={cx(3) - 37 + c * 26} y={cy - 37 + r * 26} width="22" height="22" rx="3" fill={r === 1 && c === 2 ? gold : navy}/>
+		)))}
+	</g>
+	<image href={blogUrl("/blog-logos/pytorch.svg")} x="262" y="258" width="76" height="85"/>
+	<text x="338" y="316" font-family={plex} font-size="40" font-weight="700" fill="#ffffff">2026</text>
+</svg>
