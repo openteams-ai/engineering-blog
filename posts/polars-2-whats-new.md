@@ -124,10 +124,9 @@ Polars 1.44.2 returns the first 5 trips of the file:
 └─────┴──────────────────────┴──────────────────────────────┘
 ```
 
-Polars 2.0 doesn't return the first 5 trips, and running it twice gave two different answers:
+Polars 2.0 doesn't return the first 5 trips, and each run can return a different set of rows:
 
 ```text
-first run
 ┌─────────┬──────────────────────┐
 │ row     ┆ tpep_pickup_datetime │
 ╞═════════╪══════════════════════╡
@@ -136,61 +135,11 @@ first run
 │ 734033  ┆ 2024-01-09 20:43:48  │
 │ …       ┆ …                    │
 └─────────┴──────────────────────┘
-
-second run
-┌─────────┬──────────────────────┐
-│ row     ┆ tpep_pickup_datetime │
-╞═════════╪══════════════════════╡
-│ 1572923 ┆ 2024-01-18 19:27:34  │
-│ 1572933 ┆ 2024-01-18 19:56:27  │
-│ 1572977 ┆ 2024-01-18 19:30:55  │
-│ …       ┆ …                    │
-└─────────┴──────────────────────┘
 ```
 
 No error is raised. If your code expects `head()` after a join to return the first rows, it now gets random rows instead.
 
-There are two ways to get the first rows back. The first is to keep the order of the left table (`trips`) with `maintain_order="left"`:
-
-```python
-ordered = (
-    trips.with_row_index("row")
-    .join(
-        zones,
-        left_on="PULocationID",  # column in trips (left table)
-        right_on="LocationID",   # column in zones (right table)
-        maintain_order="left",   # keep the row order of trips
-    )
-    .select("row", "tpep_pickup_datetime", "Zone")
-)
-ordered.head(5).collect()
-```
-
-```text
-┌─────┬──────────────────────┬──────────────────────────────┐
-│ row ┆ tpep_pickup_datetime ┆ Zone                         │
-╞═════╪══════════════════════╪══════════════════════════════╡
-│ 0   ┆ 2024-01-01 00:57:55  ┆ Penn Station/Madison Sq West │
-│ 1   ┆ 2024-01-01 00:03:00  ┆ Lenox Hill East              │
-│ 2   ┆ 2024-01-01 00:17:06  ┆ Upper East Side North        │
-│ 3   ┆ 2024-01-01 00:36:38  ┆ East Village                 │
-│ 4   ┆ 2024-01-01 00:46:51  ┆ SoHo                         │
-└─────┴──────────────────────┴──────────────────────────────┘
-```
-
-This returns the first 5 trips in the table. However, this change makes the query slower.
-
-Here is the result of running the join code 5 times and taking the median:
-
-```text
-                                      time     peak memory
-polars 2.0.0                          20 ms    280 MB
-polars 2.0.0, maintain_order="left"   48 ms    283 MB    <- 2.4x slower
-```
-
-We can see that the query is 2.4x slower when we add `maintain_order="left"`.
-
-The second is to sort the final result. If you only need the order at the end, this is faster than `maintain_order="left"`:
+To get the first rows back, sort the result before taking them:
 
 ```python
 joined.sort("row").head(5).collect()
@@ -208,20 +157,19 @@ joined.sort("row").head(5).collect()
 └─────┴──────────────────────┴──────────────────────────────┘
 ```
 
-Adding the sort to the timing run gives:
+Keep in mind that sorting can increase query time and memory usage. For the median of 5 runs, sorting makes the query 1.5 times slower and uses about 50% more memory:
 
 ```text
-                                      time     peak memory
-polars 2.0.0                          20 ms    280 MB
-polars 2.0.0, maintain_order="left"   48 ms    283 MB
-polars 2.0.0, .sort("row") at end     30 ms    416 MB    <- faster, but more memory
+                              time     peak memory
+polars 2.0.0                  20 ms    280 MB
+polars 2.0.0, .sort("row")    30 ms    416 MB    <- 1.5x slower, more memory
 ```
 
 ### SQL Runs on the Streaming Engine
 
 In 2.0, SQL queries also run on the streaming engine by default, so the speed-up and the row-order change above apply to them too.
 
-To measure the difference, run this query 5 times in fresh processes on each version and take the median:
+To measure the difference, I ran this query 5 times on each version and took the median:
 
 ```python
 trips = pl.scan_parquet("taxi.parquet").with_row_index("row")
@@ -238,7 +186,7 @@ ORDER BY Borough
 summary = pl.sql(query).collect()
 ```
 
-Polars 2.0 runs it 2.8 times faster than Polars 1.44.2, an even bigger gain than the Python query earlier, and with less memory:
+Polars 2.0 runs this query 2.8 times faster than Polars 1.44.2, and uses less memory:
 
 ```text
                  time     peak memory
@@ -280,7 +228,7 @@ second run
 └─────┴────────────────────────────────┘
 ```
 
-Add `ORDER BY` if you rely on the order of the result:
+Add `ORDER BY` if you need the rows in a stable order:
 
 ```python
 query = """
@@ -305,15 +253,17 @@ pl.sql(query).collect()
 
 ### LazyFrame.profile() Is Removed
 
-In Polars 1.x, you could use `profile()` to find which step was slow, because steps ran one after another. The streaming engine runs them at the same time, so the same question no longer has a clear answer:
+In Polars 1.x, you could use `profile()` to find which step was slow, because steps ran one after another.
+
+In Polars 2.0, the streaming engine is the default, so steps run at the same time. Their timings overlap, and Polars can't tell you which step is slow:
 
 ![On the in-memory engine, filter, join and group_by run one after another, so the long join bar shows join is the slow step. On the streaming engine, the three steps run at the same time and span almost the same time, so you can't tell which step is slow.](images/polars-2-whats-new/profile-which-step-is-slow.svg)
 
-Because the streaming engine is now the default, Polars 2.0 removes the method. There is no replacement in open-source Polars yet, but the Polars team [is working on one](https://docs.pola.rs/releases/upgrade/2/).
+So Polars 2.0 removes the method. There is no replacement in open-source Polars yet, but the Polars team [is working on one](https://docs.pola.rs/releases/upgrade/2/).
 
 ### Switch Back to the In-Memory Engine
 
-If a query depends on the old behavior and you can't change it yet, switch back to the in-memory engine for that query:
+If a query still depends on the in-memory engine's behavior, you can switch back to it for that query:
 
 ```python
 summary = query.collect(engine="in-memory")
@@ -324,6 +274,8 @@ Or make it the default for every `collect()` that follows:
 ```python
 pl.Config.set_engine_affinity("in-memory")
 ```
+
+Note that this doesn't bring back `profile()`, which is removed in 2.0.
 
 ## Stricter Types: Fewer Silent Conversions
 
@@ -338,7 +290,7 @@ dates = pl.DataFrame({"pickup_date": ["01/15/2024", "01/16/2024"]})
 dates.with_columns(pl.col("pickup_date").cast(pl.Date))
 ```
 
-But `cast` only reads strings in the `YYYY-MM-DD` format. Any other format raises an error, and the error doesn't say which format `cast` expected:
+But `cast` only reads strings in the `YYYY-MM-DD` format. Any other format raises an error:
 
 ```text
 InvalidOperationError: conversion from `str` to `date` failed in column 'pickup_date'
@@ -386,9 +338,11 @@ Polars 2.0 uses `Int128` instead. It's still an integer, so nothing is rounded, 
 polars 2.0.0    9007199254740993     Int128    <- ID is exact
 ```
 
+This means IDs stay exact after arithmetic, so joins and lookups on them still match the right rows.
+
 ### Matching Integers Against Floats in is_in
 
-Before Polars 2.0, you could filter an integer column with a list of floats, or a float column with integers. But after Polars 2.0, you can no longer filter an integer column with a list of floats or a float column with integers.
+Polars 1.x let you filter an integer column with a list of floats, or a float column with integers. Polars 2.0 no longer allows either:
 
 | Column    | `is_in` values | Polars 1.x | Polars 2.0 |
 | --------- | -------------- | ---------- | ---------- |
@@ -445,7 +399,7 @@ InvalidOperationError: 'is_in' cannot check for Int64 values in List(Float64) da
 
 This behavior is ideal. It's better to get an error now than to spend hours later debugging a silent bug.
 
-To fix it, make sure the lookup holds integers, not floats:
+To clear the error, make sure the lookup holds integers, not floats:
 
 ```python
 lookup = [1234567890123456789]
@@ -473,7 +427,7 @@ stops.explode("stops")
 └──────┴───────┘
 ```
 
-In Polars 2.0, the empty list produces no rows:
+In Polars 2.0, the empty list produces no rows, as you'd expect:
 
 ```text
 ┌──────┬───────┐
