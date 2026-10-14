@@ -14,9 +14,11 @@ meta_description: "Is your LLM eval wrong? Learn how Claude Code's build-eval fi
 focus_keyword: "build-eval"
 ---
 
-What if your eval score went up, not because your app got better, but because your eval was wrong?
+What if your LLM app's evaluation score improved because of problems in the evaluation, not because the app got better?
 
-A wrong label, an unfair grader, or test cases that are too easy can make a weak app look strong, or a strong one look weak. Claude Code recently added `/claude-api build-eval`, a command that checks an eval for these problems.
+A wrong label, an unfair grader, or test cases that are too easy can make a weak app look strong, or a strong one look weak.
+
+Claude Code recently added `/claude-api build-eval`, a command that checks an eval for these problems.
 
 To see how well it works, I built a small eval for an email router, hid 5 bugs in it, and ran the command. This article shows what it found and what it was like to use.
 
