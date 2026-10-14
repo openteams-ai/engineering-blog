@@ -10,7 +10,7 @@ tags:
   - claude-code
   - llm-as-judge
   - evals
-meta_description: "Is your LLM eval wrong? Learn how Claude Code's build-eval finds bad labels, flaky LLM judges, and leaked test cases, tested on 5 hidden bugs."
+meta_description: "A wrong label or unfair grader can make your LLM app look better than it is. See how Claude Code's build-eval finds these problems in your eval."
 focus_keyword: "build-eval"
 ---
 
