@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 470" role="img" aria-label="Timeline of a filter, join, and group_by query on two engines. In-memory: each step runs on all the data, so join starts only after filter finishes and group_by only after join. Streaming: the data is split into four chunks that pass through all three steps, so the steps overlap and the query finishes sooner.">
+  <defs>
+    <style>
+      text { font-family: "IBM Plex Sans", "Inter Tight", Helvetica, Arial, sans-serif; font-size: 18px; fill: #e8edff; }
+      .mut { fill: #9aa8c7; }
+      .b { font-weight: 700; }
+      .teal { fill: #72FCDB; }
+      .salmon { fill: #FF8A69; }
+      .mid { text-anchor: middle; }
+      .mem { fill: #FF8A69; }
+      .chunk { fill: #72FCDB; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9aa8c7"/></marker>
+  </defs>
+  <rect width="780" height="470" rx="12" fill="#041437"/>
+
+  <!-- time axis -->
+  <text class="mut" x="170" y="50">time</text>
+  <line x1="222" y1="44" x2="748" y2="44" stroke="#9aa8c7" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- in-memory: each step waits for the previous one -->
+  <text class="b salmon" x="30" y="100">IN-MEMORY</text>
+  <text class="mut" x="170" y="100">steps run one at a time on all the data</text>
+  <text x="30" y="140">filter</text>
+  <text x="30" y="180">join</text>
+  <text x="30" y="220">group_by</text>
+  <rect class="mem" x="170" y="120" width="176" height="28" rx="4"/>
+  <rect class="mem" x="350" y="160" width="176" height="28" rx="4"/>
+  <rect class="mem" x="530" y="200" width="176" height="28" rx="4"/>
+
+  <!-- streaming: chunks pass through all steps, so steps overlap -->
+  <text class="b teal" x="30" y="280">STREAMING</text>
+  <text class="mut" x="170" y="280">steps run in parallel on different chunks</text>
+  <text x="30" y="320">filter</text>
+  <text x="30" y="360">join</text>
+  <text x="30" y="400">group_by</text>
+  <g>
+    <rect class="chunk" x="170" y="300" width="40" height="28" rx="4"/>
+    <rect class="chunk" x="220" y="300" width="40" height="28" rx="4"/>
+    <rect class="chunk" x="270" y="300" width="40" height="28" rx="4"/>
+    <rect class="chunk" x="320" y="300" width="40" height="28" rx="4"/>
+  </g>
+  <g>
+    <rect class="chunk" x="220" y="340" width="40" height="28" rx="4"/>
+    <rect class="chunk" x="270" y="340" width="40" height="28" rx="4"/>
+    <rect class="chunk" x="320" y="340" width="40" height="28" rx="4"/>
+    <rect class="chunk" x="370" y="340" width="40" height="28" rx="4"/>
+  </g>
+  <g>
+    <rect class="chunk" x="270" y="380" width="40" height="28" rx="4"/>
+    <rect class="chunk" x="320" y="380" width="40" height="28" rx="4"/>
+    <rect class="chunk" x="370" y="380" width="40" height="28" rx="4"/>
+    <rect class="chunk" x="420" y="380" width="40" height="28" rx="4"/>
+  </g>
+
+  <!-- finish marker -->
+  <path d="M440,420 L448,432 L432,432 z" fill="#72FCDB"/>
+  <text class="teal mid" x="440" y="456">finishes sooner</text>
+</svg>
