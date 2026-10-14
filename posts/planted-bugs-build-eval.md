@@ -20,7 +20,7 @@ A wrong label, an unfair grader, or test cases that are too easy can make a weak
 
 To see how well it works, I built a small eval for an email router, hid 5 bugs in it, and ran the command. This article shows what it found and what it was like to use.
 
-The code for this experiment is in the [companion folder](https://github.com/khuyentran1401/codecut-articles/tree/main/notebooks/planted-bugs-build-eval).
+The code for this experiment is in the [companion folder](https://github.com/khuyentran1401/codecut-blog/tree/main/planted-bugs-build-eval).
 
 ## What makes an eval good
 
@@ -201,7 +201,7 @@ If you're building an eval, or unsure about one you have, run `build-eval` on it
 
 ## Try it yourself
 
-To try it yourself, copy the broken eval out of the [companion folder](https://github.com/khuyentran1401/codecut-articles/tree/main/notebooks/planted-bugs-build-eval) and run the command in a fresh Claude Code session:
+To try it yourself, copy the broken eval out of the [companion folder](https://github.com/khuyentran1401/codecut-blog/tree/main/planted-bugs-build-eval) and run the command in a fresh Claude Code session:
 
 ```bash
 cp -r notebooks/planted-bugs-build-eval/eval ~/router-eval
