@@ -17,7 +17,7 @@
 
 @theme {
 	/* Typeface -- --font-body is injected by the Astro font pipeline
-	   (astro.config.mjs). Mapping it to --font-sans makes it the default. */
+	   (src/lib/fonts.ts). Mapping it to --font-sans makes it the default. */
 	--font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
 
 	/* Surfaces + text */

@@ -5,7 +5,7 @@ date: 2026-10-12
 topic: python-tooling
 authors:
 - khuyen-tran
-meta_description: Polars 2.0 makes streaming the default and tightens types. See what changes in your code, with 1.x and 2.0 outputs side by side on real data.
+meta_description: Polars 2.0 runs your lazy queries up to 2.8x faster without code changes. See the new defaults, side by side with Polars 1.x, on real data.
 focus_keyword: Polars 2.0
 ---
 
@@ -33,12 +33,7 @@ The figure below shows how each engine runs a query with three steps: filter, jo
 
 ![Timeline of filter, join, and group_by on each engine. In-memory runs the three steps one after another on all the data. Streaming passes four chunks through all three steps, so the steps overlap and the query finishes sooner.](images/polars-2-whats-new/in-memory-vs-streaming-timeline.svg)
 
-Because the steps overlap, the same query can finish sooner. To measure how much, download one month of [NYC taxi trips](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page) and the zone lookup table:
-
-```bash
-curl -o taxi.parquet https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-01.parquet
-curl -o taxi_zones.csv https://d37ci6vzurychx.cloudfront.net/misc/taxi_zone_lookup.csv
-```
+Because the steps overlap, the same query can finish sooner. To measure how much, download one month of [NYC taxi trips](https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-01.parquet) and the [zone lookup table](https://d37ci6vzurychx.cloudfront.net/misc/taxi_zone_lookup.csv), saved as `taxi.parquet` and `taxi_zones.csv`.
 
 *This post uses polars v2.0.0. The 1.x comparisons use polars v1.44.2.*
 

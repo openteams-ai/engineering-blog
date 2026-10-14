@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 380" role="img" aria-label="One unit test and one eval case side by side. Input: add(2, 3) versus the question 'I forgot my password'. Expected: 5 versus account. Actual: the code returns 5 versus the LLM app returns account. Check: an assert passes versus a grader passes.">
+	<style>
+		text { font-family: "IBM Plex Sans", "Inter Tight", Helvetica, Arial, sans-serif; fill: #e8edff; font-size: 18px; dominant-baseline: central; }
+		.code { font-family: "Fira Code", Menlo, Consolas, monospace; font-size: 17px; }
+		.row { fill: #9aa8c7; font-weight: 600; }
+		.head { font-weight: 600; text-anchor: middle; }
+		.pass { fill: #72FCDB; font-weight: 600; }
+		.arrow { fill: #9aa8c7; }
+		.rule { stroke: #1d2b55; stroke-width: 1.5; }
+	</style>
+
+	<rect width="780" height="380" rx="12" fill="#041437"/>
+
+	<!-- column headers -->
+	<rect x="180" y="28" width="250" height="44" rx="8" fill="#0f2350"/>
+	<text x="305" y="50" class="head">Unit test</text>
+	<rect x="450" y="28" width="300" height="44" rx="8" fill="#FF8A69" fill-opacity="0.18"/>
+	<text x="600" y="50" class="head" style="fill:#FF8A69">Eval</text>
+
+	<!-- row rules -->
+	<line x1="40" y1="148" x2="750" y2="148" class="rule"/>
+	<line x1="40" y1="216" x2="750" y2="216" class="rule"/>
+	<line x1="40" y1="284" x2="750" y2="284" class="rule"/>
+
+	<!-- column divider -->
+	<line x1="440" y1="84" x2="440" y2="352" class="rule"/>
+
+	<!-- input -->
+	<text x="40" y="116" class="row">input</text>
+	<text x="200" y="116" class="code">add(2, 3)</text>
+	<text x="470" y="116">"I forgot my password"</text>
+
+	<!-- expected -->
+	<text x="40" y="182" class="row">expected</text>
+	<text x="200" y="182" class="code">5</text>
+	<text x="470" y="182">account</text>
+
+	<!-- actual -->
+	<text x="40" y="250" class="row">actual</text>
+	<text x="200" y="250">code <tspan class="arrow">→</tspan> <tspan class="code">5</tspan></text>
+	<text x="470" y="250">LLM app <tspan class="arrow">→</tspan> account</text>
+
+	<!-- check -->
+	<text x="40" y="318" class="row">check</text>
+	<text x="200" y="318"><tspan class="code">assert</tspan> <tspan class="arrow">→</tspan> <tspan class="pass">pass</tspan></text>
+	<text x="470" y="318">grader <tspan class="arrow">→</tspan> <tspan class="pass">pass</tspan></text>
+</svg>

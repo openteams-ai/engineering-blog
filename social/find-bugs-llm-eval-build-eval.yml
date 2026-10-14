@@ -1,0 +1,16 @@
+# The social brief for posts/planted-bugs-build-eval.md. It's used to write the LinkedIn post.
+# Answer each question yourself or with your AI assistant (see Social Brief in
+# README.md). The PR can merge once all four are answered.
+
+# What problem does this article solve? (1-2 sentences)
+problem: "An LLM app's eval score can rise or fall because of the eval itself, not the app, for example a wrong label or test cases that are too easy."
+
+# What does the article build, test, compare, or argue? (1-2 sentences)
+what_it_does: "Plants 5 bugs in a 15-email eval for a bank's email router, then runs Claude Code's build-eval on it to see which bugs it finds and how it fixes them."
+
+# If readers remember one thing, what should it be? (1 sentence)
+remember_one_thing: "Always check your eval for bugs before using it to measure your LLM app."
+
+# Who should read this? Pick one or more:
+# data-scientists, ml-ai-engineers, python-developers, platform-devops-engineers, security-compliance-engineers, oss-maintainers, engineering-leaders
+audience: ["ml-ai-engineers"]

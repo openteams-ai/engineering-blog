@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 380" role="img" aria-label="Bug 4, the same answer gets different grades. The router says account, the right queue. Graded once it scores 5 and passes; graded again it scores 4 and fails, because only a 5 passes.">
+	<defs>
+		<marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+			<path d="M0 0L10 5L0 10Z" fill="#c3d2f4"/>
+		</marker>
+	</defs>
+	<style>
+		text { font-family: "IBM Plex Sans", "Inter Tight", Helvetica, Arial, sans-serif; fill: #e8edff; font-size: 18px; dominant-baseline: central; }
+		.muted { fill: #9aa8c7; }
+		.row { fill: #9aa8c7; font-weight: 600; }
+		.b { font-weight: 600; }
+		.mid { text-anchor: middle; }
+		.ok { fill: #72FCDB; font-weight: 600; }
+		.bad { fill: #FF8A69; font-weight: 600; }
+		.box { fill: #0b1d47; stroke: #1d2b55; stroke-width: 1.5; }
+		.hl { fill: #FF8A69; fill-opacity: 0.12; stroke: #FF8A69; stroke-width: 2; }
+		.rule { stroke: #1d2b55; stroke-width: 1.5; }
+		.note { stroke: #c3d2f4; stroke-width: 1.5; fill: none; }
+		.num { font-size: 15px; font-weight: 600; text-anchor: middle; }
+		.badge { fill: #041437; stroke: #FF8A69; stroke-width: 1.5; }
+	</style>
+	<rect width="780" height="380" rx="12" fill="#041437"/>
+	<rect x="250" y="26" width="280" height="56" rx="8" class="box"/>
+	<text x="390" y="54" class="mid">router says: <tspan class="b">account</tspan> <tspan class="ok">✓</tspan></text>
+	<text x="390" y="102" class="mid muted">the right queue</text>
+
+	<path d="M330 120 L270 164" class="note" marker-end="url(#head)"/>
+	<path d="M450 120 L510 164" class="note" marker-end="url(#head)"/>
+
+	<text x="270" y="182" class="mid muted">grade #1</text>
+	<rect x="220" y="198" width="100" height="70" rx="8" class="box"/>
+	<text x="270" y="233" class="mid b" style="font-size:32px">5</text>
+
+	<text x="510" y="182" class="mid muted">grade #2</text>
+	<rect x="460" y="198" width="100" height="70" rx="8" class="box"/>
+	<text x="510" y="233" class="mid b" style="font-size:32px">4</text>
+
+	<line x1="60" y1="296" x2="720" y2="296" stroke="#5b6b94" stroke-width="1.5" stroke-dasharray="6 5"/>
+	<text x="60" y="282" class="muted">pass line: 5 only</text>
+
+	<text x="270" y="334" class="mid ok" style="font-size:22px">✓ pass</text>
+	<text x="510" y="334" class="mid bad" style="font-size:22px">✗ fail</text>
+</svg>

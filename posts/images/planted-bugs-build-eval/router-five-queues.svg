@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 290" role="img" aria-label="The email router reads a customer email, 'Why did my transfer fail?', and sends it to one of 5 queues: cards, billing, account, transfers, or top-up. It picks transfers.">
+	<defs>
+		<marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+			<path d="M0 0L10 5L0 10Z" fill="#5b6b94"/>
+		</marker>
+		<marker id="hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+			<path d="M0 0L10 5L0 10Z" fill="#72FCDB"/>
+		</marker>
+	</defs>
+	<style>
+		text { font-family: "IBM Plex Sans", "Inter Tight", Helvetica, Arial, sans-serif; fill: #e8edff; font-size: 18px; dominant-baseline: central; }
+		.muted { fill: #9aa8c7; }
+		.b { font-weight: 600; }
+		.mid { text-anchor: middle; }
+		.box { fill: #0b1d47; stroke: #1d2b55; stroke-width: 1.5; }
+		.path { stroke: #5b6b94; stroke-width: 1.5; fill: none; }
+		.pick { stroke: #72FCDB; stroke-width: 2.5; fill: none; }
+	</style>
+
+	<rect width="780" height="290" rx="12" fill="#041437"/>
+
+	<g transform="translate(50 0)">
+	<!-- email -->
+	<text x="140" y="96" class="mid muted">customer email</text>
+	<rect x="40" y="114" width="200" height="72" rx="8" class="box"/>
+	<text x="140" y="138" class="mid">"Why did my</text>
+	<text x="140" y="162" class="mid">transfer fail?"</text>
+	<line x1="244" y1="150" x2="296" y2="150" class="path" marker-end="url(#head)"/>
+
+	<!-- router -->
+	<rect x="300" y="118" width="140" height="64" rx="8" class="box" style="stroke:#4D75FE"/>
+	<text x="370" y="150" class="mid b">router</text>
+
+	<!-- queues -->
+	<path d="M440 150 C500 150 500 50 560 50" class="path" marker-end="url(#head)"/>
+	<path d="M440 150 C500 150 500 100 560 100" class="path" marker-end="url(#head)"/>
+	<path d="M440 150 L560 150" class="path" marker-end="url(#head)"/>
+	<path d="M440 150 C500 150 500 200 560 200" class="pick" marker-end="url(#hot)"/>
+	<path d="M440 150 C500 150 500 250 560 250" class="path" marker-end="url(#head)"/>
+
+	<text x="574" y="50" class="muted">cards</text>
+	<text x="574" y="100" class="muted">billing</text>
+	<text x="574" y="150" class="muted">account</text>
+	<text x="574" y="200" class="b" style="fill:#72FCDB">transfers</text>
+	<text x="574" y="250" class="muted">top-up</text>
+	</g>
+</svg>
