@@ -8,8 +8,8 @@ import { fonts } from "./src/lib/fonts.ts";
 import { postMoves, redirectsFile } from "./src/lib/old-addresses.ts";
 import remarkPostCleanup from "./src/lib/remark-post-cleanup.ts";
 
-// Topics that were renamed keep their old tag page address.
-const topicMoves = [{ from: `${BLOG_PATH}/tag/practices`, to: pageUrl("/tag/code-quality") }];
+// Topics that were merged into another keep their old tag page address.
+const topicMoves = [{ from: `${BLOG_PATH}/tag/practices`, to: pageUrl("/tag/ai-engineering") }];
 
 export default defineConfig({
 	site: "https://openteams.com",

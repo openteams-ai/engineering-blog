@@ -4,7 +4,6 @@ export const TOPIC_LABELS = {
 	"llms-inference": "LLMs & Inference",
 	"ai-engineering": "AI Engineering",
 	"python-tooling": "Python Tooling",
-	"code-quality": "Code Quality",
 	infrastructure: "Infrastructure",
 } as const;
 
