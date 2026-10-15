@@ -82,7 +82,7 @@ Peak memory went up, which is expected because the streaming engine holds many c
 
 ### Spill-to-Disk Is On
 
-In Polars 1.x, the in-memory engine had to fit all the data in RAM. If it didn't fit, the query crashed, often taking the whole Python process with it.
+In Polars 1.x, queries ran on the in-memory engine unless you passed `engine="streaming"`. That engine had to fit all the data in RAM, so a query too big for memory crashed the whole Python process.
 
 Polars 2.0 instead writes intermediate data to disk when memory use reaches about 80% of RAM, so the query can finish. By default, it uses up to 64 GB of disk space for this.
 
@@ -122,14 +122,15 @@ Polars 1.44.2 returns the first 5 trips of the file:
 Polars 2.0 doesn't return the first 5 trips, and each run can return a different set of rows:
 
 ```text
-┌─────────┬──────────────────────┐
-│ row     ┆ tpep_pickup_datetime │
-╞═════════╪══════════════════════╡
-│ 734007  ┆ 2024-01-09 20:06:43  │
-│ 734013  ┆ 2024-01-09 20:41:13  │
-│ 734033  ┆ 2024-01-09 20:43:48  │
-│ …       ┆ …                    │
-└─────────┴──────────────────────┘
+┌─────────┬──────────────────────┬───────────────────────────────┐
+│ row     ┆ tpep_pickup_datetime ┆ Zone                          │
+╞═════════╪══════════════════════╪═══════════════════════════════╡
+│ 1258298 ┆ 2024-01-15 13:05:17  ┆ Upper West Side South         │
+│ 1258327 ┆ 2024-01-15 13:19:00  ┆ Sutton Place/Turtle Bay North │
+│ 1258340 ┆ 2024-01-15 13:00:25  ┆ Upper West Side South         │
+│ 1258369 ┆ 2024-01-15 13:18:51  ┆ Sutton Place/Turtle Bay North │
+│ 1258379 ┆ 2024-01-15 13:20:08  ┆ Upper West Side South         │
+└─────────┴──────────────────────┴───────────────────────────────┘
 ```
 
 No error is raised. If your code expects `head()` after a join to return the first rows, it now gets random rows instead.
@@ -159,6 +160,8 @@ Keep in mind that sorting can increase query time and memory usage. For the medi
 polars 2.0.0                  20 ms    280 MB
 polars 2.0.0, .sort("row")    30 ms    416 MB    <- 1.5x slower, more memory
 ```
+
+For more on why lazy engines don't preserve row order, see [Writing Portable DataFrame Code for Eager and Lazy Execution](https://codecut.ai/eager-to-lazy-dataframes-with-narwhals/).
 
 ### SQL Runs on the Streaming Engine
 
@@ -278,21 +281,21 @@ Polars 1.x converted between some types on its own, sometimes losing information
 
 ### Casting Strings to Dates
 
-The `cast` method converts a column from one type to another, such as `Int32` to `Int64`. In Polars 1.x, it could also convert strings to dates:
+The `cast` method converts a column from one type to another, such as `Int32` to `Int64`. In Polars 1.x, it could also convert strings to dates, but only in the `YYYY-MM-DD` format. Dates in any other format, like these US-style ones, fail:
 
 ```python
 dates = pl.DataFrame({"pickup_date": ["01/15/2024", "01/16/2024"]})
 dates.with_columns(pl.col("pickup_date").cast(pl.Date))
 ```
 
-But `cast` only reads strings in the `YYYY-MM-DD` format. Any other format raises an error:
+Polars 1.44.2 raises an error:
 
 ```text
 InvalidOperationError: conversion from `str` to `date` failed in column 'pickup_date'
 for 2 out of 2 values: ["01/15/2024", "01/16/2024"]
 ```
 
-To stop `cast` from assuming a format, Polars 2.0 drops support for casting strings to date and time types. Instead, you state the format with the matching `str` method, such as `str.to_date`:
+Polars 2.0 removes string-to-date casting entirely and recommends `str.to_date()` instead. Unlike `cast`, it takes a format string, so it can read dates written in any format, including US-style dates:
 
 ```python
 dates.with_columns(pl.col("pickup_date").str.to_date("%m/%d/%Y"))
@@ -311,7 +314,7 @@ dates.with_columns(pl.col("pickup_date").str.to_date("%m/%d/%Y"))
 
 ### Adding Large Integers Without Rounding
 
-Adding a signed integer (one that allows negatives) and an unsigned one (one that doesn't) used to produce a float. Floats can't store very large integers exactly, so large values were rounded.
+Adding a signed integer (one that allows negatives) to a `UInt64` (an unsigned one, which doesn't) used to produce a float. Floats can't store very large integers exactly, so large values were rounded.
 
 For IDs, even a small rounding error is a big problem, because it usually goes unnoticed. For example:
 
