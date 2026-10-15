@@ -24,7 +24,7 @@ Only people with write access can open pull requests here. If you're a guest aut
 
 ## Reviewing Posts
 
-Are you an expert in one of our topics? Put a 👍 on them in [issue #55](https://github.com/openteams-ai/engineering-blog/issues/55), and you'll get a GitHub review request when a new post in one of them is ready for review.
+Authors need reviewers who work in their area. Put a 👍 on your topics in [issue #55](https://github.com/openteams-ai/engineering-blog/issues/55), and you'll get a GitHub review request when a new post in one of them is ready for review.
 
 Reviewing is optional, so review it if you have time. Remove your 👍 anytime to stop.
 
