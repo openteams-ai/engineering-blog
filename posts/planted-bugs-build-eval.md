@@ -18,9 +18,7 @@ What if your LLM app's evaluation score improved because of problems in the eval
 
 A wrong label, an unfair grader, or test cases that are too easy can make a weak app look strong, or a strong one look weak.
 
-Claude Code recently added `/claude-api build-eval`, a command that checks an eval for these problems.
-
-To see how well it works, I built a small eval for an email router, hid 5 bugs in it, and ran the command. This article shows what it found and what it was like to use.
+Claude Code recently added `/claude-api build-eval`, a command that checks an eval for these problems. To see how well it works, I built a small eval for an email router, hid 5 bugs in it, and ran the command. This article shows what it found and what it was like to use.
 
 The code for this experiment is in the [companion folder](https://github.com/khuyentran1401/codecut-blog/tree/main/planted-bugs-build-eval).
 
@@ -70,51 +68,24 @@ I tested an email router for a bank's support team. It reads a customer email an
 
 ![The router reads a customer email, "Why did my transfer fail?", and sends it to one of 5 queues: cards, billing, account, transfers, or top-up. It picks transfers](images/planted-bugs-build-eval/router-five-queues.svg)
 
-To test it, I took 15 customer emails from the [Banking77](https://huggingface.co/datasets/PolyAI/banking77) dataset and labeled each with a queue. Then I planted 5 bugs in the eval.
+To test it, I took 15 customer emails from the [Banking77](https://huggingface.co/datasets/PolyAI/banking77) dataset and labeled each with a queue. Then I planted 5 bugs in the eval, without telling `build-eval` where they were.
 
 I used two models:
 
 - Claude Haiku 4.5 for the router and the eval's original grader
 - Claude Opus 5.5 to run `build-eval`
 
-### Bug 1: the wrong label
-
-"I forgot my password" belongs in the `account` queue, but I labeled it `billing`. So when the router gets it right and picks `account`, the eval marks it wrong.
-
-![Bug 1: the input "I forgot my password" is labeled billing, but it should be account](images/planted-bugs-build-eval/bug-wrong-label.svg)
-
-### Bug 2: an email with two right queues
-
-I added an email that could be routed to either `billing` or `top-up`. The label accepts only `top-up`, so a router that picks `billing` is marked wrong.
-
-![Bug 2: an email about being charged when adding money with a US card fits both billing and top-up, but the label says top-up only](images/planted-bugs-build-eval/bug-two-queues.svg)
-
-### Bug 3: emails that are too easy
-
-I filled the eval with easy emails. In 12 of the 15, a single word gives away the queue, like "card" in "How do I track my card?". A router that just matches keywords scores high.
-
-![Bug 3: in "How do I track my card?", the word card gives away the queue, cards](images/planted-bugs-build-eval/bug-too-easy.svg)
-
-### Bug 4: a grader that changes its verdict
-
-I wrote a strict grader: an LLM scores each answer from 1 to 5, and only a 5 passes. The same answer can get a 5 one run and a 4 the next.
-
-![Bug 4: the router's right answer, account, scores 5 and passes when graded once, then scores 4 and fails when graded again](images/planted-bugs-build-eval/bug-grade-flips.svg)
-
-### Bug 5: answers in the prompt
-
-I leaked test data into the router's prompt: 3 of the 15 test emails appear there as examples, answers included. The router already knows those answers, so passing them is cheating.
-
-![Bug 5: "My top up is pending." appears both as an example in the router's prompt and as a test case, so it passes only because the router saw the answer](images/planted-bugs-build-eval/bug-answer-in-prompt.svg)
-
-
 ## What build-eval found
 
-`build-eval` found all 5 bugs.
+`build-eval` found all 5 bugs. Below is each bug I planted and what `build-eval` recommended.
 
 ### It fixed the wrong label
 
-It started with [bug 1](#bug-1-the-wrong-label), named the mislabeled password email, and recommended relabeling it from `billing` to `account`:
+I labeled one email wrong on purpose. "I forgot my password" belongs in the `account` queue, but I labeled it `billing`.
+
+So even when the router picks the right queue, the eval marks it wrong.
+
+`build-eval` found that the label was wrong and recommended relabeling it from `billing` to `account`:
 
 ```text
 case_09 "I forgot my password" is labeled billing. Change it?
@@ -124,9 +95,15 @@ case_09 "I forgot my password" is labeled billing. Change it?
    Your bank genuinely routes password resets to billing.
 ```
 
-### It replaced the copied test cases
+![For "I forgot my password", the router answers account both times. Before build-eval, the label is billing, so the eval fails the right answer. After build-eval relabels it to account, the same answer passes](images/planted-bugs-build-eval/wrong-label-before-after.svg)
 
-Next, it found [bug 5](#bug-5-answers-in-the-prompt), named all 3 test emails copied into the router's prompt, and recommended replacing them with new ones:
+
+
+### It replaced the leaked test cases
+
+I leaked 3 test emails into the router's prompt as examples, with their answers. The router already knows those answers, so passing them is cheating.
+
+`build-eval` named all 3 leaked emails and recommended replacing them with new ones:
 
 ```text
 case_03, case_07, case_11 are copied word for word from the prompt's examples.
@@ -136,21 +113,28 @@ How should I handle them?
 3. Change the prompt examples
 ```
 
-### It flagged the two-queue email
+![Before build-eval, "My top up is pending." is both an example in the router's prompt and a test case, so the router passes only because it saw the answer. After build-eval replaces the test case with a new email that is not in the prompt, a pass or fail is earned](images/planted-bugs-build-eval/leaked-case-before-after.svg)
 
-Then it found [bug 2](#bug-2-an-email-with-two-right-queues) and named 2 emails that could reasonably go to two queues:
+
+### It flagged the email with two right answers
+
+I added an email with two right answers: `billing` and `top-up`. Its label accepts only `top-up`, so a router that picks `billing` is marked wrong.
+
+`build-eval` flagged that email:
 
 ```text
-2 cases where the right queue could be argued:
-  - case_11 "Do you charge a monthly fee for the account?" could also go to account.
-  - case_12 mentions a charge but is about adding money, so it could go to either billing or top-up.
-
-Are these 15 representative of what your router actually sees?
+case_12 mentions a charge but is about adding money, so it could go to either billing or top-up.
 ```
+
+![An email about being charged when adding money with a US card has two right answers, billing and top-up, but the label accepts only top-up. build-eval flags that the email has two right answers](images/planted-bugs-build-eval/two-right-answers-flag.svg)
 
 ### It replaced the flaky grader
 
-After that, it found [bug 4](#bug-4-a-grader-that-changes-its-verdict), named both problems with the LLM judge, and recommended replacing it with a code check:
+I wrote a flaky grader: an LLM scores each answer from 1 to 5, and only a 5 passes. The same answer can score 5 on one run and 4 on the next, so its verdict can flip without the answer changing.
+
+With a grader like this, you can't tell whether a change in the score means the app got better, got worse, or is just noise.
+
+`build-eval` flagged that this LLM judge is flaky and recommended replacing it with a code check:
 
 ```text
 How should the queue choice be graded?
@@ -161,6 +145,8 @@ How should the queue choice be graded?
    Current 1-5 holistic score, pass only at 5.
    Non-deterministic and blends queue with reason quality.
 ```
+
+![Run 1 and run 2 grade the same input and the same answer, account. Before build-eval, an LLM judge scores it 5 and passes it on run 1, then scores it 4 and fails it on run 2. After build-eval replaces the judge with a code check, the answer passes on both runs](images/planted-bugs-build-eval/flaky-grader-before-after.svg)
 
 A code check works better than an LLM judge here. It only compares the queue name with the expected one, so it gives the same verdict every time.
 
@@ -174,7 +160,11 @@ passed = queue == expected                                           # exact mat
 
 ### It warned the eval was too easy
 
-Last, it ran the router on all 15 emails and found [bug 3](#bug-3-emails-that-are-too-easy). The router scored 98%, so a better prompt would have almost no room to show up in the score:
+I filled the eval with easy emails. In 12 of the 15 emails, one word gives away the answer. For example, "How do I track my card?" contains "card", so it goes to `cards`.
+
+Because of this, even a weak router scores high, and a better prompt has little room to raise the score.
+
+`build-eval` caught this bug from the score, not the emails. The router scored 98%, so a better prompt would have almost no room to show up:
 
 ```text
 This eval is close to its ceiling. There are 2 points of room above the
@@ -182,6 +172,8 @@ baseline, but the margin of error is ±4 points. That means it can catch a
 change that makes routing worse, so it works as a regression check before you
 change the prompt or model. It can't show a change that makes routing better.
 ```
+
+![On the easy eval, the router scores 98% and a better router can score at most 100%, so the eval can't tell them apart. On an eval with hard cases the router would score lower and a better router higher, so the gap shows up](images/planted-bugs-build-eval/easy-eval-ceiling.svg)
 
 ## Before and after build-eval
 
