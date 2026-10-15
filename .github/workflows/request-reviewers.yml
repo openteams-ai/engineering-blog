@@ -5,16 +5,13 @@ name: Request topic reviewers
 # from the next post on, with no list to keep in sync.
 #
 # pull_request_target so PRs from forks get a token that can request reviews.
-# Nothing from the PR runs: the post's topic is read through the GitHub API,
-# as data.
+# The checkout is main, not the PR, and the script reads the PR's posts
+# through the GitHub API, as data, so nothing from the PR runs.
 on:
   pull_request_target:
     types: [opened, ready_for_review]
     paths:
       - 'posts/**'
-
-env:
-  SIGNUP_ISSUE: 55
 
 jobs:
   request:
@@ -25,53 +22,13 @@ jobs:
       pull-requests: write
       issues: read
       contents: read
-    env:
-      GH_TOKEN: ${{ github.token }}
-      PR_NUMBER: ${{ github.event.pull_request.number }}
-      PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-      HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
-      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
     steps:
-      - name: Request reviewers for each new post's topic
-        run: |
-          # Only new posts. Edits to published ones don't need a topic review.
-          mapfile -t added < <(gh api --paginate \
-            "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" \
-            --jq '.[] | select(.status == "added") | .filename
-                  | select(test("^posts/[^/]+\\.md$"))')
-          [ "${#added[@]}" -eq 0 ] && { echo "No new posts."; exit 0; }
-
-          # Topic comments are the ones the issue's author wrote, each linking
-          # its topic page, so a comment anyone else adds can't add reviewers.
-          owner=$(gh api "repos/$GITHUB_REPOSITORY/issues/$SIGNUP_ISSUE" --jq .user.login)
-          comments=$(gh api --paginate \
-            "repos/$GITHUB_REPOSITORY/issues/$SIGNUP_ISSUE/comments" \
-            --jq ".[] | select(.user.login == \"$owner\") | {id, body}")
-
-          reviewers=()
-          for f in "${added[@]}"; do
-            topic=$(gh api -H 'Accept: application/vnd.github.raw' \
-              "repos/$HEAD_REPO/contents/$f?ref=$HEAD_SHA" \
-              | sed -n 's/^topic:[[:space:]]*//p' | head -n1 | tr -d "\"' \r")
-            if ! [[ "$topic" =~ ^[a-z-]+$ ]]; then
-              echo "::warning::$f has no valid topic, skipping"; continue
-            fi
-            id=$(jq -r --arg t "/tag/$topic/" \
-              'select(.body | contains($t)) | .id' <<< "$comments" | head -n1)
-            [ -z "$id" ] && { echo "::warning::No sign-up comment for $topic"; continue; }
-            mapfile -t voters < <(gh api --paginate \
-              "repos/$GITHUB_REPOSITORY/issues/comments/$id/reactions?content=%2B1" \
-              --jq '.[].user.login')
-            echo "$f ($topic): ${voters[*]:-nobody}"
-            reviewers+=("${voters[@]}")
-          done
-
-          # One request per person: GitHub rejects the whole list if any one
-          # login can't review (the PR's author, or someone without access).
-          printf '%s\n' "${reviewers[@]}" | sort -u | while read -r login; do
-            [ -z "$login" ] || [ "$login" = "$PR_AUTHOR" ] && continue
-            gh api -X POST "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/requested_reviewers" \
-              -f "reviewers[]=$login" --silent \
-              && echo "Requested $login" \
-              || echo "::warning::Could not request $login"
-          done
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 25
+          cache: npm
+      - run: npm ci
+      - run: node scripts/request-reviewers.ts "${{ github.event.pull_request.number }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
