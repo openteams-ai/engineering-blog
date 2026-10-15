@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
+      contents: read
     steps:
       # The paths filter above lets through any PR touching posts, which
       # includes edits to articles that are already published. The channel
@@ -30,6 +31,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           ADDED=$(gh api --paginate \
             "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" \
@@ -38,6 +40,17 @@ jobs:
           if [ -n "$ADDED" ]; then
             echo "Announcing:"; echo "$ADDED"
             echo "new-post=true" >> "$GITHUB_OUTPUT"
+            # Each post's address on the PR's preview deploy, from its frontmatter slug.
+            {
+              echo "preview-url<<EOF"
+              while IFS= read -r f; do
+                slug=$(gh api -H 'Accept: application/vnd.github.raw' \
+                  "repos/$GITHUB_REPOSITORY/contents/$f?ref=$HEAD_SHA" \
+                  | sed -n 's/^slug:[[:space:]]*//p' | head -n1)
+                echo "https://pr-$PR_NUMBER-openteams-engineering-blog.openteams-account.workers.dev/engineering-blog/$slug/"
+              done <<< "$ADDED"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
           else
             echo "Only edits to existing posts; staying quiet."
             echo "new-post=false" >> "$GITHUB_OUTPUT"
@@ -51,13 +64,15 @@ jobs:
           PR_URL: ${{ github.event.pull_request.html_url }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          PREVIEW_URL: ${{ steps.check.outputs.preview-url }}
         run: |
           PAYLOAD=$(jq -n \
             --arg pr_title "$PR_TITLE" \
             --arg pr_url "$PR_URL" \
             --arg pr_author "$PR_AUTHOR" \
             --arg pr_number "$PR_NUMBER" \
-            '{pr_title: $pr_title, pr_url: $pr_url, pr_author: $pr_author, pr_number: $pr_number}')
+            --arg preview_url "$PREVIEW_URL" \
+            '{pr_title: $pr_title, pr_url: $pr_url, pr_author: $pr_author, pr_number: $pr_number, preview_url: $preview_url}')
 
           curl -sf -X POST -H 'Content-Type: application/json' \
             --data "$PAYLOAD" "$SLACK_PR_WEBHOOK"
