@@ -9,7 +9,7 @@ Source repository for engineering blog posts published on [openteams.com/enginee
 ## How It Works
 
 1. Write your post as a `.md` file in `posts/`.
-2. Open a pull request for review.
+2. Open a pull request. Reviewers for your post's topic are requested automatically (see [Reviewing Posts](#reviewing-posts)).
 3. Once merged to `main`, the post goes live.
 
 Changing the site's code or settings? See [DEVELOPMENT.md](DEVELOPMENT.md).
@@ -21,6 +21,12 @@ Only people with write access can open pull requests here. If you're a guest aut
 1. Open a [Request write access](https://github.com/openteams-ai/engineering-blog/issues/new?template=request-write-access.yml) issue. OpenTeams members get write access within a minute, and the issue closes itself.
 2. Guests only: if the admin approves, accept the email invite from GitHub.
 3. Follow the [Writing Guide](#writing-guide).
+
+## Reviewing Posts
+
+Authors need reviewers who work in their area. Put a 👍 on your topics in [issue #55](https://github.com/openteams-ai/engineering-blog/issues/55), and you'll get a GitHub review request when a new post in one of them is ready for review.
+
+Reviewing is optional, so review it if you have time. Remove your 👍 anytime to stop.
 
 ## Repository Structure
 

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 250" role="img" aria-label="Bug 3, emails that are too easy. On this easy eval, the router scores 98%, and a better router could score at most about 100%, so the eval can't tell them apart. On an eval with hard cases the router would score lower and a better router higher, so the gap between them shows up.">
+	<style>
+		text { font-family: "IBM Plex Sans", "Inter Tight", Helvetica, Arial, sans-serif; fill: #e8edff; font-size: 18px; dominant-baseline: central; }
+		.muted { fill: #9aa8c7; }
+		.row { fill: #9aa8c7; font-weight: 600; }
+		.b { font-weight: 600; }
+		.mid { text-anchor: middle; }
+		.ok { fill: #72FCDB; font-weight: 600; }
+		.bad { fill: #FF8A69; font-weight: 600; }
+		.track { fill: #0b1d47; stroke: #1d2b55; stroke-width: 1.5; }
+		.now { fill: #4D75FE; }
+		.better { fill: #9db4ff; }
+		.ill { fill-opacity: 0.45; stroke-dasharray: 5 4; stroke-width: 1.5; }
+		.now.ill { stroke: #4D75FE; }
+		.better.ill { stroke: #9db4ff; }
+	</style>
+	<rect width="780" height="250" rx="12" fill="#041437"/>
+
+	<text x="295" y="52" class="row mid">easy eval (now)</text>
+	<text x="590" y="52" class="row mid">eval with hard cases</text>
+
+	<text x="24" y="100" class="row">this router</text>
+	<text x="24" y="150" class="row">a better router</text>
+
+	<!-- easy eval -->
+	<rect x="180" y="86" width="230" height="28" rx="4" class="track"/>
+	<rect x="180" y="86" width="225" height="28" rx="4" class="now"/>
+	<text x="420" y="100" class="b">98%</text>
+	<rect x="180" y="136" width="230" height="28" rx="4" class="track"/>
+	<rect x="180" y="136" width="230" height="28" rx="4" class="better"/>
+	<text x="420" y="150" class="b">≤100%</text>
+
+	<!-- hard eval -->
+	<rect x="500" y="86" width="180" height="28" rx="4" class="track"/>
+	<rect x="500" y="86" width="95" height="28" rx="4" class="now ill"/>
+	<text x="690" y="100" class="muted">lower</text>
+	<rect x="500" y="136" width="180" height="28" rx="4" class="track"/>
+	<rect x="500" y="136" width="145" height="28" rx="4" class="better ill"/>
+	<text x="690" y="150" class="muted">higher</text>
+
+	<!-- verdicts -->
+	<text x="180" y="210" class="bad">✗ can't tell them apart</text>
+	<text x="500" y="210" class="ok">✓ the gap shows up</text>
+</svg>

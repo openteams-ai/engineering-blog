@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 330" role="img" aria-label="What happens when a query runs out of memory. Polars 1.x: RAM fills to 100 percent and the process is killed. Polars 2.0: at about 80 percent of RAM, Polars writes intermediate data to disk, up to 64 GB by default, and the query finishes.">
+  <defs>
+    <style>
+      text { font-family: "IBM Plex Sans", "Inter Tight", Helvetica, Arial, sans-serif; font-size: 18px; fill: #e8edff; }
+      .b { font-weight: 700; }
+      .mid { text-anchor: middle; }
+      .salmon { fill: #FF8A69; }
+      .teal { fill: #72FCDB; }
+      .ink { fill: #041437; font-weight: 700; }
+      .box { fill: none; stroke: #9aa8c7; stroke-width: 2; }
+      .flow { stroke: #9aa8c7; stroke-width: 2; fill: none; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9aa8c7"/></marker>
+  </defs>
+  <rect width="780" height="330" rx="12" fill="#041437"/>
+
+  <!-- headers -->
+  <text class="b salmon mid" x="180" y="48">POLARS 1.x</text>
+  <text class="b teal mid" x="500" y="48">POLARS 2.0</text>
+
+  <!-- query boxes -->
+  <rect class="box" x="80" y="68" width="200" height="44" rx="8"/>
+  <text class="mid" x="180" y="96">query</text>
+  <rect class="box" x="400" y="68" width="200" height="44" rx="8"/>
+  <text class="mid" x="500" y="96">query</text>
+  <line class="flow" x1="180" y1="112" x2="180" y2="146" marker-end="url(#arrow)"/>
+  <line class="flow" x1="500" y1="112" x2="500" y2="146" marker-end="url(#arrow)"/>
+
+  <!-- RAM bars -->
+  <rect x="80" y="152" width="200" height="36" rx="6" fill="#FF8A69"/>
+  <text class="ink mid" x="180" y="176">RAM 100%</text>
+  <rect class="box" x="400" y="152" width="200" height="36" rx="6"/>
+  <rect x="400" y="152" width="160" height="36" rx="6" fill="#72FCDB"/>
+  <text class="ink mid" x="480" y="176">RAM 80%</text>
+  <line class="flow" x1="180" y1="188" x2="180" y2="230" marker-end="url(#arrow)"/>
+  <line class="flow" x1="500" y1="188" x2="500" y2="230" marker-end="url(#arrow)"/>
+
+  <!-- outcomes -->
+  <rect x="80" y="236" width="200" height="56" rx="8" fill="none" stroke="#FF8A69" stroke-width="2"/>
+  <path d="M128,254 L144,270 M144,254 L128,270" stroke="#FF8A69" stroke-width="3" stroke-linecap="round"/>
+  <text class="b salmon" x="156" y="270">killed</text>
+  <rect x="400" y="236" width="200" height="56" rx="8" fill="none" stroke="#72FCDB" stroke-width="2"/>
+  <path d="M440,263 L448,271 L464,254" stroke="#72FCDB" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="b teal" x="474" y="270">finishes</text>
+
+  <!-- disk spill -->
+  <path class="flow" d="M600,170 L700,170 L700,230" marker-end="url(#arrow)"/>
+  <rect class="box" x="644" y="236" width="112" height="56" rx="8"/>
+  <text class="mid" x="700" y="259">disk</text>
+  <text class="mid" x="700" y="282">≤ 64 GB</text>
+  <line class="flow" x1="644" y1="264" x2="606" y2="264" marker-end="url(#arrow)"/>
+</svg>
