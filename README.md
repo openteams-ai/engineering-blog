@@ -28,6 +28,19 @@ Authors need reviewers who work in their area. Put a 👍 on your topics in [iss
 
 Reviewing is optional, so review it if you have time. Remove your 👍 anytime to stop.
 
+## Traffic Dashboard
+
+Access the [blog traffic dashboard](https://claude.ai/artifact/5PKQDQH9bv8HH1wcKu8rje) to see how many people read each post and where they came from. It is open to the openteams-engr group and updates daily from Google Analytics.
+
+The more you share your article, the more readers you will get. Some places to share it:
+
+- LinkedIn
+- X (Twitter)
+- [Hacker News](https://news.ycombinator.com/submit)
+- Newsletters: [PyCoder's Weekly](https://pycoders.com/submissions) and [TLDR](https://tldr.tech)
+- Bluesky
+- Reddit
+
 ## Repository Structure
 
 ```text
