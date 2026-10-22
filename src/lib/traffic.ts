@@ -27,6 +27,26 @@ export function slugFromLandingPage(landingPage: string): string | null {
 	return parts[0];
 }
 
+/**
+ * Visits per day, oldest first, counting only landing pages that are posts
+ * (as the dashboard does). Rows are GA4 date + landingPage + sessions.
+ */
+export function dailyVisits(rows: { date: string; landingPage: string; sessions: number }[]) {
+	const byDate = new Map<string, number>();
+	for (const { date, landingPage, sessions } of rows) {
+		if (slugFromLandingPage(landingPage)) byDate.set(date, (byDate.get(date) ?? 0) + sessions);
+	}
+	return [...byDate].map(([date, visits]) => ({ date, visits })).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/** The middle value, so one spike doesn't move "a typical day". 0 when empty. */
+export function median(values: number[]): number {
+	if (!values.length) return 0;
+	const sorted = [...values].sort((a, b) => a - b);
+	const mid = Math.floor(sorted.length / 2);
+	return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
 /** GA4 dates come as YYYYMMDD. */
 export const isoDate = (gaDate: string) => `${gaDate.slice(0, 4)}-${gaDate.slice(4, 6)}-${gaDate.slice(6, 8)}`;
 

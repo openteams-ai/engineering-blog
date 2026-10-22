@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { channelFor, isoDate, slugFromLandingPage } from "./traffic";
+import { channelFor, dailyVisits, isoDate, median, slugFromLandingPage } from "./traffic";
 
 describe("channelFor", () => {
 	it.each([
@@ -51,5 +51,38 @@ describe("slugFromLandingPage", () => {
 describe("isoDate", () => {
 	it("turns a GA4 date into an ISO date", () => {
 		expect(isoDate("20261021")).toBe("2026-10-21");
+	});
+});
+
+describe("dailyVisits", () => {
+	it("sums each day's post visits, oldest day first", () => {
+		expect(
+			dailyVisits([
+				{ date: "20261021", landingPage: "/engineering-blog/polars/", sessions: 3 },
+				{ date: "20261020", landingPage: "/engineering-blog/uv/", sessions: 5 },
+				{ date: "20261021", landingPage: "/engineering-blog/uv/?utm_source=x", sessions: 4 },
+			]),
+		).toEqual([
+			{ date: "20261020", visits: 5 },
+			{ date: "20261021", visits: 7 },
+		]);
+	});
+
+	it("leaves out pages that aren't posts", () => {
+		expect(dailyVisits([{ date: "20261021", landingPage: "/engineering-blog/", sessions: 9 }])).toEqual([]);
+	});
+});
+
+describe("median", () => {
+	it("gives the middle value of an odd count", () => {
+		expect(median([40, 5, 150])).toBe(40);
+	});
+
+	it("averages the two middle values of an even count", () => {
+		expect(median([30, 10, 40, 20])).toBe(25);
+	});
+
+	it("is 0 with no values", () => {
+		expect(median([])).toBe(0);
 	});
 });
