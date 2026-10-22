@@ -50,7 +50,10 @@ export function channelFor(source: string, medium: string): string {
 	if (from("tldr")) return "TLDR";
 	if (from("codecut")) return "CodeCut";
 	// OpenTeams marketing emails, sent from HubSpot.
-	if (from("hs_email") || med === "email") return "Email";
+	if (from("hs_email")) return "Email";
+	// Other people's newsletters tag their links with medium "email"
+	// (Software Testing Weekly sends "softwaretestingweekly" / "email").
+	if (med === "email") return "Newsletters";
 	if (med === "ai-assistant" || from("chatgpt", "perplexity", "claude.ai", "gemini.google", "copilot.microsoft"))
 		return "AI assistants";
 	if (from("news.ycombinator")) return "Hacker News";

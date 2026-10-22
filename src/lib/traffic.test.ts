@@ -12,6 +12,7 @@ describe("channelFor", () => {
 		["X", "Social", "X"],
 		["twitter", "social", "X"],
 		["hs_email", "email", "Email"],
+		["softwaretestingweekly", "email", "Newsletters"],
 		["chatgpt.com", "ai-assistant", "AI assistants"],
 		["perplexity.ai", "referral", "AI assistants"],
 		["t.co", "referral", "X"],
