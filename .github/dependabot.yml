@@ -4,7 +4,18 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # One weekly PR for minor and patch bumps. Major bumps still come one per
+    # PR, since they can need code changes.
+    groups:
+      npm-minor-and-patch:
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
