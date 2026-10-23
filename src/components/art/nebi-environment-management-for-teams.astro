@@ -1,0 +1,51 @@
+---
+import { blogUrl } from "../../lib/blog-path";
+import { plex, navy, softBlue, blueMut, check } from "./style";
+
+// One Nebi server in the middle, holding a pixi.toml and pixi.lock pair,
+// shared out to four places: a laptop, JupyterHub, CI and an OCI registry.
+const hub = { x: 360, y: 190, w: 210, h: 150 };
+const node = 76;
+const spokes = [
+	{ x: 130, y: 118, label: "laptop", ly: 58 },
+	{ x: 590, y: 118, label: "JupyterHub", ly: 58 },
+	{ x: 130, y: 262, label: "CI", ly: 342 },
+	{ x: 590, y: 262, label: "OCI", ly: 342 },
+];
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A Nebi server holding a pixi.toml and pixi.lock pair, shared to a laptop, JupyterHub, CI and an OCI registry">
+	<rect x="-300" y="-300" width="1320" height="980" fill={softBlue}/>
+	<g stroke={blueMut} stroke-width="4" stroke-linecap="round" stroke-dasharray="2 12">
+		{spokes.map((s) => {
+			const left = s.x < hub.x;
+			const x1 = left ? hub.x - hub.w / 2 : hub.x + hub.w / 2;
+			const x2 = left ? s.x + node / 2 + 10 : s.x - node / 2 - 10;
+			return <path d={`M${x1 + (left ? -10 : 10)} ${s.y < hub.y ? hub.y - 30 : hub.y + 30} L${x2} ${s.y}`}/>;
+		})}
+	</g>
+	{spokes.map((s) => <rect x={s.x - node / 2} y={s.y - node / 2} width={node} height={node} rx="14" fill="#ffffff"/>)}
+	<g fill="none" stroke={navy} stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+		<!-- laptop -->
+		<rect x="106" y="100" width="48" height="32" rx="3"/>
+		<path d="M96 140 H164"/>
+		<!-- OCI registry: stacked layers -->
+		<path d="M590 238 L614 250 L590 262 L566 250 Z"/>
+		<path d="M566 262 L590 274 L614 262"/>
+		<path d="M566 274 L590 286 L614 274"/>
+	</g>
+	<image href={blogUrl("/blog-logos/jupyter.svg")} x="571" y="93" width="38" height="50"/>
+	<!-- CI: a passing check -->
+	<g transform="translate(130 262)">
+		<circle r="24" fill={check}/>
+		<path d="M-10 0 L-3 7 L11 -8" stroke="#ffffff" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+	</g>
+	<rect x={hub.x - hub.w / 2} y={hub.y - hub.h / 2} width={hub.w} height={hub.h} rx="18" fill="#ffffff"/>
+	<image href={blogUrl("/blog-logos/nebi.svg")} x="272" y="132" width="76" height="76"/>
+	<text x="354" y="186" font-family={plex} font-size="44" font-weight="800" fill={navy}>Nebi</text>
+	<rect x="290" y="222" width="64" height="16" rx="8" fill={softBlue}/>
+	<rect x="366" y="222" width="64" height="16" rx="8" fill={blueMut}/>
+	<g font-family={plex} font-size="30" font-weight="600" fill={navy} text-anchor="middle">
+		{spokes.map((s) => <text x={s.x} y={s.ly}>{s.label}</text>)}
+	</g>
+</svg>
