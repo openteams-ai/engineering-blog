@@ -47,6 +47,20 @@ export function median(values: number[]): number {
 	return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
+/**
+ * Whether the last day should raise an alert: it went over the threshold, and
+ * either the day before didn't (a new spike) or it beats every earlier day of
+ * the same spike by `newHigh` times (the spike is still climbing). Keeps a
+ * spike that lasts several days to one message, or two if it grows.
+ */
+export function shouldAlert(days: { visits: number }[], threshold: number, newHigh = 1.5): boolean {
+	const latest = days.at(-1);
+	if (!latest || latest.visits <= threshold) return false;
+	const spike: number[] = [];
+	for (let i = days.length - 2; i >= 0 && days[i].visits > threshold; i--) spike.push(days[i].visits);
+	return !spike.length || latest.visits >= newHigh * Math.max(...spike);
+}
+
 /** GA4 dates come as YYYYMMDD. */
 export const isoDate = (gaDate: string) => `${gaDate.slice(0, 4)}-${gaDate.slice(4, 6)}-${gaDate.slice(6, 8)}`;
 

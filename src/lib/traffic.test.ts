@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { channelFor, dailyVisits, isoDate, median, slugFromLandingPage } from "./traffic";
+import { channelFor, dailyVisits, isoDate, median, shouldAlert, slugFromLandingPage } from "./traffic";
 
 describe("channelFor", () => {
 	it.each([
@@ -84,5 +84,33 @@ describe("median", () => {
 
 	it("is 0 with no values", () => {
 		expect(median([])).toBe(0);
+	});
+});
+
+describe("shouldAlert", () => {
+	const days = (...visits: number[]) => visits.map((v) => ({ visits: v }));
+
+	it("alerts on the first day over the threshold", () => {
+		expect(shouldAlert(days(40, 39, 148), 100)).toBe(true);
+	});
+
+	it("stays quiet on the second day of the same spike", () => {
+		expect(shouldAlert(days(39, 148, 155), 100)).toBe(false);
+	});
+
+	it("alerts again when the spike keeps climbing", () => {
+		expect(shouldAlert(days(39, 150, 240), 100)).toBe(true);
+	});
+
+	it("compares with the highest earlier day of the spike", () => {
+		expect(shouldAlert(days(39, 200, 120, 250), 100)).toBe(false);
+	});
+
+	it("alerts on a new spike after a quiet day", () => {
+		expect(shouldAlert(days(150, 40, 130), 100)).toBe(true);
+	});
+
+	it("stays quiet under the threshold", () => {
+		expect(shouldAlert(days(39, 90), 100)).toBe(false);
 	});
 });

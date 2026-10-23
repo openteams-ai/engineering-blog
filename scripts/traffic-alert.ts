@@ -7,9 +7,12 @@
 // a post (see ga-report.ts for GA_PROPERTY_ID and GA_SERVICE_ACCOUNT_JSON).
 // TRAFFIC_ALERT_THRESHOLD sets the bar (default 100). Without
 // SLACK_TRAFFIC_WEBHOOK it prints what it would send.
+//
+// A spike that lasts several days posts once, on its first day, and again
+// only if a later day beats it by 1.5x.
 import { BetaAnalyticsDataClient } from "@google-analytics/data";
 import { BLOG_PATH } from "../src/lib/blog-path.ts";
-import { dailyVisits, isoDate, median } from "../src/lib/traffic.ts";
+import { dailyVisits, isoDate, median, shouldAlert } from "../src/lib/traffic.ts";
 
 const DASHBOARD_URL = "https://claude.ai/artifact/5PKQDQH9bv8HH1wcKu8rje";
 // "A typical day" is the median of this many days before yesterday.
@@ -60,7 +63,10 @@ const date = new Date(`${isoDate(latest.date)}T00:00:00Z`).toLocaleDateString("e
 	timeZone: "UTC",
 });
 console.log(`${date}: ${latest.visits} visits (typical day ${normal}, threshold ${threshold}).`);
-if (latest.visits <= threshold) process.exit(0);
+if (!shouldAlert(days, threshold)) {
+	if (latest.visits > threshold) console.log("Same spike as the day before, and not a new high. No alert.");
+	process.exit(0);
+}
 
 const timesNormal = normal ? String(Math.round(latest.visits / normal)) : "many";
 const body = {
