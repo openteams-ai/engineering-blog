@@ -9,13 +9,16 @@
 // text) when set, else with your own login from
 // `gcloud auth application-default login`. The GA4 property is shared with
 // openteams.com, so only blog landing pages count.
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+//
+// PyCoder's Weekly sends readers without UTM tags, so they arrive as Direct.
+// For posts it featured, the Direct visits above the post's usual level on
+// the issue day and the day after are credited to it as an estimate.
+import { writeFileSync } from "node:fs";
 import { BetaAnalyticsDataClient } from "@google-analytics/data";
-import authors from "../authors.json" with { type: "json" };
 import { BLOG_PATH } from "../src/lib/blog-path.ts";
-import { frontmatter } from "../src/lib/new-posts.ts";
-import { plainTitle } from "../src/lib/title.ts";
-import { channelFor, isoDate, slugFromLandingPage, type TrafficRow } from "../src/lib/traffic.ts";
+import { channelFor, creditNewsletterDirect, isoDate, slugFromLandingPage, type TrafficRow } from "../src/lib/traffic.ts";
+import { readPosts } from "./posts.ts";
+import { pycodersFeatures, pycodersSource } from "./pycoders-features.ts";
 
 const OUT_FILE = "ga-report.json";
 
@@ -27,17 +30,7 @@ if (!propertyId) {
 }
 const days = Number(process.argv[2] ?? 90);
 
-const names = new Map(authors.map((a) => [a.slug, a.name]));
-const posts = readdirSync("posts")
-	.filter((f) => f.endsWith(".md"))
-	.map((f) => frontmatter(readFileSync(`posts/${f}`, "utf8")))
-	.map((data) => ({
-		slug: String(data.slug),
-		title: plainTitle(String(data.title ?? "")),
-		authors: (Array.isArray(data.authors) ? data.authors.map(String) : []).map((s) => names.get(s) ?? s),
-		date: String(data.date ?? "").slice(0, 10),
-		topic: String(data.topic ?? ""),
-	}));
+const posts = readPosts();
 const known = new Set(posts.map((p) => p.slug));
 
 const client = new BetaAnalyticsDataClient(key ? { credentials: JSON.parse(key) } : {});
@@ -57,7 +50,9 @@ const [report] = await client.runReport({
 	limit: 100_000,
 });
 
-const rows: TrafficRow[] = [];
+// One row per day, post, source and medium: GA4 gives a row per landing page
+// variant (a query string makes another), which would split a post's Direct.
+const merged = new Map<string, TrafficRow>();
 const unknown = new Set<string>();
 for (const row of report.rows ?? []) {
 	const [date, landingPage, source, medium] = (row.dimensionValues ?? []).map((d) => d.value ?? "");
@@ -65,18 +60,33 @@ for (const row of report.rows ?? []) {
 	const slug = slugFromLandingPage(landingPage);
 	if (!slug) continue;
 	if (!known.has(slug)) unknown.add(slug);
-	rows.push({
+	const key = [date, slug, source, medium].join("|");
+	const entry = merged.get(key) ?? {
 		date: isoDate(date),
 		slug,
 		channel: channelFor(source, medium),
 		source,
 		medium,
-		sessions,
-		users,
-		engagedSessions: engaged,
-		engagementSec: Math.round(duration),
-	});
+		sessions: 0,
+		users: 0,
+		engagedSessions: 0,
+		engagementSec: 0,
+	};
+	entry.sessions += sessions;
+	entry.users += users;
+	entry.engagedSessions += engaged;
+	entry.engagementSec += Math.round(duration);
+	merged.set(key, entry);
 }
+
+const since = new Date(Date.now() - days * 864e5).toISOString().slice(0, 10);
+const features = await pycodersFeatures(posts, since);
+const rows = creditNewsletterDirect(
+	[...merged.values()],
+	features.map((f) => ({ slug: f.slug, date: f.date, source: pycodersSource(f.number) })),
+);
+const credited = rows.filter((r) => r.medium === "estimated from direct").reduce((sum, r) => sum + r.sessions, 0);
+console.log(`PyCoder's Weekly featured ${features.length} post(s); credited ${credited} Direct visits to it.`);
 
 writeFileSync(OUT_FILE, JSON.stringify({ fetchedAt: new Date().toISOString(), days, posts, rows }, null, "\t"));
 const total = rows.reduce((sum, r) => sum + r.sessions, 0);

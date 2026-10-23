@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { channelFor, dailyVisits, isoDate, median, shouldAlert, slugFromLandingPage } from "./traffic";
+import {
+	channelFor,
+	creditNewsletterDirect,
+	dailyVisits,
+	isoDate,
+	median,
+	shouldAlert,
+	slugFromLandingPage,
+	type TrafficRow,
+} from "./traffic";
 
 describe("channelFor", () => {
 	it.each([
@@ -13,6 +22,7 @@ describe("channelFor", () => {
 		["twitter", "social", "X"],
 		["hs_email", "email", "Email"],
 		["softwaretestingweekly", "email", "Newsletters"],
+		["pycoders.com", "referral", "Newsletters"],
 		["chatgpt.com", "ai-assistant", "AI assistants"],
 		["perplexity.ai", "referral", "AI assistants"],
 		["t.co", "referral", "X"],
@@ -112,5 +122,59 @@ describe("shouldAlert", () => {
 
 	it("stays quiet under the threshold", () => {
 		expect(shouldAlert(days(39, 90), 100)).toBe(false);
+	});
+});
+
+describe("creditNewsletterDirect", () => {
+	const direct = (date: string, sessions: number): TrafficRow => ({
+		date,
+		slug: "pytorch",
+		channel: "Direct / unknown",
+		source: "(direct)",
+		medium: "(none)",
+		sessions,
+		users: sessions,
+		engagedSessions: sessions / 2,
+		engagementSec: sessions * 10,
+	});
+	// Usually 4 Direct visits a day, then 50 and 30 on the issue day and the day after.
+	const rows = [
+		...Array.from({ length: 14 }, (_, i) => direct(`2026-10-${String(6 + i).padStart(2, "0")}`, 4)),
+		direct("2026-10-20", 50),
+		direct("2026-10-21", 30),
+		direct("2026-10-22", 40),
+	];
+	const credited = creditNewsletterDirect(rows, [
+		{ slug: "pytorch", date: "2026-10-20", source: "pycoders.com (estimated, #757)" },
+	]);
+	const on = (date: string, channel: string) =>
+		credited.filter((r) => r.date === date && r.channel === channel).reduce((s, r) => s + r.sessions, 0);
+
+	it("moves only the Direct visits above the post's usual level", () => {
+		expect(on("2026-10-20", "Direct / unknown")).toBe(4);
+		expect(on("2026-10-20", "Newsletters")).toBe(46);
+	});
+
+	it("covers the day after the issue too", () => {
+		expect(on("2026-10-21", "Newsletters")).toBe(26);
+	});
+
+	it("leaves later days alone", () => {
+		expect(on("2026-10-22", "Newsletters")).toBe(0);
+	});
+
+	it("keeps the total visits the same", () => {
+		const total = (rs: TrafficRow[]) => rs.reduce((s, r) => s + r.sessions, 0);
+		expect(total(credited)).toBe(total(rows));
+	});
+
+	it("counts the usual level only from the post's first visit", () => {
+		const newPost = [direct("2026-10-18", 10), direct("2026-10-19", 10), direct("2026-10-20", 50)];
+		const result = creditNewsletterDirect(newPost, [{ slug: "pytorch", date: "2026-10-20", source: "pycoders" }]);
+		expect(result.find((r) => r.date === "2026-10-20" && r.channel === "Newsletters")?.sessions).toBe(40);
+	});
+
+	it("leaves the given rows unchanged", () => {
+		expect(rows.find((r) => r.date === "2026-10-20")?.sessions).toBe(50);
 	});
 });
