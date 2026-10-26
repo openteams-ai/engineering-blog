@@ -128,5 +128,14 @@
 			"bluesky": "https://bsky.app/profile/krassowski.bsky.social",
 			"website": "https://whybook.dev/"
 		}
+	},
+	{
+		"slug": "daina-bouquin",
+		"name": "Daina Bouquin",
+		"bio": "Senior Developer Advocate at OpenTeams. Writes about open source and AI, and hosts Found in the Machine, a podcast about the people behind digital technology.",
+		"avatarUrl": "https://avatars.githubusercontent.com/u/5713878?v=4",
+		"links": {
+			"github": "https://github.com/dbouquin"
+		}
 	}
 ]
