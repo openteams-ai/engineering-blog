@@ -460,7 +460,13 @@
 		font-family: var(--font-mono);
 	}
 
+	/* A card's link overlay sits on top of the title, so the title can't see
+	   its own hover: the whole card (.group) drives it. */
 	.blog-theme .post-title-link {
-		@apply transition-colors hover:text-brand;
+		@apply transition-colors group-hover:text-brand;
+	}
+
+	.blog-theme .thumb > * {
+		@apply transition-transform duration-300 ease-out motion-safe:group-hover:scale-[1.04];
 	}
 }

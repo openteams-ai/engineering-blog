@@ -8,3 +8,7 @@ dist/
 
 # scripts/card-preview.ts default output
 card-preview-*.png
+
+# GA traffic report (scripts/ga-report.ts)
+.env
+ga-report.json

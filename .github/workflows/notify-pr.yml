@@ -6,7 +6,9 @@ name: Notify Slack on new PR
 # list of added files comes from the GitHub API, as data.
 on:
   pull_request_target:
-    types: [opened]
+    # A draft can hold a test post that never ships, so drafts wait until
+    # they're marked ready for review.
+    types: [opened, ready_for_review]
     # The channel exists to announce posts. Without this every workflow and
     # script change lands there too, which trains people to ignore it.
     paths:
@@ -14,6 +16,7 @@ on:
 
 jobs:
   notify:
+    if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
