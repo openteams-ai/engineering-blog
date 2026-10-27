@@ -474,6 +474,19 @@ describe.concurrent("interactions", () => {
 		);
 		expect(result).toEqual([]);
 	});
+
+	it("dark mode: the saved theme wins over another cookie whose name ends in theme", async ({ expect }) => {
+		const domain = new URL(ORIGIN).hostname;
+		const cookie = (name: string, value: string) => ({ name, value, domain, path: "/", expires: -1, httpOnly: false, secure: false, sameSite: "Lax" as const });
+		const theme = await withPage(
+			async (page) => {
+				await open(page, `${BLOG_PATH}/`);
+				return page.evaluate(() => document.documentElement.classList.contains("dark"));
+			},
+			{ storageState: { cookies: [cookie("collab-theme", "light"), cookie("theme", "dark")], origins: [] } },
+		);
+		expect(theme).toBe(true);
+	});
 });
 
 describe.concurrent("table of contents", () => {

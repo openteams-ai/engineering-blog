@@ -100,9 +100,8 @@ const schema = JSON.stringify(
 			// Apply an explicit theme choice immediately to prevent flash.
 			// With no cookie, color-scheme: light dark follows the OS.
 			(function () {
-				var c = document.cookie;
-				var i = c.indexOf("theme=");
-				var theme = i >= 0 ? c.slice(i + 6).split(";")[0] : null;
+				var m = document.cookie.match(/(?:^|; )theme=([^;]*)/);
+				var theme = m ? m[1] : null;
 				if (theme === "dark" || theme === "light") {
 					document.documentElement.classList.add(theme);
 				}
