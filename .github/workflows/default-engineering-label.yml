@@ -1,0 +1,21 @@
+name: Default Engineering label
+
+# Every issue here should show in the Engineering view of the DevRel board
+# (openteams-ai project 47), which filters on the Engineering label.
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  label:
+    if: ${{ !contains(github.event.issue.labels.*.name, 'Engineering') }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: gh issue edit "$NUMBER" --repo "$REPO" --add-label Engineering
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
