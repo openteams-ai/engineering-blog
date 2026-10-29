@@ -74,7 +74,7 @@ The next time you type `pip install`, your computer will ask who is on the other
 
 ## If you run Python: check these now
 
-Chrome and Firefox fixed themselves. Your Python tools are fixed only when you update them. The [Python security advisory](https://discuss.python.org/t/information-for-python-users-regarding-emudhra-emsign-ca-certificate-security-incident/109576) has the full list; these are the steps that matter for most people.
+Most common browsers fixed themselves. Your Python tools are fixed only when you update them. The [Python security advisory](https://discuss.python.org/t/information-for-python-users-regarding-emudhra-emsign-ca-certificate-security-incident/109576) has the full list; these are the steps that matter for most people.
 
 1. Upgrade pip to 26.2.2 or newer in every environment. It carries its own copy of the list, so this is the step that counts. It needs Python 3.10 or newer.
 2. Upgrade certifi to 2026.10.19 or newer, including in lockfiles and pinned requirements.
