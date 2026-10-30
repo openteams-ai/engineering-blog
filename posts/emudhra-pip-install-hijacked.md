@@ -94,7 +94,7 @@ This fix was a huge community effort, and many more people took part than I can 
 
 - **[Information for Python users regarding eMudhra / emSign CA certificate security incident](https://discuss.python.org/t/information-for-python-users-regarding-emudhra-emsign-ca-certificate-security-incident/109576)** (Python Software Foundation, 2026): The advisory, the fixed versions, and the follow-up thread quoted here.
 - **[Python 3.15.2, 3.14.10, 3.13.18, 3.12.16 and 3.11.18 are out](https://blog.python.org/2026/10/python-3152-31410-31318-31216-31118/)** (Python Insider, 2026): The releases that block the compromised keys in Python's `ssl` module.
-- **[Python 3.15.1, 3.14.9 and 3.13.17 are out](https://blog.python.org/2026/10/python-3151-3149-31317/)** (Python Insider, 2026): The CPython releases that ship the fixed pip and certifi, including the exception for 3.13.
+- **[Python 3.15.1, 3.14.9 and 3.13.17 are out](https://blog.python.org/2026/10/python-3151-3149-31317/)** (Python Insider, 2026): The first round of CPython releases, which ship the fixed pip and certifi.
 - **[Security updates for conda, Mamba, and Pixi](https://conda.org/blog/2026-10-21-emudhra-security-updates/)** (Jannis Leidel, 2026): Fixed versions for the conda ecosystem and the index fixes for older builds.
 - **[eMudhra CA response](https://github.com/conda-forge/conda-forge.github.io/issues/2967)** (conda-forge, 2026): The images, installers and services conda-forge rebuilt.
 - **[Protecting Firefox users following the compromise of eMudhra intermediate certificates](https://blog.mozilla.org/security/2026/10/20/protecting-firefox-users-following-the-compromise-of-emudhra-intermediate-certificates/)** (Mozilla, 2026): When and how Firefox blocked the certificates.
