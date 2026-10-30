@@ -1,5 +1,5 @@
 ---
-title: "Your `pip install` Could Have Been Hijacked. Here's Who Fixed It."
+title: "Your `pip install` Could Have Been Hijacked. Here's How It Got Fixed."
 slug: emudhra-pip-install-hijacked
 date: 2026-10-26
 topic: python-tooling
@@ -68,9 +68,9 @@ By Thursday, five days after the first report, the main Python install tools all
 
 Some copies are harder to find. A few packages carry their own copy of the list as a plain file, usually named `cacert.pem`, with no version number attached. As [Endor Labs points out](https://www.endorlabs.com/learn/emudhra-intermediate-ca-compromise-the-trust-stores-you-patched-and-the-ones-you-didnt-know-you-had), a file like that doesn't show up in a software bill of materials, so nothing flags it when it goes out of date. Our team has started checking every package on conda-forge for one.
 
-Python itself now has a backstop. In the same security thread, Christian Heimes proposed letting Python's `ssl` module block known-bad certificates directly, the way Go's standard library already does. On 26 October, new Python releases did exactly that, so even an old pip now refuses the eMudhra keys. pip's maintainers are also discussing relying on the operating system's list instead of carrying their own.
+Python itself now has a backstop. In the same security thread, Christian Heimes proposed letting Python's `ssl` module block known-bad certificates directly, the way Go's standard library already does. On 26 October, [new Python releases](https://blog.python.org/2026/10/python-3152-31410-31318-31216-31118/) did exactly that, so even an old pip now refuses the eMudhra keys. pip's maintainers are also discussing relying on the operating system's list instead of carrying their own.
 
-The next time you type `pip install`, your computer will ask who is on the other end and check the answer against a list. The list is new now. Dozens of people reprinted it, in public, over a few days in October, and then went looking for every other copy.
+The next time you type `pip install`, your computer will ask who is on the other end and check the answer against a list. The list is new now. A whole community reprinted it, in public, over a few days in October, and then went looking for every other copy.
 
 ## If you run Python: check these now
 
@@ -86,13 +86,13 @@ Most common browsers fixed themselves. Your Python tools are fixed only when you
 
 ## Acknowledgments
 
-Thanks to everyone who worked through the response in public, including Seth Larson, Christian Heimes, Paul Moore, Zachary Ware, William Woodruff, Hugo van Kemenade, Sumana Harihareswara, Eric Swanson, Henry Schreiner and Jannis Leidel; to Wolf Vollprecht and the team at Prefix; and to my OpenTeams colleagues Isuru Fernando, Sophia Castellarin, Michał Górny, Jaime Rodríguez-Guerra, Axel Obermeier and Vinicius Cerutti.
+This fix was a huge community effort. Thank you to everyone who took part, including Seth Larson, Christian Heimes, Paul Moore, Zachary Ware, William Woodruff, Hugo van Kemenade, Sumana Harihareswara, Eric Swanson, Henry Schreiner and Jannis Leidel; Wolf Vollprecht and the team at Prefix; and my OpenTeams colleagues Isuru Fernando, Michał Górny, Jaime Rodríguez-Guerra and Axel Obermeier.
 
 ## References
 
 - **[Information for Python users regarding eMudhra / emSign CA certificate security incident](https://discuss.python.org/t/information-for-python-users-regarding-emudhra-emsign-ca-certificate-security-incident/109576)** (Python Software Foundation, 2026): The advisory, the fixed versions, and the follow-up thread quoted here.
-- **[Python 3.15.1, 3.14.9 and 3.13.17 are out](https://blog.python.org/2026/10/python-3151-3149-31317/)** (Python Insider, 2026): The CPython releases that ship the fixed pip and certifi, including the exception for 3.13.
 - **[Python 3.15.2, 3.14.10, 3.13.18, 3.12.16 and 3.11.18 are out](https://blog.python.org/2026/10/python-3152-31410-31318-31216-31118/)** (Python Insider, 2026): The releases that block the compromised keys in Python's `ssl` module.
+- **[Python 3.15.1, 3.14.9 and 3.13.17 are out](https://blog.python.org/2026/10/python-3151-3149-31317/)** (Python Insider, 2026): The CPython releases that ship the fixed pip and certifi, including the exception for 3.13.
 - **[Security updates for conda, Mamba, and Pixi](https://conda.org/blog/2026-10-21-emudhra-security-updates/)** (Jannis Leidel, 2026): Fixed versions for the conda ecosystem and the index fixes for older builds.
 - **[eMudhra CA response](https://github.com/conda-forge/conda-forge.github.io/issues/2967)** (conda-forge, 2026): The images, installers and services conda-forge rebuilt.
 - **[Protecting Firefox users following the compromise of eMudhra intermediate certificates](https://blog.mozilla.org/security/2026/10/20/protecting-firefox-users-following-the-compromise-of-emudhra-intermediate-certificates/)** (Mozilla, 2026): When and how Firefox blocked the certificates.
