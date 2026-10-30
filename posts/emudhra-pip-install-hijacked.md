@@ -1,7 +1,7 @@
 ---
 title: "Your `pip install` Could Have Been Hijacked. Here's How It Got Fixed."
 slug: emudhra-pip-install-hijacked
-date: 2026-10-26
+date: 2026-10-30T09:00:00-04:00
 topic: python-tooling
 authors:
   - daina-bouquin
