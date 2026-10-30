@@ -145,7 +145,7 @@ export function channelFor(source: string, medium: string): string {
 	if (from("github")) return "GitHub";
 	// Teams shows up as several Microsoft hosts. Slack hides its referrer,
 	// so Slack shares land in Direct.
-	if (from("teams.", "engage.cloud.microsoft")) return "Chat";
+	if (from("teams.", "engage.cloud.microsoft")) return "Microsoft Teams";
 	if (med === "organic" || from("search.brave")) return "Search";
 	// No referrer and no tag: typed links, but also apps that strip the
 	// referrer (Slack, email, LinkedIn's app) and staff checking the site.
