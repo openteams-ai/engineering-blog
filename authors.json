@@ -128,5 +128,15 @@
 			"bluesky": "https://bsky.app/profile/krassowski.bsky.social",
 			"website": "https://whybook.dev/"
 		}
+	},
+	{
+		"slug": "dharhas-pothina",
+		"name": "Dharhas Pothina",
+		"bio": "CTO at OpenTeams. Works on open source for AI and scientific computing.",
+		"avatarUrl": "https://avatars.githubusercontent.com/u/561301?v=4",
+		"links": {
+			"github": "https://github.com/dharhas",
+			"linkedin": "https://www.linkedin.com/in/dharhas"
+		}
 	}
 ]
