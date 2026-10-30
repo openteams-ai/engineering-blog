@@ -86,7 +86,7 @@ Most common browsers fixed themselves. Your Python tools are fixed only when you
 
 ## Acknowledgments
 
-This fix was a huge community effort. Thank you to everyone who took part, including Seth Larson, Christian Heimes, Paul Moore, Zachary Ware, William Woodruff, Hugo van Kemenade, Sumana Harihareswara, Eric Swanson, Henry Schreiner and Jannis Leidel; Wolf Vollprecht and the team at Prefix; and my OpenTeams colleagues Isuru Fernando, Michał Górny, Jaime Rodríguez-Guerra and Axel Obermeier.
+This fix was a huge community effort, and many more people took part than I can name here. Thank you to all of them, including Seth Larson, Christian Heimes, Paul Moore, Zachary Ware, William Woodruff, Hugo van Kemenade, Sumana Harihareswara, Eric Swanson, Henry Schreiner and Jannis Leidel; Wolf Vollprecht and the team at Prefix; and my OpenTeams colleagues Isuru Fernando, Michał Górny, Jaime Rodríguez-Guerra and Axel Obermeier.
 
 ## References
 
