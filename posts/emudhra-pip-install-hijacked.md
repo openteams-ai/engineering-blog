@@ -58,11 +58,13 @@ Seth Larson of the Python Software Foundation posted the [advisory](https://disc
 
 The harder copies were the ones baked into something else. Python's installers carry their own pip. So do Docker images, build servers, and the tool Python uses to set up every new environment, a copy that makes copies. Updating pip on your laptop doesn't touch any of them. Each has to be rebuilt by whoever makes it.
 
-So the forum thread turned into a running list of places an old copy might be hiding. What about the official Docker images? What about Debian's version of pip? Someone would ask, someone else would check, and the answer was either "that one's fine" or a new fix. By Wednesday the Python core team had shipped [new releases of Python itself](https://blog.python.org/2026/10/python-3151-3149-31317/), including one for a version that doesn't normally get this kind of update.
+So the forum thread turned into a running list of places an old copy might be hiding. What about the official Docker images? What about Debian's version of pip? Someone would ask, someone else would check, and the answer was either "that one's fine" or a new fix. By Wednesday the Python core team had shipped [new releases of the latest Python versions](https://blog.python.org/2026/10/python-3151-3149-31317/), and for [all supported versions by the following Monday](https://blog.python.org/2026/10/python-3152-31410-31318-31216-31118/).
+
+The conda tools got the same treatment. On Wednesday, Jannis Leidel published [a guide to the fixed releases of conda, Mamba and Pixi](https://conda.org/blog/2026-10-21-emudhra-security-updates/).
 
 The hardest copies were the ones already installed. conda-forge can't reach into anyone's machine, but it does control the index that conda and mamba read to decide which packages go together. Its maintainers edited that index so that installing an older version of mamba or conda's solver now brings the fixed list along with it. My colleagues at OpenTeams were among the people doing this work on the conda-forge side.
 
-By Thursday, five days after the first report, the main Python install tools all had fixed releases.
+By Thursday, five days after the first report, the main Python packaging tools all had fixed releases.
 
 ## The copies nobody has found yet
 
@@ -80,13 +82,13 @@ Most common browsers fixed themselves. Your Python tools are fixed only when you
 2. Upgrade pip to 26.2.2 or newer in every environment. It needs Python 3.10 or newer.
 3. Upgrade certifi to 2026.10.19 or newer, including in lockfiles and pinned requirements.
 4. If you use them, update uv (0.13.4 or newer), pixi (0.82.1 or newer) and conda (26.9.4 or newer, plus `ca-certificates` in every environment).
-5. Install your operating system's updates.
+5. Install your operating system's updates. On a Mac, command-line tools like curl, git and Apple's python3 still trust the compromised certificates until Apple ships an update. [Apple's support article](https://support.apple.com/en-us/149555) explains how to remove them by hand.
 6. Rebuild container images and CI caches from scratch.
 7. Don't turn off certificate checking to make an error go away.
 
 ## Acknowledgments
 
-This fix was a huge community effort, and many more people took part than I can name here. Thank you to all of them, including Seth Larson, Christian Heimes, Paul Moore, Zachary Ware, William Woodruff, Hugo van Kemenade, Sumana Harihareswara, Eric Swanson, Henry Schreiner and Jannis Leidel; Wolf Vollprecht and the team at Prefix; and my OpenTeams colleagues Isuru Fernando, Michał Górny, Jaime Rodríguez-Guerra and Axel Obermeier.
+This fix was a huge community effort, and many more people took part than I can name here. This post follows the Python side of the story, but the same work happened across the wider open source community that week, in the Rust, Node.js and Go projects, Linux distributions and beyond. Thank you to all of them, including Seth Larson, Christian Heimes, Paul Moore, Zachary Ware, William Woodruff, Hugo van Kemenade, Sumana Harihareswara, Eric Swanson, Henry Schreiner and Jannis Leidel; Wolf Vollprecht and the team at Prefix; and my OpenTeams colleagues Isuru Fernando, Michał Górny, Jaime Rodríguez-Guerra and Axel Obermeier.
 
 ## References
 
