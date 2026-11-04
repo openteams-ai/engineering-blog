@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 316" role="img" aria-label="Merged Table 5.3 after conversion. The first two rows, For currency costs and For CFPB costs, come from page 71. The next two rows, Reserve Bank net loss from operations and Consolidated VIEs income, come from page 72. They sit in one table with a single header.">
+	<style>
+		text { font-family: "IBM Plex Sans", "Inter Tight", Helvetica, Arial, sans-serif; fill: #0f172a; font-size: 18px; }
+		.head { font-weight: 600; }
+		.num { text-anchor: end; font-variant-numeric: tabular-nums; }
+		.rule { stroke: #ffffff; stroke-width: 1.5; }
+		.p71 { fill: #d3ddff; }
+		.p72 { fill: #ffe2da; }
+		.b71 { fill: none; stroke: #4d75fe; stroke-width: 2.5; }
+		.b72 { fill: none; stroke: #ff8a69; stroke-width: 2.5; }
+		.l71 { fill: #0f172a; font-weight: 600; }
+		.l72 { fill: #0f172a; font-weight: 600; }
+	</style>
+
+	<rect x="0.75" y="0.75" width="778.5" height="314.5" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+
+	<!-- table frame -->
+	<rect x="32" y="36" width="630" height="244" rx="8" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+
+	<!-- header -->
+	<text x="52" y="68" class="head">Item</text>
+	<text x="540" y="68" class="head num">2024</text>
+	<text x="642" y="68" class="head num">2023</text>
+	<line x1="32" y1="88" x2="662" y2="88" stroke="#e2e8f0" stroke-width="1.5"/>
+
+	<!-- page 71 rows -->
+	<rect x="33" y="89" width="628" height="95" class="p71"/>
+	<text x="52" y="117">For currency costs</text>
+	<text x="540" y="117" class="num">1,242</text>
+	<text x="642" y="117" class="num">1,047</text>
+	<line x1="32" y1="136" x2="662" y2="136" class="rule"/>
+	<text x="52" y="165">For CFPB costs</text>
+	<text x="540" y="165" class="num">663</text>
+	<text x="642" y="165" class="num">721</text>
+
+	<!-- page 72 rows -->
+	<rect x="33" y="184" width="628" height="95" rx="0" class="p72"/>
+	<line x1="32" y1="184" x2="662" y2="184" class="rule"/>
+	<text x="52" y="213">Reserve Bank net (loss) from operations</text>
+	<text x="540" y="213" class="num">-77,606</text>
+	<text x="642" y="213" class="num">-114,386</text>
+	<line x1="32" y1="232" x2="662" y2="232" class="rule"/>
+	<text x="52" y="261">Consolidated VIEs: Income, net</text>
+	<text x="540" y="261" class="num">22</text>
+	<text x="642" y="261" class="num">1,124</text>
+
+	<!-- page brackets -->
+	<path d="M672 94 H682 V178 H672" class="b71"/>
+	<text x="690" y="142" class="l71">page 71</text>
+	<path d="M672 190 H682 V274 H672" class="b72"/>
+	<text x="690" y="238" class="l72">page 72</text>
+</svg>

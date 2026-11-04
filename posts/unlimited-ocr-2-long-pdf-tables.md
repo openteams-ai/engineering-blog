@@ -5,17 +5,15 @@ date: 2026-11-02
 topic: ai-engineering
 authors:
   - khuyen-tran
-meta_description: "Unlimited-OCR-2 reads many PDF pages in one request, so tables split across pages come back as one DataFrame. Run it on a Mac and check what it misses."
+meta_description: "Unlimited-OCR-2 reads many PDF pages in one request, so tables split across pages come back as one table. Run it on a Mac and check what it misses."
 focus_keyword: "Unlimited-OCR-2"
 ---
 
-Have you ever pulled a table out of a long PDF report, only to find it split into two DataFrames because it crossed a page break? The second half usually starts with a title like "Table 5.3—continued" and the column headers again, sitting in your data as ordinary rows.
+If you run OCR on a long PDF report, a table that spans two pages may come back as two separate tables instead of one. This happens because most OCR models read one page at a time, so the model has no idea the two halves belong to the same table.
 
-This happens because most OCR models read one page at a time. Each page is parsed on its own, so the model has no idea that the table at the top of page 72 is the rest of the table at the bottom of page 71.
+Unlimited-OCR-2 solves this by reading many pages in one request, so the model can see where a table continues onto the next page.
 
-Fixing it by hand means finding every continued table, deleting the repeated title and header rows, and concatenating the pieces. In a 200-page report with a dozen split tables, that adds up quickly.
-
-In this article, you will learn Unlimited-OCR-2's features by parsing the Federal Reserve's 2024 Annual Report on a Mac.
+It scores well on [long-document benchmarks](https://huggingface.co/baidu/Unlimited-OCR-2/blob/main/Unlimited-OCR-2.pdf), but benchmarks don't always reflect real-world documents. So I tested it on a long PDF report to see how good it is in practice.
 
 > 💻 **Get the Code**: The scripts for every example are on [GitHub](https://github.com/khuyentran1401/codecut-blog/tree/main/unlimited-ocr-2-vs-deepseek-ocr-2).
 
@@ -25,271 +23,172 @@ In this article, you will learn Unlimited-OCR-2's features by parsing the Federa
 
 It is built on DeepSeek-OCR and has the same size as [DeepSeek-OCR-2](https://huggingface.co/deepseek-ai/DeepSeek-OCR-2), with 3B parameters and 0.5B active per token. The difference is how they read a document.
 
-```text
-DeepSeek-OCR-2     page 71 -> request 1
-                   page 72 -> request 2        <- each page alone
+DeepSeek-OCR-2 scans one page per request and never sees the page before or after, so a table that spans two pages comes back as two separate tables. Unlimited-OCR-2 reads many pages in one request, so it can see that both pages hold the same table.
 
-Unlimited-OCR-2    page 71 + page 72 -> one request   <- sees where the table continues
-```
+![DeepSeek-OCR-2 reads one page at a time, so page 1 produces table 1 and page 2 produces table 2. Unlimited-OCR-2 reads both pages together and produces one table](images/unlimited-ocr-2-long-pdf-tables/one-page-per-request.svg)
 
-Throughout this article, DeepSeek-OCR-2 serves as the page-by-page baseline, so you can see what reading the whole document changes.
+## How Can a Model Read Across Page Breaks?
+
+The obvious way to let a model see across a page break is to have it look at every page while it writes. But a model writes one word at a time, so it rereads every page before each word, which gets very slow for long documents.
+
+![While writing a row on page 30, the model looks at every part of every page, from page 1 to page 30, for every word it writes](images/unlimited-ocr-2-long-pdf-tables/all-pages-every-step.svg)
+
+Unlimited-OCR-2 avoids this slowdown by:
+
+1. Splitting each page into small bands and summarizing each one
+2. Before each word, checking which summaries are most relevant to what comes next
+3. Reading only the top-scoring bands in full
+
+Because it reads only a few bands in full, no matter how long the document is, writing each word gets only a little slower as you add pages. At 100 pages, Baidu measured each word as 7 times faster to write than with the read-every-page approach.
+
+![First, each page is split into horizontal bands. Then, before each word, the model reads in full only the most relevant bands, here the table header on page 29 and the bands around where it is writing on page 30, and skips the rest](images/unlimited-ocr-2-long-pdf-tables/keep-top-bands.svg)
+
+To see how well this works, I ran DeepSeek-OCR-2 and Unlimited-OCR-2 on several tables that span multiple pages. Both models are built on DeepSeek-OCR and have the same size, so differences in their outputs come mostly from whether they read across page breaks.
 
 ## Setup
 
-Baidu's own inference code needs an NVIDIA GPU. On a Mac, the MLX conversions of both models run through [mlx-vlm](https://github.com/Blaizzy/mlx-vlm).
+Unlimited-OCR-2 runs on an NVIDIA GPU through Baidu's Transformers code, or on an Apple Silicon Mac through the MLX conversion in [mlx-vlm](https://github.com/Blaizzy/mlx-vlm). This article uses the Mac path, but the outputs are the same format on both.
+
+On a Mac:
 
 ```bash
-pip install mlx-vlm==0.7.11 pymupdf pandas lxml
+pip install mlx-vlm==0.7.11
 ```
 
-*This article uses mlx-vlm v0.7.11, PyMuPDF v2.0, and pandas v3.1.0.*
-
-The running example is the [Federal Reserve's 2024 Annual Report](https://www.federalreserve.gov/publications/files/2024-annual-report.pdf), a 214-page public domain report with 16 pages where a table continues from the previous page. Each page is rendered to a PNG with PyMuPDF before it goes to the model.
-
-Baidu's Markdown converter is a single Python file that you download next to your code. Follow the rest of the setup instructions, including downloading the report and the converter, in the [example README](https://github.com/khuyentran1401/codecut-blog/tree/main/unlimited-ocr-2-vs-deepseek-ocr-2#setup).
+On an NVIDIA GPU, follow the [model card's Transformers setup](https://huggingface.co/baidu/Unlimited-OCR-2#transformers).
 
 ## Parse Many Pages in One Request
 
-Table 5.3 of the report starts on page 71 and continues on page 72, with its header repeated.
+The first test is the simplest: give the model the two pages around one split table, and see whether it can recognize them as one table.
+
+The tests use the [Federal Reserve's 2024 Annual Report](https://www.federalreserve.gov/publications/files/2024-annual-report.pdf), a 214-page report with many tables that cross a page break. Its Table 5.3 starts on page 71 and continues on page 72, with its header repeated.
 
 ![Table 5.3 split across pages 71 and 72](images/unlimited-ocr-2-long-pdf-tables/case1-table-5-3-break.png)
 
-To parse both pages together, pass both images to `mlx_vlm.generate` with the prompt `Multi page parsing.`
+A page-by-page model like DeepSeek-OCR-2 parses each page separately, so these two pages come back as two tables. The first one ends at the bottom of page 71:
+
+| Item | 2024 | 2023 |
+| --- | --- | --- |
+| ... | | |
+| For currency costs | 1,242 | 1,047 |
+| For Consumer Financial Protection Bureau costs | 663 | 721 |
+
+The second one starts with the page title and the header as ordinary rows:
+
+| Table 5.3—continued | | |
+| --- | --- | --- |
+| Item | 2024 | 2023 |
+| Reserve Bank net (loss) from operations | -77,606 | -114,386 |
+| Consolidated variable interest entities: Income, net | 22 | 1,124 |
+| ... | | |
+
+Before you can use the table, you have to delete those rows and join the two halves yourself.
+
+Now let's try Unlimited-OCR-2. Pass both page images to `mlx_vlm.generate` in one call, with the prompt `Multi page parsing.`:
 
 ```bash
 mlx_vlm.generate --model mlx-community/Unlimited-OCR-2-8bit \
   --image p071.png p072.png \
-  --prompt "Multi page parsing." --max-tokens 60000 --temperature 0
+  --prompt "Multi page parsing." --max-tokens 8000
 ```
 
-The output has one `<PAGE>` section per image. Each block on a page gets a label, its position on a 0 to 1000 scale, and its content. Long lines are trimmed here.
+This prints one `<PAGE>` section per image, each containing a list of blocks. The model uses the label `append_table` to indicate that the table on page 72 is a continuation of the table on page 71.
 
 ```text
-<PAGE><BLOCK>header[555, 46, 854, 61]<FORK>Payment System and Reserve Bank Oversight
-<BLOCK>page_number[871, 47, 892, 59]<FORK>65
-...
-<BLOCK>table[144, 460, 855, 817]<FORK><table><tr><td>Item</td><td>2024</td><td>2023</td></tr>...
-<BLOCK>text[786, 821, 853, 833]<FORK>(continued)
-<BLOCK>page_footnote[143, 860, 813, 873]<FORK>$ ^{15} $  The Reserve Banks transferred ...
-<PAGE><BLOCK>page_number[106, 48, 127, 59]<FORK>66
-<BLOCK>header[145, 47, 331, 61]<FORK>111th Annual Report | 2024
-<BLOCK>other[154, 120, 294, 133]<FORK>Table 5.3—continued
-<BLOCK>append_table[145, 137, 855, 535]<FORK><table><tr><td>Item</td><td>2024</td><td>2023</td></tr>...
+<PAGE>                                                        <- page 71
+<BLOCK>table[144, 460, 855, 817]<FORK><table>...
+<PAGE>                                                        <- page 72
+<BLOCK>append_table[145, 137, 855, 535]<FORK><table>...       <- continues the table above
 ```
 
-The table on page 72 is labeled `append_table`, which means the model recognized it as the rest of the table on page 71.
+The raw output is hard to read, so I use Baidu's [Markdown converter](https://github.com/baidu/Unlimited-OCR/tree/main/utils). It uses the `append_table` label to join the two halves into one table. Here are the rows around the page break:
 
-This is nice for several reasons:
+![The merged Table 5.3 with one header. The rows For currency costs and For CFPB costs come from page 71, and the rows Reserve Bank net (loss) from operations and Consolidated VIEs: Income, net come from page 72](images/unlimited-ocr-2-long-pdf-tables/merged-table-rows.svg)
 
-- The page number of every block is known from its `<PAGE>` section
-- Labels like `header`, `page_number`, and `page_footnote` let you drop page clutter by type
-- The `append_table` label marks the continuation, so nothing has to be guessed from the layout
-
-## Merge a Table Split Across Pages
-
-The raw output is not Markdown yet. Baidu's converter, [`process_unlimitedOCR2.py`](https://github.com/baidu/Unlimited-OCR/tree/main/utils), turns it into Markdown and joins each `append_table` onto the table before it, dropping the repeated header.
-
-To load the result into pandas, read every HTML table in the Markdown.
-
-```python
-import re
-from io import StringIO
-
-import pandas as pd
-from process_unlimitedOCR2 import convert
-
-
-def load_tables(markdown):
-    tables = re.findall(r"<table>.*?</table>", markdown, re.S)
-    return [pd.read_html(StringIO(table))[0] for table in tables]
-
-
-raw = open("results/case1-table-5-3/unlimited-raw.txt").read()
-markdown = convert(raw[raw.index("<PAGE>"):])
-tables = load_tables(markdown)
-print([table.shape for table in tables])
-```
-
-```text
-[(36, 3)]
-```
-
-The two pages come back as one DataFrame. The rows on either side of the page break sit next to each other.
-
-```python
-print(tables[0].iloc[19:23].to_string(header=False))
-```
-
-```text
-19                                      For currency costs    1242     1047
-20  For Consumer Financial Protection Bureau \( costs^3 \)     663      721
-21                 Reserve Bank net (loss) from operations  -77606  -114386
-22    Consolidated variable interest entities: Income, net      22     1124
-```
-
-Row 20 is the last row of page 71, and row 21 is the first row of page 72.
-
-For comparison, DeepSeek-OCR-2 parses each page separately and returns two DataFrames, with the page title and the header repeated as data.
-
-```text
-[(21, 3), (20, 3)]
-
-table 2, first 3 rows
-0                      Table 5.3—continued  Table 5.3—continued  Table 5.3—continued
-1                                     Item                 2024                 2023
-2  Reserve Bank net (loss) from operations               -77606              -114386
-```
-
-Both models read every value correctly. The difference is that with Unlimited-OCR-2 there is nothing left to clean up.
+The two halves are merged into one table, with no repeated header between them.
 
 ## Merge a Table Across Four Pages
 
-Some tables run much longer. Table G.10 lists the Federal Reserve Banks' income and expenses for every year from 1914 to 2024, across four pages.
+Let's make the test harder by running the model on a table that spans four pages (Table G.10).
 
 ![Table G.10 running across pages 206 to 209](images/unlimited-ocr-2-long-pdf-tables/case3-table-g10-four-pages.png)
 
-Pass all four pages in one request, then load the tables the same way.
+DeepSeek-OCR-2 returns four separate tables, one per page.
 
-```python
-raw = open("results/case3-table-g10/unlimited-raw.txt").read()
-tables = load_tables(convert(raw[raw.index("<PAGE>"):]))
-print([table.shape for table in tables])
-```
+Unlimited-OCR-2 returns one table for all four pages, with only one repeated header row left between 1986 and 1987:
 
-```text
-[(129, 13)]
-```
+![Merged Table G.10 around the page 207 to 208 break. The rows 1985 and 1986 come from page 207 and 1987 from page 208, with a repeated header row from page 208 left between 1986 and 1987](images/unlimited-ocr-2-long-pdf-tables/g10-repeated-header.svg)
 
-All three page breaks were labeled `append_table`, so the full history comes back as one DataFrame. The years on either side of the first two breaks line up.
-
-```python
-income = tables[0].iloc[:, :3]
-print(income[income.iloc[:, 0].isin(["1949", "1950", "1986", "1987"])].to_string(header=False))
-```
-
-```text
-37  1949    316537    67931
-38  1950    275839    69822
-74  1986  17464528  1156868
-76  1987  17633012  1146911
-```
-
-Row 75 between 1986 and 1987 is the header again. The model wrote a footnote marker in the header differently on page 208, so it no longer matched the header on page 206, and the converter only drops an exact match.
-
-```text
-page 206 header   Net additions or deductions (-)1
-page 208 header   Net additions or deductions $ (-)^{1} $
-```
-
-So one row needs deleting by hand. DeepSeek-OCR-2 returns four DataFrames for the same table, and three of them start with "Table G.10—continued" and the header rows.
+One row to delete is far less work than cleaning and joining four separate tables.
 
 ## Join Paragraphs Across Pages
 
-Text that crosses a page break gets the same treatment. The model labels the first half `cross_text` and the second half `append_text`.
+Page breaks cut paragraphs in half too. Let's see whether the model can rejoin them.
 
-This paragraph in the Federal Reserve's [June 2025 Monetary Policy Report](https://www.federalreserve.gov/monetarypolicy/files/20250620_mprfullreport.pdf) ends mid-sentence on page 54 and continues on page 55.
+For this test, I switched to a different report. This paragraph in the Federal Reserve's [June 2025 Monetary Policy Report](https://www.federalreserve.gov/monetarypolicy/files/20250620_mprfullreport.pdf) stops at "highly accommodative" on page 54 and continues on page 55:
 
 ![A paragraph that ends with "highly accommodative" on page 54 and continues on page 55](images/unlimited-ocr-2-long-pdf-tables/case4-mpr-paragraph-break.png)
 
-```text
-<BLOCK>cross_text[162, 853, 834, 910]<FORK>Figure A shows historical prescriptions ... called for highly accommodative
-<PAGE>...
-<BLOCK>append_text[161, 154, 834, 251]<FORK>monetary policy in response to the pandemic-driven recession ...
-```
-
-After the converter, the two halves are one paragraph.
+DeepSeek-OCR-2 leaves the sentence split, with the box title from page 55 in the middle:
 
 ```text
-PDF              "...called for highly accommodative monetary policy in response..."
-DeepSeek-OCR-2   "...called for highly accommodative"  [Box 4—continued]  "monetary policy in response..."
-Unlimited-OCR-2  "...called for highly accommodativemonetary policy in response..."
+...called for highly accommodative                                <- end of page 54
+
+Box 4—continued                                                   <- box title repeated on page 55
+
+monetary policy in response to the pandemic-driven recession...   <- start of page 55
 ```
 
-The sentence is whole, though the space at the page break is lost.
+Unlimited-OCR-2 returns one paragraph but loses the space at the page break:
 
-Paragraphs are less reliable than tables. In two other paragraph breaks I tested, the converter had nothing to join. One second half came back as plain `text` instead of `append_text`, and the other break got no continuation labels at all.
+```text
+...called for highly accommodativemonetary policy in response to the pandemic-driven recession...
+                                  ^ space lost at the page break
+```
+
+I also tested two other paragraph breaks, and Unlimited-OCR-2 left both sentences split, just like DeepSeek-OCR-2. So paragraph merging seems less reliable than table merging.
 
 ## Send a Whole Section at Once
 
-So far, each request held only the pages around one break. In practice, you would send a whole section of a report and let the model find the breaks.
+So far, I gave the model only the few pages around one break. In practice, you would send a whole section of a report and let the model find the breaks.
 
-To test that, I sent 10- and 30-page windows of the Annual Report in one request each and checked every table break inside them.
+Let's test how well the model can find breaks in longer requests by sending 10- and 30-page chunks of the Annual Report in one request each:
 
 ```bash
 mlx_vlm.generate --model mlx-community/Unlimited-OCR-2-8bit \
   --image pages/p185.png pages/p186.png ... pages/p214.png \
-  --prompt "Multi page parsing." --max-tokens 150000 --temperature 0
+  --prompt "Multi page parsing." --max-tokens 150000
 ```
 
-| Request size | Table breaks labeled `append_table` |
+| Pages per request | Table breaks recognized |
 | --- | --- |
-| 2 to 4 pages | 7 of 7 |
-| 10 pages | 11 of 12 |
-| 30 pages | 20 of 22 |
+| 2 to 4 | 7 of 7 |
+| 10 | 11 of 12 |
+| 30 | 20 of 22 |
 
-Merging held up as the requests grew. The one table that kept failing was Table 5.3, which merged when sent as two pages but split in both the 10- and 30-page requests.
+Unlimited-OCR-2 recognized most breaks even in 30-page requests.
 
-On a MacBook Pro with an M5 Pro chip, a 30-page request took 3 to 5.5 minutes and peaked at about 17 GB of memory.
-
-## Check the Numbers
-
-Merging tables is only useful if the values are right. On Table G.9, an 8-column table split across pages 204 and 205, Unlimited-OCR-2 kept all 336 numbers printed on the two pages, while DeepSeek-OCR-2 misread one.
-
-```text
-row "Foreign currency denominated investments, net", 3rd value
-  PDF               7,380
-  DeepSeek-OCR-2    7,360    <- misread
-  Unlimited-OCR-2   7,380
-```
-
-Merging can also lose data without any error. In Table G.10, Unlimited-OCR-2 kept all 13 columns on pages 206 to 208 but dropped the last column on page 209. Because the merged DataFrame still has 13 columns, pandas fills the gap with `NaN`.
-
-Comparing the 12 Reserve Bank rows with the table's Total row catches it. This continues from the G.10 `tables` loaded above.
-
-```python
-BANKS = ["Boston", "New York", "Philadelphia", "Cleveland", "Richmond", "Atlanta",
-         "Chicago", "St. Louis", "Minneapolis", "Kansas City", "Dallas", "San Francisco"]
-
-g10 = tables[0]
-g10 = g10.set_index(g10.columns[0])
-banks = g10.loc[BANKS].apply(pd.to_numeric, errors="coerce")
-total = pd.to_numeric(g10.loc["Total"], errors="coerce")
-
-check = pd.DataFrame({"sum of banks": banks.sum(min_count=1), "Total row": total})
-check["missing"] = banks.isna().sum()
-print(check.tail(3))
-```
-
-```text
-    sum of banks     Total row  missing
-10  1.198433e+09  1.198433e+09        0
-11 -5.000000e+00 -4.000000e+00        0
-12           NaN           NaN       12
-```
-
-Column 12 is empty for all 12 banks and the total. The gap of 1 in column 11 is rounding in the source table.
-
-A check like this is worth running on any merged table that has a total row.
+On a MacBook Pro with an M5 Pro chip, a 30-page request took 3 to 5.5 minutes and peaked at about 17 GB of memory, so you can parse a long report on a laptop without a GPU server.
 
 ## Final Thoughts
 
-What I like about Unlimited-OCR-2 is that it fixes the most tedious part of pulling tables out of reports. A table that crosses a page break comes back as one DataFrame. Across all my runs, 38 of 41 table breaks were labeled as continuations, including a table across four pages.
+From my tests, Unlimited-OCR-2 is a great tool for parsing long PDFs. It can read across page breaks and join tables that span multiple pages.
 
 It also runs on a laptop. With mlx-vlm, a 30-page request fits in about 17 GB of memory, so private documents never leave the machine.
 
-But it is not a drop-in replacement for every OCR job:
+But how does it perform on single pages? On OmniDocBench v1.6, a single-page benchmark, it scores about 3 points below the best single-page models but above DeepSeek-OCR-2:
 
-- On single pages, Baidu's own report shows it scoring below the best single-page models, so a page-by-page model is a fine choice when nothing crosses a page break
-- Paragraphs across pages merged in only 1 of 3 tests, so check text that matters
-- A merge can drop a column or keep a repeated header without an error, so validate merged tables against their totals
-- For documents of 100 pages or more, Baidu's SGLang server on an NVIDIA GPU processes the document in windows and keeps memory flat, which the Mac path does not do
+| Model | Overall score |
+| --- | --- |
+| TeleOCR (best) | 96.91 |
+| OvisOCR2 | 96.47 |
+| **Unlimited-OCR-2** | **94.02** |
+| DeepSeek-OCR-2 | 90.25 |
+
+A 3-point gap is small, so if you're not sure whether your documents have page breaks, Unlimited-OCR-2 is a good default.
 
 ## References
 
-- **[Unlimited-OCR-2 model card](https://huggingface.co/baidu/Unlimited-OCR-2)** (Baidu, 2026): multi-page usage, the `Multi page parsing.` prompt, and the SGLang page-window settings.
-- **[Unlimited OCR Works 2 technical report](https://huggingface.co/baidu/Unlimited-OCR-2/blob/main/Unlimited-OCR-2.pdf)** (Baidu ERNIE Team, 2026): built on DeepSeek-OCR, single-page and long-document benchmark scores, and memory savings on the SGLang server.
+- **[Unlimited-OCR-2 model card](https://huggingface.co/baidu/Unlimited-OCR-2)** (Baidu, 2026): multi-page usage and the `Multi page parsing.` prompt.
+- **[Unlimited OCR Works 2 technical report](https://huggingface.co/baidu/Unlimited-OCR-2/blob/main/Unlimited-OCR-2.pdf)** (Baidu ERNIE Team, 2026): built on DeepSeek-OCR, how it picks which parts of earlier pages to read, and single-page and long-document benchmark scores.
 - **[DeepSeek-OCR-2 model card](https://huggingface.co/deepseek-ai/DeepSeek-OCR-2)** (DeepSeek, 2026): the page-by-page baseline and its grounding prompt.
-- **[Baidu post-processing README](https://github.com/baidu/Unlimited-OCR/tree/main/utils)** (Baidu, 2026): how `cross_*` and `append_*` blocks are merged and repeated headers dropped.
-- **[mlx-vlm PR #2601](https://github.com/Blaizzy/mlx-vlm/pull/2601)** (2026): Unlimited-OCR-2 support in mlx-vlm 0.7.11.
-- **[Federal Reserve 2024 Annual Report](https://www.federalreserve.gov/publications/files/2024-annual-report.pdf)** (Board of Governors of the Federal Reserve System, 2025): the running example, a U.S. government work in the public domain.
-- **[Monetary Policy Report, June 2025](https://www.federalreserve.gov/monetarypolicy/files/20250620_mprfullreport.pdf)** (Board of Governors of the Federal Reserve System, 2025): the paragraph example, public domain.
