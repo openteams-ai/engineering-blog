@@ -9,9 +9,9 @@ meta_description: "Unlimited-OCR-2 reads many PDF pages in one request, so table
 focus_keyword: "Unlimited-OCR-2"
 ---
 
-If you run OCR on a long PDF report, a table that spans two pages may come back as two separate tables instead of one. This happens because most OCR models read one page at a time, so the model has no idea the two halves belong to the same table.
+If you run OCR on a long PDF report, a table that spans two pages may come back as two separate tables instead of one. This happens because most OCR models read one page at a time, so they can't tell that a table on one page continues onto the next.
 
-Unlimited-OCR-2 solves this by reading many pages in one request, so the model can see where a table continues onto the next page.
+Unlimited-OCR-2 solves this by reading many pages in one request, so a table split across pages comes back as one table.
 
 It scores well on [long-document benchmarks](https://huggingface.co/baidu/Unlimited-OCR-2/blob/main/Unlimited-OCR-2.pdf), but benchmarks don't always reflect real-world documents. So I tested it on a long PDF report to see how good it is in practice.
 
@@ -19,29 +19,28 @@ It scores well on [long-document benchmarks](https://huggingface.co/baidu/Unlimi
 
 ## What Is Unlimited-OCR-2?
 
-[Unlimited-OCR-2](https://huggingface.co/baidu/Unlimited-OCR-2) is an open-source document parsing model from Baidu that reads many pages in one request.
+[Unlimited-OCR-2](https://huggingface.co/baidu/Unlimited-OCR-2) is an open-source document parsing model from Baidu. It is built on DeepSeek-OCR and has the same size as [DeepSeek-OCR-2](https://huggingface.co/deepseek-ai/DeepSeek-OCR-2). The main difference between them is how they read a document.
 
-It is built on DeepSeek-OCR and has the same size as [DeepSeek-OCR-2](https://huggingface.co/deepseek-ai/DeepSeek-OCR-2), with 3B parameters and 0.5B active per token. The difference is how they read a document.
-
-DeepSeek-OCR-2 scans one page per request and never sees the page before or after, so a table that spans two pages comes back as two separate tables. Unlimited-OCR-2 reads many pages in one request, so it can see that both pages hold the same table.
+DeepSeek-OCR-2 reads one page per request, while Unlimited-OCR-2 reads many pages in one request:
 
 ![DeepSeek-OCR-2 reads one page at a time, so page 1 produces table 1 and page 2 produces table 2. Unlimited-OCR-2 reads both pages together and produces one table](images/unlimited-ocr-2-long-pdf-tables/one-page-per-request.svg)
 
 ## How Can a Model Read Across Page Breaks?
 
-The obvious way to let a model see across a page break is to have it look at every page while it writes. But a model writes one word at a time, so it rereads every page before each word, which gets very slow for long documents.
+The obvious way to let a model see across a page break is to have it look at every page while it writes. But then the model would reread every page before writing each word, which gets very slow for long documents.
 
 ![While writing a row on page 30, the model looks at every part of every page, from page 1 to page 30, for every word it writes](images/unlimited-ocr-2-long-pdf-tables/all-pages-every-step.svg)
 
 Unlimited-OCR-2 avoids this slowdown by:
 
 1. Splitting each page into small bands and summarizing each one
-2. Before each word, checking which summaries are most relevant to what comes next
-3. Reading only the top-scoring bands in full
-
-Because it reads only a few bands in full, no matter how long the document is, writing each word gets only a little slower as you add pages. At 100 pages, Baidu measured each word as 7 times faster to write than with the read-every-page approach.
+2. Before each word, checking which bands are most relevant to what comes next. This check is quick because it looks only at the summaries, not the full bands.
+3. Reading only the most relevant bands in full
 
 ![First, each page is split into horizontal bands. Then, before each word, the model reads in full only the most relevant bands, here the table header on page 29 and the bands around where it is writing on page 30, and skips the rest](images/unlimited-ocr-2-long-pdf-tables/keep-top-bands.svg)
+
+Because the number of bands it reads in full stays small no matter how long the document is, each word gets only a little slower to write as you add pages. In Baidu's tests at 100 pages, each word was 7 times faster to write than with the read-every-page approach.
+
 
 To see how well this works, I ran DeepSeek-OCR-2 and Unlimited-OCR-2 on several tables that span multiple pages. Both models are built on DeepSeek-OCR and have the same size, so differences in their outputs come mostly from whether they read across page breaks.
 
@@ -82,7 +81,7 @@ The second one starts with the page title and the header as ordinary rows:
 | Consolidated variable interest entities: Income, net | 22 | 1,124 |
 | ... | | |
 
-Before you can use the table, you have to delete those rows and join the two halves yourself.
+Before you can use the table, you have to delete the extra title and header rows from the second table, then join the two tables yourself.
 
 Now let's try Unlimited-OCR-2. Pass both page images to `mlx_vlm.generate` in one call, with the prompt `Multi page parsing.`:
 
@@ -119,7 +118,7 @@ Unlimited-OCR-2 returns one table for all four pages, with only one repeated hea
 
 ![Merged Table G.10 around the page 207 to 208 break. The rows 1985 and 1986 come from page 207 and 1987 from page 208, with a repeated header row from page 208 left between 1986 and 1987](images/unlimited-ocr-2-long-pdf-tables/g10-repeated-header.svg)
 
-One row to delete is far less work than cleaning and joining four separate tables.
+The result isn't perfect, but deleting one row is far less work than cleaning and joining four separate tables.
 
 ## Join Paragraphs Across Pages
 
