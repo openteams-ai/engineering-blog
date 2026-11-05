@@ -5,7 +5,7 @@ date: 2026-11-02
 topic: ai-engineering
 authors:
   - khuyen-tran
-meta_description: "Unlimited-OCR-2 reads many PDF pages in one request, so tables split across pages come back as one table. Run it on a Mac and check what it misses."
+meta_description: "Unlimited-OCR-2 reads many PDF pages in one request, so tables split across pages come back as one table. See how it compares to page-by-page OCR."
 focus_keyword: "Unlimited-OCR-2"
 ---
 
