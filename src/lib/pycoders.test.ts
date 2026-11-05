@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { featuredSlugs, parseIssueList, titleKey } from "./pycoders";
+import { blogSlug, featuredSlugs, openteamsLinks, parseIssueList, titleKey } from "./pycoders";
 
 describe("parseIssueList", () => {
 	it("reads each issue's number and date", () => {
@@ -34,5 +34,25 @@ describe("featuredSlugs", () => {
 
 	it("finds nothing when no post is in the issue", () => {
 		expect(featuredSlugs("<p>Other Python news</p>", posts)).toEqual([]);
+	});
+});
+
+describe("openteamsLinks", () => {
+	it("finds the article PyCoder's credits to openteams.com, whatever its title", () => {
+		const html = `
+			<span><a href="https://pycoders.com/link/17338/web" style="color: #AAA" target="_blank">Polars 2.0: Streaming by Default and Stricter Types</a></span><br>
+			<span><a href="https://pycoders.com/link/17338/web" target="_blank">OPENTEAMS.COM</a> • Shared by Khuyen Tran</span>
+			<span><a href="https://pycoders.com/link/17346/web">GOOGLEBLOG.COM</a> • Shared by anonymous</span>`;
+		expect(openteamsLinks(html)).toEqual(["https://pycoders.com/link/17338/web"]);
+	});
+});
+
+describe("blogSlug", () => {
+	it("reads the slug of an engineering-blog post", () => {
+		expect(blogSlug("https://openteams.com/engineering-blog/polars-2-whats-new/")).toBe("polars-2-whats-new");
+	});
+
+	it("ignores other openteams.com pages", () => {
+		expect(blogSlug("https://openteams.com/blog/some-news/")).toBeUndefined();
 	});
 });
