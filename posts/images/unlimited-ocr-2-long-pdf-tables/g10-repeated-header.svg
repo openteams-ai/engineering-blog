@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 316" role="img" aria-label="Merged Table G.10 around the page 207 to 208 break. The rows 1985 and 1986 come from page 207 and the row 1987 from page 208, but a repeated header row from page 208 sits between 1986 and 1987.">
+	<style>
+		text { font-family: "IBM Plex Sans", "Inter Tight", Helvetica, Arial, sans-serif; fill: #0f172a; font-size: 18px; }
+		.head { font-weight: 600; }
+		.num { text-anchor: end; font-variant-numeric: tabular-nums; }
+		.rule { stroke: #ffffff; stroke-width: 1.5; }
+		.p207 { fill: #d3ddff; }
+		.p208 { fill: #ffe2da; }
+		.stray { fill: #e2e8f0; }
+		.strayline { fill: none; stroke: #f43f5e; stroke-width: 2.5; stroke-dasharray: 7 5; }
+		.straytext { fill: #5d6575; font-style: italic; }
+		.b207 { fill: none; stroke: #4d75fe; stroke-width: 2.5; }
+		.b208 { fill: none; stroke: #ff8a69; stroke-width: 2.5; }
+		.label { font-weight: 600; }
+	</style>
+
+	<rect x="0.75" y="0.75" width="778.5" height="314.5" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+
+	<!-- table frame -->
+	<rect x="32" y="36" width="528" height="244" rx="8" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+
+	<!-- header -->
+	<text x="52" y="68" class="head">Bank and period</text>
+	<text x="390" y="68" class="head num">Current income</text>
+	<text x="540" y="68" class="head num">Net expenses</text>
+	<line x1="32" y1="88" x2="560" y2="88" stroke="#e2e8f0" stroke-width="1.5"/>
+
+	<!-- page 207 rows -->
+	<rect x="33" y="89" width="526" height="95" class="p207"/>
+	<text x="52" y="117">1985</text>
+	<text x="390" y="117" class="num">18,131,983</text>
+	<text x="540" y="117" class="num">1,127,744</text>
+	<line x1="32" y1="136" x2="560" y2="136" class="rule"/>
+	<text x="52" y="165">1986</text>
+	<text x="390" y="165" class="num">17,464,528</text>
+	<text x="540" y="165" class="num">1,156,868</text>
+
+	<!-- repeated header from page 208 -->
+	<rect x="33" y="185" width="526" height="46" class="stray"/>
+	<rect x="36" y="188" width="520" height="40" rx="4" class="strayline"/>
+	<text x="52" y="213" class="straytext">Bank and period</text>
+	<text x="390" y="213" class="num straytext">Current income</text>
+	<text x="540" y="213" class="num straytext">Net expenses</text>
+
+	<!-- page 208 row -->
+	<rect x="33" y="232" width="526" height="47" class="p208"/>
+	<text x="52" y="261">1987</text>
+	<text x="390" y="261" class="num">17,633,012</text>
+	<text x="540" y="261" class="num">1,146,911</text>
+
+	<!-- page brackets -->
+	<path d="M570 94 H580 V178 H570" class="b207"/>
+	<text x="592" y="142" class="label">page 207</text>
+	<path d="M570 190 H580 V274 H570" class="b208"/>
+	<text x="592" y="214" class="label">← repeated header</text>
+	<text x="592" y="262" class="label">page 208</text>
+</svg>
