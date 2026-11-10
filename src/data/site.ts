@@ -7,13 +7,14 @@ export const TITLE_ENDING = "OpenTeams | AI you own";
 /** The main site's Google Analytics property, so blog visits are counted with it. */
 export const ANALYTICS_ID = "G-P5T85K8QL2";
 /**
- * The newsletter form in the main site's footer. Signups sent here land in
- * WordPress under Elementor, Submissions, the same place as the footer's.
+ * The Engineering newsletter's HubSpot form ("Engineering blog signup") and
+ * its subscription type. These IDs are public: any embed of the form shows
+ * them. Signups land in HubSpot under Marketing, Forms.
  */
-export const NEWSLETTER_FORM = {
-	endpoint: "https://openteams.com/wp-admin/admin-ajax.php",
-	postId: "24848",
-	formId: "306990c",
+export const ENGINEERING_SIGNUP = {
+	portalId: "48576056",
+	formGuid: "4bb33d04-d180-414b-b548-71fe35117817",
+	subscriptionTypeId: 4097849099,
 };
 /**
  * The clock dates are printed on. It is the one the main site used, so a

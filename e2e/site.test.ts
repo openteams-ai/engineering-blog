@@ -193,6 +193,38 @@ describe.concurrent("site", () => {
 		expect(result.buttons).toBe(result.blocks);
 	});
 
+	it("signs an email up for the Engineering newsletter in HubSpot, or says why not", async ({ expect }) => {
+		// Answers 200 to the first signup and 400 (bad email) to the second.
+		const result = await withPage(async (page) => {
+			const sent: { url: string; body: any }[] = [];
+			await page.route("https://api.hsforms.com/**", (route) => {
+				sent.push({ url: route.request().url(), body: route.request().postDataJSON() });
+				return sent.length === 1
+					? route.fulfill({ json: { inlineMessage: "" } })
+					: route.fulfill({ status: 400, json: { errors: [{ errorType: "INVALID_EMAIL", message: "bad" }] } });
+			});
+			await open(page, `${BLOG_PATH}/`);
+			const status = page.locator("[data-subscribe-status]");
+			await page.fill("#subscribe-email", "reader@example.com");
+			await page.click("[data-subscribe] button");
+			await status.filter({ hasText: "welcome email" }).waitFor();
+			const ok = { status: await status.textContent(), formHidden: await page.locator("[data-subscribe]").isHidden() };
+
+			await page.reload();
+			await page.fill("#subscribe-email", "typo@example.con");
+			await page.click("[data-subscribe] button");
+			await status.filter({ hasText: "look right" }).waitFor();
+			return { sent, ok, rejected: await status.textContent() };
+		});
+		expect(result.sent[0].url).toBe(
+			"https://api.hsforms.com/submissions/v3/integration/submit/48576056/4bb33d04-d180-414b-b548-71fe35117817",
+		);
+		expect(result.sent[0].body.fields[0].value).toBe("reader@example.com");
+		expect(result.sent[0].body.legalConsentOptions.consent.communications[0].subscriptionTypeId).toBe(4097849099);
+		expect(result.ok).toEqual({ status: "Thanks! We sent a welcome email to reader@example.com.", formHidden: true });
+		expect(result.rejected).toMatch(/doesn't look right/);
+	});
+
 	it("shares a post on X, Hacker News, LinkedIn and Bluesky, and copies its link", async ({ expect }) => {
 		const path = `${BLOG_PATH}/pixi-ubi-micro-containers/`;
 		const result = await withPage(async (page) => {
