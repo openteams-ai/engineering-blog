@@ -1,10 +1,11 @@
 ---
 import { blogUrl } from "../lib/blog-path";
-import { NEWSLETTER_FORM } from "../data/site";
+import { CONSENT_TEXT } from "../lib/hubspot-form";
 // Subscribe call-to-action below the article grid and below every post: a
-// navy band with an email box that feeds the main site's newsletter form,
-// plus the RSS feed. The email box needs JavaScript to send, so it stays
-// hidden until the page's script is running; RSS works regardless.
+// navy band with an email box that signs readers up for the Engineering
+// newsletter in HubSpot (src/data/site.ts), plus the RSS feed. The email box
+// needs JavaScript to send, so it stays hidden until the page's script is
+// running; RSS works regardless.
 ---
 
 <section class="container-wide pb-20">
@@ -12,14 +13,20 @@ import { NEWSLETTER_FORM } from "../data/site";
 		<div>
 			<h2 class="text-2xl font-bold tracking-tight text-white">Never miss a post</h2>
 			<p class="mt-1.5 max-w-[520px] text-[15px] text-[#97a3c4]">
-				Benchmarks, deep dives, and lessons from OpenTeams engineers. Leave your email, or follow the feed.
+				Benchmarks, deep dives, and lessons from OpenTeams engineers. Get the Engineering newsletter once a month, or follow the feed.
 			</p>
 		</div>
 		<div class="flex w-full flex-col gap-4 lg:w-auto lg:items-end">
 			<form class="sub-form" data-subscribe hidden>
-				<label for="subscribe-email" class="sr-only">Email address</label>
-				<input id="subscribe-email" class="sub-input" type="email" name="email" placeholder="Email address" autocomplete="email" required />
-				<button type="submit" class="sub-button">Subscribe</button>
+				<div class="sub-row">
+					<label for="subscribe-email" class="sr-only">Email address</label>
+					<input id="subscribe-email" class="sub-input" type="email" name="email" placeholder="Email address" autocomplete="email" required />
+					<button type="submit" class="sub-button">Subscribe</button>
+				</div>
+				<p class="sub-consent">
+					{CONSENT_TEXT}{" "}
+					<a href="https://openteams.com/privacy-policy/">Privacy policy</a>
+				</p>
 			</form>
 			<p class="sub-status" data-subscribe-status aria-live="polite"></p>
 			<a href={blogUrl("/rss.xml")} class="sub-rss">
@@ -34,34 +41,35 @@ import { NEWSLETTER_FORM } from "../data/site";
 	</div>
 </section>
 
-<script is:inline define:vars={{ NEWSLETTER_FORM }}>
-	// Sends the email to the main site's newsletter form, so blog signups land in
-	// the same place as signups from the footer of openteams.com. The blog lives
-	// on the same domain, which is what lets the browser send this request.
-	const form = document.querySelector("[data-subscribe]");
-	const status = document.querySelector("[data-subscribe-status]");
+<script>
+	import { ENGINEERING_SIGNUP } from "../data/site";
+	import { rejectionMessage, submissionBody, submitUrl } from "../lib/hubspot-form";
+
+	// Double opt-in is off, so a 200 means subscribed. A HubSpot workflow
+	// ("Engineering newsletter welcome") then sends the welcome email.
+	const form = document.querySelector<HTMLFormElement>("[data-subscribe]")!;
+	const status = document.querySelector<HTMLElement>("[data-subscribe-status]")!;
+	const rss = document.querySelector<HTMLAnchorElement>(".sub-rss")!.href;
 	form.hidden = false;
 	form.addEventListener("submit", async (event) => {
 		event.preventDefault();
-		const button = form.querySelector("button");
-		const body = new FormData();
-		body.set("action", "elementor_pro_forms_send_form");
-		body.set("post_id", NEWSLETTER_FORM.postId);
-		body.set("form_id", NEWSLETTER_FORM.formId);
-		body.set("queried_id", NEWSLETTER_FORM.postId);
-		body.set("referer_title", document.title);
-		body.set("form_fields[email]", form.email.value);
+		const button = form.querySelector("button")!;
+		const email = (form.elements.namedItem("email") as HTMLInputElement).value;
 		button.disabled = true;
 		status.textContent = "Sending…";
-		try {
-			const answer = await (await fetch(NEWSLETTER_FORM.endpoint, { method: "POST", body })).json();
-			if (!answer.success) throw new Error(answer.data?.message ?? "rejected");
+		const res = await fetch(submitUrl(ENGINEERING_SIGNUP), {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(submissionBody(ENGINEERING_SIGNUP, email, { uri: location.href, name: document.title })),
+		}).catch(() => null);
+		if (res?.ok) {
 			form.hidden = true;
-			status.textContent = "You're on the list. Thanks for reading.";
-		} catch {
-			button.disabled = false;
-			status.innerHTML = 'That did not go through. Try again, or <a href="https://openteams.com/#Subscribe">subscribe on openteams.com</a>.';
+			status.textContent = "Thanks! Check your inbox for a welcome email.";
+			return;
 		}
+		button.disabled = false;
+		const reason = res && rejectionMessage(await res.json().catch(() => ({})));
+		status.innerHTML = reason ?? `That did not go through. Try again, or follow the <a href="${rss}">RSS feed</a>.`;
 	});
 </script>
 
@@ -69,7 +77,24 @@ import { NEWSLETTER_FORM } from "../data/site";
 	.sub-form {
 		display: flex;
 		width: 100%;
+		flex-direction: column;
+		gap: 0.6rem;
+	}
+	.sub-form[hidden] {
+		display: none;
+	}
+	.sub-row {
+		display: flex;
 		gap: 0.5rem;
+	}
+	.sub-consent {
+		font-size: 12px;
+		line-height: 1.5;
+		color: #97a3c4;
+	}
+	.sub-consent a {
+		color: #dce3ff;
+		text-decoration: underline;
 	}
 	.sub-input {
 		flex: 1;
