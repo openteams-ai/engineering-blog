@@ -64,7 +64,8 @@ import { CONSENT_TEXT } from "../lib/hubspot-form";
 		}).catch(() => null);
 		if (res?.ok) {
 			form.hidden = true;
-			status.textContent = "Thanks! Check your inbox for a welcome email.";
+			// The address is shown so readers can spot a typo.
+			status.textContent = `Thanks! We sent a welcome email to ${email}.`;
 			return;
 		}
 		button.disabled = false;

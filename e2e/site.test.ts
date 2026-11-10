@@ -207,7 +207,7 @@ describe.concurrent("site", () => {
 			const status = page.locator("[data-subscribe-status]");
 			await page.fill("#subscribe-email", "reader@example.com");
 			await page.click("[data-subscribe] button");
-			await status.filter({ hasText: "inbox" }).waitFor();
+			await status.filter({ hasText: "welcome email" }).waitFor();
 			const ok = { status: await status.textContent(), formHidden: await page.locator("[data-subscribe]").isHidden() };
 
 			await page.reload();
@@ -221,7 +221,7 @@ describe.concurrent("site", () => {
 		);
 		expect(result.sent[0].body.fields[0].value).toBe("reader@example.com");
 		expect(result.sent[0].body.legalConsentOptions.consent.communications[0].subscriptionTypeId).toBe(4097849099);
-		expect(result.ok).toEqual({ status: "Thanks! Check your inbox for a welcome email.", formHidden: true });
+		expect(result.ok).toEqual({ status: "Thanks! We sent a welcome email to reader@example.com.", formHidden: true });
 		expect(result.rejected).toMatch(/doesn't look right/);
 	});
 
