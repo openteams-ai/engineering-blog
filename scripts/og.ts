@@ -80,3 +80,15 @@ if (broken.length) throw new Error(`share cards not saved:\n${broken.join("\n")}
 // fingerprint (the README banner).
 const home = cards.find((c) => c.key === "home");
 if (home) copyFileSync(DIST + home.file, `${DIST}/og/og-home.png`);
+
+// Each post's art without its title, for the newsletter (scripts/newsletter.ts),
+// where the title is text. It's the art panel of the 2x share card, named
+// like the card with "art-" for "og-", so it changes when the card does.
+const ART = { left: 1300, top: 374, width: 972, height: 512 };
+const { default: sharp } = await import("sharp");
+await Promise.all(
+	cards
+		.filter((c) => c.key !== "home")
+		.map((c) => sharp(DIST + c.file).extract(ART).png().toFile(DIST + c.file.replace("/og-", "/art-"))),
+);
+console.log(`newsletter art: ${cards.length - (home ? 1 : 0)} saved`);
