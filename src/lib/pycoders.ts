@@ -33,8 +33,24 @@ export function titleKey(text: string): string {
 		.replace(/[^a-z0-9]/g, "");
 }
 
-/** Slugs of the posts whose title appears in an issue's page. */
+/** Slugs of the posts whose full title appears in an issue's page. */
 export function featuredSlugs(issueHtml: string, posts: { slug: string; title: string }[]): string[] {
 	const page = titleKey(issueHtml);
 	return posts.filter((p) => titleKey(p.title).length > 10 && page.includes(titleKey(p.title))).map((p) => p.slug);
+}
+
+/**
+ * Links of the articles an issue credits to openteams.com. PyCoder's prints
+ * each article's site under its summary, linked through the same
+ * pycoders.com/link redirect as the title, so this finds a post even when
+ * the editors reworded its title.
+ */
+export function openteamsLinks(issueHtml: string): string[] {
+	const links = [...issueHtml.matchAll(/<a href="([^"]+)"[^>]*>\s*(?:www\.)?openteams\.com\s*<\/a>/gi)].map((m) => m[1]);
+	return [...new Set(links)];
+}
+
+/** The post slug in an engineering-blog URL, or undefined for any other page. */
+export function blogSlug(url: string): string | undefined {
+	return url.match(/^https:\/\/(?:www\.)?openteams\.com\/engineering-blog\/([^/?#]+)/)?.[1];
 }

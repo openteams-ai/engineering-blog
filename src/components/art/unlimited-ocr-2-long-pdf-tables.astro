@@ -1,0 +1,51 @@
+---
+import { plex, navy, softBlue, solidBlue, green, check } from "./style";
+
+const line = "#b7c8e6";
+const HEAD = 24;
+const ROW = 26;
+const COLS = [90, 42, 42];
+
+// A table drawn as a grid: a filled header row, body rows and column lines.
+const grid = (x: number, y: number, rows: number) => {
+	const w = COLS.reduce((a, b) => a + b, 0);
+	const h = HEAD + rows * ROW;
+	const colXs = COLS.slice(0, -1).map((_, i) => x + COLS.slice(0, i + 1).reduce((a, b) => a + b, 0));
+	const rowYs = Array.from({ length: rows - 1 }, (_, i) => y + HEAD + (i + 1) * ROW);
+	return { x, y, w, h, colXs, rowYs };
+};
+
+// two pages stacked like the PDF, each holding part of the table with its own header
+const pages = [50, 166].map((py) => ({ py, ...grid(98, py + 14, 2) }));
+// one table: one header, the rows from both pages
+const merged = grid(448, 96, 4);
+const tables = [...pages, merged];
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A table split across two stacked pages, each with its own header, becomes one table with one header">
+	<rect x="-300" y="-300" width="1320" height="980" fill={softBlue}/>
+
+	<!-- paper: two stacked pages, then the merged table's card -->
+	{pages.map((p) => <rect x="80" y={p.py} width="210" height="104" rx="12" fill="#ffffff"/>)}
+	<rect x="430" y="82" width="210" height="156" rx="14" fill="#ffffff"/>
+
+	<!-- tables as grids -->
+	{tables.map((t) => (
+		<g>
+			<rect x={t.x} y={t.y} width={t.w} height={HEAD} fill={solidBlue}/>
+			{t.rowYs.map((ry) => <line x1={t.x} y1={ry} x2={t.x + t.w} y2={ry} stroke={line} stroke-width="2"/>)}
+			{t.colXs.map((cx) => <line x1={cx} y1={t.y + HEAD} x2={cx} y2={t.y + t.h} stroke={line} stroke-width="2"/>)}
+			<rect x={t.x} y={t.y} width={t.w} height={t.h} fill="none" stroke={solidBlue} stroke-width="2.5"/>
+		</g>
+	))}
+
+	<!-- arrow -->
+	<path d="M318 160 H392" stroke={navy} stroke-width="4" stroke-linecap="round"/>
+	<path d="M386 149 L404 160 L386 171 Z" fill={navy}/>
+
+	<g transform="translate(476 296)">
+		<circle r="18" fill={check}/>
+		<path d="M-8 0 L-2 6 L9 -7" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+	</g>
+	<text x="506" y="309" font-family={plex} font-size="36" font-weight="600" fill={green}>1 table</text>
+</svg>
