@@ -86,12 +86,15 @@ Most common browsers fixed themselves. Your Python tools are fixed only when you
 6. Rebuild container images and CI caches from scratch.
 7. Don't turn off certificate checking to make an error go away.
 
+If you use other languages or tools, check the community-maintained [eMudhra incident page](https://emudhra.we-have-a-problem.com/). It describes the compromise in detail and keeps an updated list of affected packages, runtimes and tools, with the version that fixed each one.
+
 ## Acknowledgments
 
 This fix was a huge community effort, and many more people took part than I can name here. This post follows the Python side of the story, but the same work happened across the wider open source community that week, in the Rust, Node.js and Go projects, Linux distributions and beyond. Thank you to all of them, including Seth Larson, Christian Heimes, Paul Moore, Zachary Ware, William Woodruff, Hugo van Kemenade, Sumana Harihareswara, Eric Swanson, Henry Schreiner and Jannis Leidel; Wolf Vollprecht and the team at Prefix; and my OpenTeams colleagues Isuru Fernando, Michał Górny and Axel Obermeier.
 
 ## References
 
+- **[eMudhra Intermediate CA Compromise](https://emudhra.we-have-a-problem.com/)** (Dennis Jackson and community contributors, 2026): The canonical description of the incident, with a community-updated list of affected packages, runtimes and tools and the versions that fixed them.
 - **[Information for Python users regarding eMudhra / emSign CA certificate security incident](https://discuss.python.org/t/information-for-python-users-regarding-emudhra-emsign-ca-certificate-security-incident/109576)** (Python Software Foundation, 2026): The advisory, the fixed versions, and the follow-up thread quoted here.
 - **[Python 3.15.2, 3.14.10, 3.13.18, 3.12.16 and 3.11.18 are out](https://blog.python.org/2026/10/python-3152-31410-31318-31216-31118/)** (Python Insider, 2026): The releases that block the compromised keys in Python's `ssl` module.
 - **[Python 3.15.1, 3.14.9 and 3.13.17 are out](https://blog.python.org/2026/10/python-3151-3149-31317/)** (Python Insider, 2026): The first round of CPython releases, which ship the fixed pip and certifi.
