@@ -1,0 +1,103 @@
+<!doctype html>
+<!--
+  Engineering newsletter template, filled in by scripts/newsletter.ts.
+  Double-bracket markers are filled per issue; the block between POST and /POST
+  repeats once per post. Double-curly-brace tags are HubSpot's own (HubL):
+  the view-online, preferences, unsubscribe and company address links that
+  HubSpot fills when it sends. Keep them as they are.
+
+  Email-safe: table layout, inline styles, a 640px column, hosted PNGs.
+  Fonts and colors follow the 2026 brand guidelines (see newsletter/README.md).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<title>OpenTeams Engineering · [[month]]</title>
+</head>
+<body style="margin:0; padding:0; background:#FFFFFF;">
+
+<div style="display:none; max-height:0; overflow:hidden; mso-hide:all;">
+	[[preheader]]
+</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFFFFF;">
+<tr><td align="center" style="padding:24px 0;">
+
+
+<table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="width:100%; max-width:640px; background:#FFFFFF;">
+
+	<!-- Header: logo left, label right -->
+	<tr>
+		<td style="padding:22px 44px;">
+			<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+				<td><a href="https://www.openteams.com"><img src="https://openteams.com/engineering-blog/openteams-horizontal.png" width="140" alt="OpenTeams" style="display:block; width:140px; height:auto; border:0;"></a></td>
+				<td align="right" style="font-family:'Inter Tight', Inter, Arial, Helvetica, sans-serif; font-size:13px; color:#0F172A;"><a href="{{ view_as_page_url }}" style="color:#0F172A;">View in browser</a></td>
+			</tr></table>
+		</td>
+	</tr>
+
+	<!-- Masthead: two lines, so the first post shows on the first screen -->
+	<tr>
+		<td align="center" style="padding:28px 44px 0; font-family:'Inter Tight', Inter, Arial, Helvetica, sans-serif; font-weight:700; font-size:40px; line-height:1.1; color:#022791;">
+			<a href="https://openteams.com/engineering-blog/" style="color:#022791; text-decoration:none;">OpenTeams <span style="color:#4D75FE;">Engineering</span></a>
+		</td>
+	</tr>
+	<tr>
+		<td align="center" style="padding:8px 44px 0; font-family:'Inter Tight', Inter, Arial, Helvetica, sans-serif; font-size:13px; font-weight:600; letter-spacing:0.06em; color:#0F172A;">
+			[[month_upper]]
+		</td>
+	</tr>
+	<tr>
+		<td align="center" style="padding:22px 64px 36px; font-family:'Inter Tight', Inter, Arial, Helvetica, sans-serif; font-size:16px; line-height:1.6; color:#0F172A;">
+			Grab a coffee ☕ Here's what our engineers have been building, breaking and writing about this month.
+		</td>
+	</tr>
+
+	<!-- POST -->
+	<tr>
+		<td style="background:[[background]]; padding:44px 44px 40px;">
+			<a href="[[url]]" style="font-family:'Inter Tight', Inter, Arial, Helvetica, sans-serif; font-weight:700; font-size:28px; line-height:1.15; color:#0F172A; text-decoration:none;">[[title_html]]</a>
+			<div style="padding-top:10px; font-family:'Inter Tight', Inter, Arial, Helvetica, sans-serif; font-size:14px; color:#475569;">By [[authors]]</div>
+			<div style="padding-top:14px; font-family:'Inter Tight', Inter, Arial, Helvetica, sans-serif; font-size:16px; line-height:1.6; color:#0F172A;">
+				[[summary]]
+			</div>
+			<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+				<td align="center" style="padding:28px 0;">
+					<a href="[[url]]"><img src="[[image]]" width="420" alt="[[image_alt]]" style="display:block; width:100%; max-width:420px; height:auto; border:0;"></a>
+				</td>
+			</tr></table>
+			<a href="[[url]]" style="font-family:'Inter Tight', Inter, Arial, Helvetica, sans-serif; font-size:15px; font-weight:700; color:#022791;">Read full article &rarr;</a>
+		</td>
+	</tr>
+	<!-- /POST -->
+
+	<!-- Footer -->
+	<tr>
+		<td align="center" bgcolor="#080D1F" style="background-color:#080D1F; background-image:linear-gradient(160deg, #0F1E5C 0%, #080D1F 70%); padding:56px 56px 44px;">
+			<a href="https://www.openteams.com"><img src="https://openteams.com/engineering-blog/openteams-white-horizontal.png" width="160" alt="OpenTeams" style="display:block; width:160px; height:auto; border:0;"></a>
+			<div style="padding-top:28px; font-family:'Inter Tight', Inter, Arial, Helvetica, sans-serif; font-size:12px; line-height:1.6; color:#E2E8F0;">
+				OpenTeams helps organizations deploy, support, and own the technology at enterprise scale, the foundation of modern data science and modern AI.
+			</div>
+			<div style="padding-top:20px; font-family:'Inter Tight', Inter, Arial, Helvetica, sans-serif; font-size:13px; color:#FFFFFF;">
+				<!-- Icons: white PNGs from Simple Icons (CC0), served from public/newsletter/icons/. -->
+				<a href="https://www.linkedin.com/company/openteams" style="text-decoration:none;"><img src="https://openteams.com/engineering-blog/newsletter/icons/linkedin.png" width="24" height="24" alt="LinkedIn" style="display:inline-block; width:24px; height:24px; border:0;"></a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="https://x.com/openteamsinc" style="text-decoration:none;"><img src="https://openteams.com/engineering-blog/newsletter/icons/x.png" width="24" height="24" alt="X" style="display:inline-block; width:24px; height:24px; border:0;"></a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="https://www.youtube.com/@openteams" style="text-decoration:none;"><img src="https://openteams.com/engineering-blog/newsletter/icons/youtube.png" width="24" height="24" alt="YouTube" style="display:inline-block; width:24px; height:24px; border:0;"></a>
+			</div>
+			<div style="padding-top:24px; font-family:'Inter Tight', Inter, Arial, Helvetica, sans-serif; font-size:11px; line-height:1.6; color:#E2E8F0;">
+				You're getting this because you subscribed on the OpenTeams Engineering Blog.<br>
+				<a href="{{ unsubscribe_link }}" style="color:#E2E8F0;">Manage preferences</a> · <a href="{{ unsubscribe_link_all }}" style="color:#E2E8F0;">Unsubscribe</a><br>
+				{{ site_settings.company_name }}, {{ site_settings.company_street_address_1 }}, {{ site_settings.company_city }}, {{ site_settings.company_state }} {{ site_settings.company_zip }}
+			</div>
+		</td>
+	</tr>
+
+</table>
+
+</td></tr>
+</table>
+</body>
+</html>

@@ -12,7 +12,8 @@
 		"check": "astro check",
 		"deploy": "node scripts/deploy.ts",
 		"ga:report": "node --env-file-if-exists=.env scripts/ga-report.ts",
-		"traffic:alert": "node --env-file-if-exists=.env scripts/traffic-alert.ts"
+		"traffic:alert": "node --env-file-if-exists=.env scripts/traffic-alert.ts",
+		"newsletter": "node scripts/newsletter.ts"
 	},
 	"dependencies": {
 		"@astrojs/markdown-remark": "7.3.4",
@@ -29,6 +30,7 @@
 		"@google-analytics/data": "7.3.0",
 		"@types/node": "26.6.5",
 		"playwright": "1.64.1",
+		"sharp": "0.35.5",
 		"typescript": "6.0.3",
 		"vitest": "5.0.5",
 		"wrangler": "4.153.0",

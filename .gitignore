@@ -12,3 +12,10 @@ card-preview-*.png
 # GA traffic report (scripts/ga-report.ts)
 .env
 ga-report.json
+
+# scripts/newsletter.ts output
+newsletter/out/
+
+# Newsletter design drafts and their local images (not used by scripts/newsletter.ts)
+newsletter/mockup*.html
+newsletter/preview-art/
