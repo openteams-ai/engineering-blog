@@ -178,4 +178,11 @@ describe("creditNewsletterDirect", () => {
 	it("leaves the given rows unchanged", () => {
 		expect(rows.find((r) => r.date === "2026-10-20")?.sessions).toBe(50);
 	});
+
+	it("credits the channel a share names", () => {
+		const result = creditNewsletterDirect(rows, [
+			{ slug: "pytorch", date: "2026-10-20", source: "linkedin.com (estimated)", channel: "LinkedIn (estimated)" },
+		]);
+		expect(result.find((r) => r.date === "2026-10-20" && r.channel === "LinkedIn (estimated)")?.sessions).toBe(46);
+	});
 });
