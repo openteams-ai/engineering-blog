@@ -72,10 +72,13 @@ const addDays = (date: string, n: number) => new Date(Date.parse(date) + n * DAY
  * the post's first visit) move to a
  * "Newsletters" row marked as estimated. The post's usual Direct visits stay
  * Direct. Returns new rows and leaves the given ones unchanged.
+ *
+ * A feature can name another channel: a post shared on LinkedIn sends app
+ * readers in as Direct too, since the app drops the referrer.
  */
 export function creditNewsletterDirect(
 	rows: TrafficRow[],
-	features: { slug: string; date: string; source: string }[],
+	features: { slug: string; date: string; source: string; channel?: string }[],
 ): TrafficRow[] {
 	const out = rows.map((r) => ({ ...r }));
 	// A post's usual level only counts days since its first visit: days before
@@ -85,7 +88,7 @@ export function creditNewsletterDirect(
 	const directOn = (slug: string, date: string) =>
 		out.find((r) => r.slug === slug && r.date === date && r.channel === DIRECT);
 
-	for (const { slug, date, source } of features) {
+	for (const { slug, date, source, channel = "Newsletters" } of features) {
 		const first = firstSeen.get(slug) ?? date;
 		const before = Array.from({ length: 14 }, (_, i) => addDays(date, -14 + i)).filter((d) => d >= first);
 		const usual = Math.round(median(before.map((d) => directOn(slug, d)?.sessions ?? 0)));
@@ -103,7 +106,7 @@ export function creditNewsletterDirect(
 			direct.users -= moved.users;
 			direct.engagedSessions -= moved.engagedSessions;
 			direct.engagementSec -= moved.engagementSec;
-			out.push({ date: day, slug, channel: "Newsletters", source, medium: "estimated from direct", sessions: extra, ...moved });
+			out.push({ date: day, slug, channel, source, medium: "estimated from direct", sessions: extra, ...moved });
 		}
 	}
 	return out;
