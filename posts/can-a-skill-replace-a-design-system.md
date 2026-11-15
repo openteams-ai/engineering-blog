@@ -108,13 +108,13 @@ A skill build used about 193,000 more tokens to make the same four screens: twic
 
 The reason is where the work happens. With the registry, engineers did the restyle once, and a build installs the result. With the skill, the agent reads the Figma kit and restyles each component in every app that needs it. The registry pays its cost once, in engineering time. The skill pays in tokens, every time.
 
-## Same base, different extras
+## What the design system adds
 
-With both approaches on shadcn, the code tells you what each one adds on top.
+Both approaches get the same behavior from shadcn. Its sidebar is 718 lines, with collapse to a rail, a mobile sheet and a keyboard shortcut, and neither build had to write that logic. The difference is what the design system adds on top.
 
-shadcn gave the skill the behavior a Figma file can't draw. Its sidebar is 718 lines, with collapse to a rail, a mobile sheet and a keyboard shortcut. The agent restyled it and didn't write any of that logic. That's the part a designer never draws and a static frame never shows.
+Nebari's engineers made decisions a Figma file can't show. The registry's checkbox is 203 lines, with a group, a label and a description. The skill's checkbox is under 30: shadcn's box, restyled. The registry's `Button` has a loading state that sets `aria-busy`. Stock shadcn's doesn't.
 
-What the skill doesn't give you is what Nebari's engineers added on top. The registry's checkbox is 203 lines, with a group, a label and a description. The skill's checkbox is under 30: shadcn's box, restyled. The registry's `Button` has a loading state that sets `aria-busy`. Stock shadcn's doesn't. An engineer decided those once, for every app. With a skill, each app adds them on its own, and two apps may do it differently. Preventing that is the reason a design system exists.
+Those decisions were made once, and every app gets them. With a skill, each app makes them on its own, if it makes them at all, and two apps may make them differently. That consistency is what a design system is for, and it's the part a skill can't replace.
 
 ## Where I land
 
