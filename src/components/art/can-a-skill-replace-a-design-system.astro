@@ -1,0 +1,44 @@
+---
+import { plex, navy, peach, peachSoft, peachMid, gold, goldDeep } from "./style";
+
+// The same screen from the component library and from the skill, and the
+// skill's token bill beside it: twice the library's.
+const screens = [
+	{ x: 48, name: "library" },
+	{ x: 300, name: "skill" },
+];
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="The component library and the skill build the same screen, but the skill uses twice the tokens">
+	<rect x="-300" y="-300" width="1320" height="980" fill={peach}/>
+	{screens.map((s) => (
+		<g transform={`translate(${s.x} 84) scale(0.86)`}>
+			<rect width="220" height="160" rx="14" fill="#ffffff"/>
+			<rect x="14" y="16" width="44" height="128" rx="8" fill={peachSoft}/>
+			<rect x="22" y="28" width="28" height="9" rx="4.5" fill={gold}/>
+			<rect x="22" y="46" width="28" height="9" rx="4.5" fill={peachMid}/>
+			<rect x="22" y="64" width="20" height="9" rx="4.5" fill={peachMid}/>
+			<rect x="72" y="18" width="120" height="10" rx="5" fill={peachMid}/>
+			<rect x="72" y="36" width="84" height="10" rx="5" fill={peachSoft}/>
+			{[
+				{ x: 76, h: 34 },
+				{ x: 104, h: 56 },
+				{ x: 132, h: 42 },
+				{ x: 160, h: 70, hot: true },
+			].map((c) => (
+				<rect x={c.x} y={140 - c.h} width="20" height={c.h} rx="5" fill={c.hot ? gold : peachMid}/>
+			))}
+		</g>
+	))}
+	<g stroke={navy} stroke-width="6" stroke-linecap="round">
+		<path d="M254 146 H284"/>
+		<path d="M254 166 H284"/>
+	</g>
+	<g font-family={plex} text-anchor="middle" font-weight="600">
+		{screens.map((s) => (
+			<text x={s.x + 95} y="276" font-size="30" fill={navy}>{s.name}</text>
+		))}
+		<text x="590" y="200" font-size="120" fill={goldDeep}>2×</text>
+		<text x="590" y="250" font-size="32" fill={goldDeep}>tokens</text>
+	</g>
+</svg>
