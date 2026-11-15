@@ -37,21 +37,7 @@ flowchart TB
     style K3 fill:#1d6ae5,color:#fff
 ```
 
-One caveat up front: both approaches depend on the Figma kit. The registry's engineers restyled from it, and the skill reads it on every build. A skill can stand in for component code, not for the design work behind it. If the kit is thin, out of date or inconsistent, both approaches get worse. The skill gets worse faster, since no engineer sits between the file and the code.
-
-## The skill's source wasn't made for it
-
-The skill is only as good as what it reads. The Nebari Figma kit belongs to our designers, and it was made for people, so the first step was a read-only audit.
-
-The good news: it's a careful file. Almost every color in it points at a named color, like "background" or "border," and not a one-off hex value. I counted 927 fills and strokes across the components, and 921 use a named color. That matters because a name is something an agent can carry into code as a token. The components also have their states drawn, so nothing is left to guess, and the icons are a full Lucide set.
-
-The gaps were all things a person never needs and an agent does:
-
-- **No code names.** A variable called `color/background/default` has no CSS name attached.
-- **No behavior hints.** Nothing says a `Select` should be built on a select primitive.
-- **Layout meant for browsing.** Cover pages, a playground page, emoji in page names.
-
-I didn't want to ask the designers to restructure their file for an experiment. So the skill got an **adapter**: a small block of config that lives in the app repo and supplies what the file leaves out. It derives CSS names by a fixed rule (`color/background/default` becomes `--background-default`), maps each Figma page to its shadcn component, and says which pages to skip. The skill never writes to the Figma file.
+One caveat up front: both approaches depend on a well-made Figma UI kit. The registry's engineers restyled from it, and the skill reads it on every build. Our designers built the Nebari kit with care. Nearly every color in its components points at a named color, like "background" or "border," which an agent can carry into code as a token, and every component state is drawn. A skill can stand in for component code, not for the design work behind it. If the kit is thin, out of date or inconsistent, both approaches get worse. The skill gets worse faster, since no engineer sits between the file and the code.
 
 ## A fair test
 
@@ -136,7 +122,7 @@ For Nebari, the registry stays. Fidelity doesn't separate the two, so it comes d
 
 For a new line of UIs, I'd start with stock shadcn and the skill. It matched a mature registry on fidelity and accessibility, with no component library to build first. Early on, components change every week, and you don't yet know which ones you need. A change in Figma is a restyle, not a release. Four things make it work:
 
-1. **Make the Figma kit for the skill.** Code names on variables and behavior hints on components are cheap to add when the file is new.
+1. **Make the Figma kit for the skill.** Give each variable a CSS name, and note which primitive each component builds on, like a select for a `Select`. Both are cheap to add when the file is new.
 2. **Give one person the rules.** When two builds disagree, someone has to tighten the skill.
 3. **Commit what it generates.** The next build should reuse a component, not restyle it again. That's also how you keep the token bill down.
 4. **Review the result by eye.** Every build had something a person would notice, and no automated check caught it. Someone has to look, whichever approach you use.
