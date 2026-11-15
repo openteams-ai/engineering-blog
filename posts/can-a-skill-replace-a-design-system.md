@@ -5,7 +5,7 @@ date: 2026-11-15
 topic: ai-engineering
 authors:
   - johnny-bouder
-meta_description: "We built Nebari screens with Claude from our component library and from a skill that restyles stock shadcn from Figma. Same fidelity, twice the tokens."
+meta_description: "We had Claude build the same screens from our component library, then from a skill. Same fidelity, twice the tokens."
 ---
 
 Here's the question I wanted to answer. If an AI agent can follow a skill that turns a design into components on demand, do we still need to maintain a design system in code?
