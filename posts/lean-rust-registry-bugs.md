@@ -123,4 +123,12 @@ Seven rules is a small slice. The backend has roughly 200 functions that make de
 
 The security bugs had two shapes: a rule that fails over a sequence, and a rule implemented in several places that drifted apart. Lean handles the first. The second needs structure in the code, which is separate work.
 
-This post used Lean to find out whether a rule was right. The next one uses it the other way: to make a hot path do less work without changing a single security decision.
+## What's next: making it faster without changing a decision
+
+This post used Lean to find out whether a rule was right. The next one uses it the other way round: to make code do less work and prove it still decides the same.
+
+We've been measuring the upcoming 1.12 release against 1.11.13 with a load harness that runs several Artifact Keeper instances against one shared Postgres server and one object store, the way a hosted fleet runs. At this load 1.12 isn't slower for clients. It does more work per artifact on the parts every instance shares: more Postgres statements and more write-ahead log for the same uploads. On a shared database server that cost is paid once per instance.
+
+Each fix goes through the same loop: measure, write the rule the faster code must still follow as a sentence, prove it in Lean when a security decision depends on it, change the Rust, and measure again.
+
+The first fix needed no proof. The RPM repodata builder wrote to the database every two seconds, even on instances with no RPM repositories at all. Skipping that work when nothing is queued cut write-ahead log by 83% across three idle instances ([#6056](https://github.com/artifact-keeper/artifact-keeper/issues/6056)). The next one does need a proof. A Maven download evaluated the same security gate twice per request, and reusing the first answer for the rest of the request must never let through anything the gate would refuse. That proof, and the numbers before and after, are the next post.
