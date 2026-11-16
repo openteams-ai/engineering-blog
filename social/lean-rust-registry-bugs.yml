@@ -1,0 +1,16 @@
+# The social brief for posts/lean-rust-registry-bugs.md. It's used to write the LinkedIn post.
+# Answer each question yourself or with your AI assistant (see Social Brief in
+# README.md). The PR can merge once all four are answered.
+
+# What problem does this article solve? (1-2 sentences)
+problem: "Formal proofs found hundreds of bugs in CPython, but it is unclear whether a theorem prover is worth the effort on an ordinary backend that has no second implementation to compare against."
+
+# What does the article build, test, compare, or argue? (1-2 sentences)
+what_it_does: "Applies Lean 4 models, reference tests against upstream tools and property tests to a Rust artifact registry, and counts which technique found each of 15 confirmed bugs."
+
+# If readers remember one thing, what should it be? (1 sentence)
+remember_one_thing: "Write down what each rule guarantees first, because a plain test usually finds the bug once the property is stated."
+
+# Who should read this? Pick one or more:
+# data-scientists, ml-ai-engineers, python-developers, platform-devops-engineers, security-compliance-engineers, oss-maintainers, engineering-leaders
+audience: ["oss-maintainers", "security-compliance-engineers", "platform-devops-engineers"]

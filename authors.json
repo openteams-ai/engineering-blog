@@ -56,7 +56,7 @@
 	{
 		"slug": "brandon-geraci",
 		"name": "Brandon Geraci",
-		"bio": "Senior Software Engineer at OpenTeams. Officially writes software, unofficially whatever else the day needs.",
+		"bio": "Senior Software Engineer at OpenTeams. Creator and maintainer of Artifact Keeper, an open source artifact registry written in Rust.",
 		"avatarUrl": "/authors/brandon-geraci.jpg",
 		"links": {
 			"github": "https://github.com/brandonrc",

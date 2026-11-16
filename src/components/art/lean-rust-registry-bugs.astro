@@ -1,0 +1,19 @@
+---
+import { plex, navy, softBlue, solidBlue, blueMut } from "./style";
+
+// 15 confirmed bugs once each rule was written down; the prover found one.
+const cells = Array.from({ length: 15 }, (_, i) => ({ x: 90 + i * 37, lean: i === 0 }));
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Writing the rules down found 15 bugs; the Lean prover found 1 of them">
+	<rect x="-300" y="-300" width="1320" height="980" fill={softBlue}/>
+	<g font-family={plex}>
+		<text x="90" y="112" font-size="34" fill={navy} font-weight="500">Rules written down</text>
+		{cells.map((c) => (
+			<rect x={c.x} y="140" width="29" height="56" rx="8" fill={c.lean ? solidBlue : "#ffffff"}/>
+		))}
+		<text x="90" y="262" font-size="30" fill={blueMut} font-weight="600">15 bugs</text>
+		<rect x="90" y="292" width="22" height="30" rx="6" fill={solidBlue}/>
+		<text x="126" y="316" font-size="26" fill={solidBlue} font-weight="600">1 found by the Lean prover</text>
+	</g>
+</svg>
