@@ -101,7 +101,7 @@ theorem without_the_check_nothing_becomes_everything :
   decide
 ```
 
-That check was already in the code. The model says why it must stay, and a Rust property test checks the same statement against the real minting code, so deleting the check fails the build.
+That check was already in the code. The model says why it must stay, and a Rust property test ([#6067](https://github.com/artifact-keeper/artifact-keeper/pull/6067)) checks the same rule against the real minting code: with the check deleted, it fails with the model's counterexample.
 
 Five of the six public models proved their guarantee as written; two of them also record an edge case as a theorem. The sixth, the scan-state model, reproduces [#5715](https://github.com/artifact-keeper/artifact-keeper/issues/5715) with `decide`, but the property test got there first, so the table credits the test. A proof that goes through still buys something a test can't: the statement holds for every input and every chain, and it is checked again whenever the model changes.
 
