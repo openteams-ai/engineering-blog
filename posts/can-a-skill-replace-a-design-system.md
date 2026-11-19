@@ -12,6 +12,8 @@ Here's the question I wanted to answer. If an AI agent can follow a skill that t
 
 A design system in code is real work. Someone builds each component, documents it, releases it, and keeps it in step with what the designers draw. A skill sounds lighter: start from stock components, write down how to restyle them from the design, and let the agent build what each screen needs.
 
+This isn't only a frontend question. Any team that keeps a shared library in step with a source of truth faces it. Examples are an API client built from an OpenAPI spec, Terraform modules that encode a platform team's standards, or an SDK that wraps a service. The library is the maintained version. A skill that reads the source and generates what each project needs is the light one. I tested it on UI because that's where I work, and a Figma kit gives a clear source to measure against.
+
 I tested that on [Nebari design](https://github.com/nebari-dev/nebari-design), our design system for Nebari. This post is what happened.
 
 ## The two approaches
