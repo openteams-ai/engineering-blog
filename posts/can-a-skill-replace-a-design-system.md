@@ -20,11 +20,7 @@ The problem: we want Nebari UIs that match the Figma design, without someone upd
 
 ## The two approaches
 
-Both approaches start from the same place: [shadcn](https://ui.shadcn.com/) components built on [Base UI](https://base-ui.com/), which supplies the keyboard and ARIA behavior. What differs is who makes them look like Nebari, and when.
-
-**The registry.** Nebari design ships as a component library, distributed as a [shadcn registry](https://nebari-dev.github.io/nebari-design/). Engineers restyled shadcn to match the Nebari design once, added what Nebari needs, and released it. You run a command, and a finished component lands in your repo. A skill tells the agent which component to use where.
-
-**A skill.** There's no Nebari component code to install. A skill called [`kit-ui`](https://github.com/jbouder/skills/tree/main/kit-ui) does the design system's job in each app. It installs each stock shadcn component the screen needs, then reads the Nebari Figma kit through the Figma MCP server and restyles the component from it. shadcn keeps its parts, props and behavior. The Figma kit decides every color, border, radius, size, spacing, text style and shadow. The skill also records which Figma node each component came from.
+The difference is who makes the components match the design, and when. With the registry, engineers do it once. With a skill, the agent does it on every build.
 
 ```mermaid
 flowchart TB
@@ -40,6 +36,12 @@ flowchart TB
     style R2 fill:#1d6ae5,color:#fff
     style K3 fill:#1d6ae5,color:#fff
 ```
+
+Both approaches start from the same place: [shadcn](https://ui.shadcn.com/) components built on [Base UI](https://base-ui.com/), which supplies the keyboard and ARIA behavior.
+
+**The registry.** Nebari design ships as a component library, distributed as a [shadcn registry](https://nebari-dev.github.io/nebari-design/). Engineers restyled shadcn to match the Nebari design once, added what Nebari needs, and released it. You run a command, and a finished component lands in your repo. A skill tells the agent which component to use where.
+
+**A skill.** There's no Nebari component code to install. A skill called [`kit-ui`](https://github.com/jbouder/skills/tree/main/kit-ui) does the design system's job in each app. It installs each stock shadcn component the screen needs, then reads the Nebari Figma kit through the Figma MCP server and restyles the component from it. shadcn keeps its parts, props and behavior. The Figma kit decides every color, border, radius, size, spacing, text style and shadow. The skill also records which Figma node each component came from.
 
 One caveat up front: both approaches depend on a well-made Figma UI kit. The registry's engineers restyled from it, and the skill reads it on every build. Our designers built the Nebari kit with care. Nearly every color in its components points at a named color, like "background" or "border," which an agent can carry into code as a token, and every component state is drawn. A skill can stand in for component code, not for the design work behind it. If the kit is thin, out of date or inconsistent, both approaches get worse. The skill gets worse faster, since no engineer sits between the file and the code.
 
