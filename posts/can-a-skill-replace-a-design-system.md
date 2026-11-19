@@ -77,16 +77,9 @@ The pixel number is still in the report, labeled as a smoke test. It catches a p
 
 | Average per build | Registry | Skill |
 | --- | --- | --- |
-| Obvious differences | 0 | 0 |
 | Noticeable differences | 1.7 | 1.3 |
 | Subtle differences | 5.0 | 3.0 |
-| Defects | 0 | 0 |
-| Keyboard checks failed | 0 | 0 |
 | Design-system code in the repo | 2,332 lines | 1,926 lines |
-| JavaScript shipped (gzip) | 152 kB | 152 kB |
-| Build time | 6m 30s | 19m 25s |
-| Tokens | 186,410 | 379,610 |
-| Calls to Figma | 4 | 12.7 |
 
 **Fidelity came out even.** Neither approach produced anything a person would see at a glance. Each averaged between one and two differences you'd notice with the build next to the design. The skill's numbers are a little lower, and the gap is too small to call.
 
