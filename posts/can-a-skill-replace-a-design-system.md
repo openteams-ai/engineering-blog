@@ -97,13 +97,9 @@ Four more differences showed up in every build. The clearest is at 1024 pixels w
 
 This is where the two approaches separate.
 
-| Average per build | Registry | Skill |
-| --- | --- | --- |
-| Tokens | 186,410 | 379,610 |
-| Build time | 6m 30s | 19m 25s |
-| Calls to Figma | 4 | 12.7 |
+![Average cost per build. Tokens: the registry used 186,410 and the skill used 379,610, about twice as many. Build time: the registry took 6 minutes 30 seconds and the skill took 19 minutes 25 seconds, about three times as long.](images/can-a-skill-replace-a-design-system/cost-per-build.svg)
 
-A skill build used about 193,000 more tokens to make the same four screens: twice the registry. It also took three times as long.
+A skill build used about 193,000 more tokens to make the same four screens: twice the registry. It also took three times as long, and called Figma about three times as often: 12.7 calls against 4.
 
 The reason is where the work happens. With the registry, engineers did the restyle once, and a build installs the result. With the skill, the agent reads the Figma kit and restyles each component in every app that needs it. The registry pays its cost once, in engineering time. The skill pays in tokens, every time.
 
