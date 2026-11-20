@@ -5,11 +5,11 @@ date: 2026-11-15
 topic: python-tooling
 authors:
 - khuyen-tran
-meta_description: "Write one Narwhals function that accepts pandas, Polars, DuckDB, or DataFusion. Filter by group, aggregate in order, and test it across every backend."
+meta_description: "Write one Narwhals function for pandas, Polars, DuckDB, or DataFusion. Test it on every backend, turn it into SQL, and keep it working across upgrades."
 focus_keyword: narwhals
 ---
 
-Say you write a small helper that fills missing sales values for each store. You write it in pandas, and it works.
+Let's say you write a small helper that fills missing sales values for each store. You write it in pandas, and it works.
 
 Then a teammate wants to call it on a Polars DataFrame. Another one keeps their data in DuckDB. A third one just moved to DataFusion. Each new caller adds another branch.
 
@@ -27,7 +27,7 @@ def ffill_by_store(df):
 
 Every branch is code to maintain and test. And when the branches disagree in a small way, nobody notices until a number looks wrong.
 
-In this article, you will learn Narwhals's features by building a store-sales helper that works with any of these libraries.
+In this article, you will learn Narwhals's features by building a store-sales helper that works with any of these libraries and keeps working when those libraries change.
 
 > 💻 **Get the Code**: The functions and tests are on [GitHub](https://github.com/khuyentran1401/codecut-blog/tree/main/narwhals-one-function-any-dataframe).
 
@@ -37,21 +37,21 @@ In this article, you will learn Narwhals's features by building a store-sales he
 
 You write your logic with a subset of the Polars API. Narwhals translates it into each library's own calls, so pandas code runs as pandas and DuckDB code runs as SQL.
 
-If you are new to Narwhals, start with [Narwhals: Unified DataFrame Functions for pandas, Polars, and PySpark](https://codecut.ai/unified-dataframe-functions-pandas-polars-pyspark/) and [Writing Portable DataFrame Code for Eager and Lazy Execution](https://codecut.ai/eager-to-lazy-dataframes-with-narwhals/). This article picks up where the second one ends.
+For more background, see [Narwhals: Unified DataFrame Functions for pandas, Polars, and PySpark](https://codecut.ai/unified-dataframe-functions-pandas-polars-pyspark/) and [Writing Portable DataFrame Code for Eager and Lazy Execution](https://codecut.ai/eager-to-lazy-dataframes-with-narwhals/).
 
 ## Setup
 
 Install Narwhals with the libraries used in this article.
 
 ```bash
-pip install "narwhals>=2.28" pandas polars duckdb pyarrow datafusion narwhals-datafusion
+pip install "narwhals>=2.28" pandas polars duckdb pyarrow sqlparse datafusion narwhals-datafusion
 ```
 
 *This article uses narwhals v2.28.0, pandas v3.1.1, polars v2.1.0, duckdb v2.0.0, datafusion v55.0.0, and narwhals-datafusion v0.2.0.*
 
-The features in this article need Narwhals 2.16 or later. On older versions, they fail on DuckDB and other lazy backends.
+Narwhals 2.28 or later covers every feature in this article.
 
-The examples use the same six rows of store sales as the previous article. Two `sales` values are missing.
+The examples use six rows of store sales. Two `sales` values are missing.
 
 ```python
 from datetime import datetime
@@ -78,7 +78,7 @@ duckdb_rel = duckdb.sql("SELECT * FROM df_polars")
 
 ## Accept Any DataFrame
 
-Here is the forward-fill function from the previous article. It fills each missing `sales` value with the previous value from the same store.
+Start with a forward-fill function. It fills each missing `sales` value with the previous value from the same store.
 
 ```python
 import narwhals as nw
@@ -101,6 +101,8 @@ The function has three steps:
 - `from_native` wraps whatever dataframe the caller passes in
 - The Narwhals expression does the work
 - `to_native` hands back the caller's own type
+
+If you prefer less boilerplate, the `@nw.narwhalify` decorator does the wrapping and unwrapping for you.
 
 ```text
  caller passes              Narwhals                caller gets back
@@ -128,7 +130,7 @@ for df in [df_pandas, df_polars, lf_polars, duckdb_rel]:
 
 Lazy inputs stay lazy. The Polars LazyFrame and the DuckDB relation are not computed until the caller asks for the result.
 
-The `order_by="sale_date"` part matters. DuckDB and other lazy backends do not keep row order, so "the previous value" only means something once you say which column sets the order. The [previous article](https://codecut.ai/eager-to-lazy-dataframes-with-narwhals/) explains this in detail.
+The `order_by="sale_date"` part tells lazy backends which row comes before which. [Aggregate in a Fixed Order](#aggregate-in-a-fixed-order) shows why that matters.
 
 ## Filter Rows by Group
 
@@ -185,7 +187,7 @@ This is nice for several reasons:
 
 ## Aggregate in a Fixed Order
 
-Now say you want each store's last sales value. In pandas, `last()` works because the rows have a fixed order. On DuckDB, the same call has no clear meaning, since the rows can come back in any order.
+Now let's say you want each store's last sales value. In pandas, `last()` works because the rows have a fixed order. On DuckDB, the same call has no clear meaning, since the rows can come back in any order.
 
 Narwhals refuses to guess. Calling `last()` on DuckDB raises an error that tells you how to fix it.
 
@@ -202,7 +204,7 @@ Hint: To make the expression valid, specify `order_by`.
    or `nw.col('price').first(order_by='date')`.
 ```
 
-Pass `order_by` to say which column defines "last".
+Pass `order_by` to say which column defines "last". The same rule is why `ffill_by_store` passes `order_by="sale_date"`: "the previous value" only means something once you say which column sets the order.
 
 ```python
 def last_sale_per_store(df_native: IntoFrameT) -> IntoFrameT:
@@ -404,13 +406,129 @@ This is nice for several reasons:
 
 The plugin system is still marked experimental, so expect some details to change between releases.
 
+## Generate SQL from the Same Code
+
+Sometimes the logic has to live in SQL, such as a dbt model or a warehouse view. Usually that means writing it a second time by hand.
+
+`narwhals.sql` gives you a table with a schema and no data. You write the same Narwhals expression on it, and `to_sql()` returns the query.
+
+```python
+from narwhals.sql import table
+
+sales = table(
+    "sales",
+    {"sale_date": nw.Datetime(), "store": nw.String(), "sales": nw.Int64()},
+)
+query = sales.with_columns(
+    nw.col("sales").fill_null(strategy="forward").over("store", order_by="sale_date")
+)
+print(query.to_sql(pretty=True))
+```
+
+```text
+SELECT "sale_date",
+       "store",
+       (last_value("sales"
+                   IGNORE nulls) OVER (PARTITION BY "store"
+                                       ORDER BY "sale_date" ASC NULLS FIRST ROWS BETWEEN UNBOUNDED PRECEDING AND 0 FOLLOWING)) AS "sales"
+FROM "sales"
+```
+
+This is nice for several reasons:
+
+- You don't need any data or a database connection to get the query
+- The window frame (`ROWS BETWEEN UNBOUNDED PRECEDING ...`) is written for you, and it is easy to get wrong by hand
+- The same expression still runs as Python on any backend
+
+`narwhals.sql` needs DuckDB installed, and the query follows DuckDB's SQL. Check that it runs on your warehouse before you ship it. `pretty=True` needs `sqlparse`.
+
+## Upgrade Engines Without Changing Your Code
+
+Polars 2.0 and DuckDB 2.0 came out in October 2026, two weeks apart. Both changed behavior that existing code relied on.
+
+Narwhals code is protected from part of that. Narwhals translates your code into each library's calls, so when a library changes, the Narwhals maintainers update the translation and you upgrade Narwhals.
+
+Take `explode` in Polars 2.0. A list column with an empty list used to produce a row with a null. Now that row disappears, with no warning.
+
+```python
+promos = pl.DataFrame(
+    {"store": ["Thimphu", "Paro"], "promo": [["spring", "loyalty"], []]}
+)
+promos.explode("promo")
+```
+
+```text
+┌─────────┬─────────┐
+│ store   ┆ promo   │
+│ ---     ┆ ---     │
+│ str     ┆ str     │
+╞═════════╪═════════╡
+│ Thimphu ┆ spring  │
+│ Thimphu ┆ loyalty │
+└─────────┴─────────┘
+```
+
+Paro is gone. The same call through Narwhals keeps it:
+
+```python
+nw.from_native(promos).explode("promo").to_native()
+```
+
+```text
+┌─────────┬─────────┐
+│ store   ┆ promo   │
+│ ---     ┆ ---     │
+│ str     ┆ str     │
+╞═════════╪═════════╡
+│ Thimphu ┆ spring  │
+│ Thimphu ┆ loyalty │
+│ Paro    ┆ null    │
+└─────────┴─────────┘
+```
+
+On Polars 1.44, both calls return the three rows. Narwhals added this fix in version 2.23, before Polars 2.0 came out.
+
+DuckDB 2.0 changed how relations reference columns, which broke joins in Narwhals 2.27. Narwhals 2.28 fixed it and kept DuckDB 1.x working. The join code itself did not change:
+
+```python
+sales = duckdb.sql("SELECT * FROM (VALUES ('Paro', 500), ('Thimphu', 1450)) t(store, sales)")
+stores = duckdb.sql("SELECT * FROM (VALUES ('Paro', 'West'), ('Thimphu', 'Central')) t(store, region)")
+
+nw.from_native(sales).join(nw.from_native(stores), on="store").to_native()
+```
+
+```text
+narwhals 2.27.1 + duckdb 2.0.0   BinderException: Referenced column "lhs."store"" not found
+narwhals 2.28.0 + duckdb 2.0.0   [('Paro', 500, 'West'), ('Thimphu', 1450, 'Central')]
+```
+
+There is a limit. Narwhals translates method calls, but it does not change a library's type rules. Polars 2.0 no longer casts strings to dates, so `nw.col("date").cast(nw.Date)` fails the same way it does in plain Polars. Use `nw.col("date").str.to_date("%Y-%m-%d")`, which works on both versions.
+
+## Protect Your Users with stable.v2
+
+The previous section is about Polars and DuckDB changing. Narwhals changes too. If other people install your code, a Narwhals upgrade should not break it either.
+
+Narwhals promises never to change or remove any public function in `narwhals.stable.v2`. Breaking changes go to the main `narwhals` namespace first. To get that promise, change one import:
+
+```python
+import narwhals.stable.v2 as nw
+```
+
+`ffill_by_store` and `latest_sale_per_store` work unchanged with this import. New features reach the main namespace first, though. At the time of writing, `last()` in `stable.v2` does not accept `order_by` yet:
+
+```text
+TypeError: Expr.last() got an unexpected keyword argument 'order_by'
+```
+
+A simple rule: libraries and shared packages import `narwhals.stable.v2`, while scripts and notebooks import `narwhals` to get the newest methods.
+
 ## Final Thoughts
 
 What I like about Narwhals is that it lets me write a function once without deciding for my users which library they should use. pandas users stay in pandas, DuckDB users keep their data in the database, and nobody waits for a conversion they did not ask for.
 
 The test helper is the part I would not skip. It caught a dtype difference that I would never have spotted by reading the output.
 
-If you publish a library built on Narwhals, import `narwhals.stable.v2` instead of `narwhals`. Narwhals promises never to change or remove any public function in a stable API, so a Narwhals upgrade will not break your users. New features arrive in the main namespace first, though. At the time of writing, `first()` and `last()` in `stable.v2` do not accept `order_by` yet.
+For code other people run, the upgrade story matters just as much. `stable.v2` keeps Narwhals' own API fixed, and the Narwhals maintainers keep up with releases like Polars 2.0 and DuckDB 2.0 so you don't have to.
 
 Narwhals is not the right fit for everything. If your work is mostly SQL against a database rather than functions that accept any dataframe, [Ibis](https://codecut.ai/ibis-vs-narwhals-vs-fugue-dataframe-portability/) is a better fit.
 
@@ -422,3 +540,7 @@ Narwhals is not the right fit for everything. If your work is mostly SQL against
 - **[Extensions and plugins](https://narwhals-dev.github.io/narwhals/extending/)** (Narwhals docs): how a package registers a backend through the `narwhals.plugins` entry point.
 - **[Narwhals 2.16.0 release notes](https://github.com/narwhals-dev/narwhals/releases/tag/v2.16.0)** (Narwhals, 2026): window functions in `filter`, `order_by` in `first` and `last`, and `assert_frame_equal`, which set the minimum version in Setup.
 - **[narwhals-datafusion](https://github.com/s5dsn-eqee/narwhals-datafusion)** (2026): the DataFusion backend plugin used in the plugin section.
+- **[narwhals.sql API reference](https://narwhals-dev.github.io/narwhals/api-reference/sql/)** (Narwhals docs): `table()` and `to_sql()`, and the DuckDB requirement.
+- **[Polars 2.0 upgrade guide](https://docs.pola.rs/releases/upgrade/2/)** (Polars, 2026): the `explode` default change and the removed string-to-date casts.
+- **[fix: explicitly use `empty_as_null=True` in `explode` for Polars (#3718)](https://github.com/narwhals-dev/narwhals/pull/3718)** (Narwhals, 2026): why Narwhals keeps the old `explode` behavior on Polars 2.0.
+- **[fix: support DuckDB 2.0 in joins, time zone lookup and `from_native` typing (#4099)](https://github.com/narwhals-dev/narwhals/pull/4099)** (Narwhals, 2026): the DuckDB 2.0 join fix in Narwhals 2.28.
