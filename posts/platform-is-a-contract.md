@@ -20,7 +20,11 @@ Platform engineering is the closest thing I've seen to DevOps principles working
 
 Most talk about platforms stays at the level of tooling: a portal, golden paths, a GitOps setup. Tooling matters the way an implementation matters behind an interface. It has to work, but consumers never build against it. They build against the interface, and for a platform, that interface is the contract.
 
-At its core, a platform is a contract. The platform team's job is to fulfill the promises that the contract makes. Consumers build things that rely on those promises. Neither side needs to know how the other does its job, as long as both keep to the contract. If that sounds like spec-driven API design, it's the same discipline applied to a whole platform instead of a single endpoint. None of this is new. The [Go 1 compatibility promise](https://go.dev/doc/go1compat) and the [Kubernetes deprecation policy](https://kubernetes.io/docs/reference/using-api/deprecation-policy/) are contracts of exactly this kind, and they are a big part of why people trust those projects enough to build on them.
+At its core, a platform is a contract. The platform team's job is to fulfill the promises that the contract makes. Consumers build things that rely on those promises. Neither side needs to know how the other does its job, as long as both keep to the contract. If that sounds like spec-driven API design, it's the same discipline applied to a whole platform instead of a single endpoint.
+
+Before we go any further, I need to define a couple of terms as I am using them in this context. They are both somewhat overloaded terms, so I want to clarify. First, a *promise* is one specific behavior the platform team commits to keep working through every upgrade and every swap of the software underneath. "A pack that declares a NebariApp gets a route, a TLS certificate and single sign-on" is a promise. It says what consumers get, not which tools provide it. Second, a *contract* is the whole written agreement: the promises and how stable each one is, the things that exist on the platform but aren't promised, and the rules for how promises get added, changed and retired.
+
+None of this is new. The [Go 1 compatibility promise](https://go.dev/doc/go1compat) and the [Kubernetes deprecation policy](https://kubernetes.io/docs/reference/using-api/deprecation-policy/) are contracts of exactly this kind, and they are a big part of why people trust those projects enough to build on them.
 
 ## Where this came from
 
