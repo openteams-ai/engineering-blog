@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 364" role="img" aria-label="A pandas DataFrame, Polars DataFrame, Polars LazyFrame, and DuckDB relation each pass through from_native into one function written once, then through to_native, and each comes back as the same type it went in.">
+	<defs>
+		<marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+			<path d="M0 0L10 5L0 10Z" fill="#c3d2f4"/>
+		</marker>
+	</defs>
+	<style>
+		text { font-family: "IBM Plex Sans", "Inter Tight", Helvetica, Arial, sans-serif; fill: #e8edff; font-size: 18px; text-anchor: middle; dominant-baseline: central; }
+		.muted { fill: #9aa8c7; }
+		.code { font-family: "Fira Code", Menlo, Consolas, monospace; }
+		.pill { fill: #041437; stroke-width: 2; }
+		.arrow { stroke: #c3d2f4; stroke-width: 1.5; marker-end: url(#head); }
+	</style>
+
+	<rect width="780" height="364" rx="12" fill="#041437"/>
+
+	<!-- column headers -->
+	<text x="104" y="40" class="muted">caller passes</text>
+	<text x="390" y="40" class="muted">Narwhals</text>
+	<text x="676" y="40" class="muted">caller gets back</text>
+
+	<!-- one function in the middle -->
+	<rect x="320" y="100" width="140" height="244" rx="10" fill="#0b2257" stroke="#c3d2f4" stroke-width="1.5"/>
+	<text x="390" y="210" >your function</text>
+	<text x="390" y="238" class="muted">written once</text>
+
+	<!-- pandas DataFrame -->
+	<rect x="20" y="106" width="168" height="44" rx="8" class="pill" stroke="#FF8A69"/>
+	<text x="104" y="128">pandas DataFrame</text>
+	<line x1="196" y1="128" x2="312" y2="128" class="arrow"/>
+	<line x1="468" y1="128" x2="584" y2="128" class="arrow"/>
+	<rect x="592" y="106" width="168" height="44" rx="8" class="pill" stroke="#FF8A69"/>
+	<text x="676" y="128">pandas DataFrame</text>
+
+	<!-- Polars DataFrame -->
+	<rect x="20" y="166" width="168" height="44" rx="8" class="pill" stroke="#4D75FE"/>
+	<text x="104" y="188">Polars DataFrame</text>
+	<line x1="196" y1="188" x2="312" y2="188" class="arrow"/>
+	<line x1="468" y1="188" x2="584" y2="188" class="arrow"/>
+	<rect x="592" y="166" width="168" height="44" rx="8" class="pill" stroke="#4D75FE"/>
+	<text x="676" y="188">Polars DataFrame</text>
+
+	<!-- Polars LazyFrame -->
+	<rect x="20" y="226" width="168" height="44" rx="8" class="pill" stroke="#d6e4fa"/>
+	<text x="104" y="248">Polars LazyFrame</text>
+	<line x1="196" y1="248" x2="312" y2="248" class="arrow"/>
+	<line x1="468" y1="248" x2="584" y2="248" class="arrow"/>
+	<rect x="592" y="226" width="168" height="44" rx="8" class="pill" stroke="#d6e4fa"/>
+	<text x="676" y="248">Polars LazyFrame</text>
+
+	<!-- DuckDB relation -->
+	<rect x="20" y="286" width="168" height="44" rx="8" class="pill" stroke="#faa944"/>
+	<text x="104" y="308">DuckDB relation</text>
+	<line x1="196" y1="308" x2="312" y2="308" class="arrow"/>
+	<line x1="468" y1="308" x2="584" y2="308" class="arrow"/>
+	<rect x="592" y="286" width="168" height="44" rx="8" class="pill" stroke="#faa944"/>
+	<text x="676" y="308">DuckDB relation</text>
+
+	<!-- conversion steps -->
+	<text x="254" y="72" class="code muted">from_native</text>
+	<text x="526" y="72" class="code muted">to_native</text>
+</svg>
