@@ -1,0 +1,42 @@
+---
+import { plex, code, navy, peach, peachSoft, gold, peachInk, check } from "./style";
+
+// The minimum viable contract as one page in three bands: what is stable,
+// what is experimental, and what not to rely on.
+const page = { x: 110, y: 20, w: 500, h: 340 };
+const rows = [
+	{ y: 136, label: "stable" },
+	{ y: 220, label: "experimental" },
+	{ y: 304, label: "do not rely on" },
+];
+const ix = 180;
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A contract page in three bands: stable, experimental, and do not rely on">
+	<rect x="-300" y="-300" width="1320" height="980" fill={peach}/>
+	<rect x={page.x} y={page.y} width={page.w} height={page.h} rx="16" fill="#ffffff"/>
+	<text x={page.x + 32} y={page.y + 52} font-family={code} font-size="30" font-weight="500" fill={peachInk}>contract</text>
+	{rows.map((r) => (
+		<rect x={page.x + 20} y={r.y - 36} width={page.w - 40} height="72" rx="10" fill={peachSoft}/>
+	))}
+	<!-- stable: a green check -->
+	<g transform={`translate(${ix} ${rows[0].y})`}>
+		<circle r="27" fill={check}/>
+		<path transform="scale(1.25)" d="M-9 0 L-3 6 L10 -8" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+	</g>
+	<!-- experimental: a gold wave -->
+	<g transform={`translate(${ix} ${rows[1].y})`}>
+		<circle r="27" fill={gold}/>
+		<path transform="scale(1.25)" d="M-11 2 Q-5.5 -8 0 0 T11 -2" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round"/>
+	</g>
+	<!-- do not rely on: a navy cross -->
+	<g transform={`translate(${ix} ${rows[2].y})`}>
+		<circle r="27" fill={navy}/>
+		<path transform="scale(1.25)" d="M-8 -8 L8 8 M8 -8 L-8 8" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+	</g>
+	<g font-family={plex} font-size="40" font-weight="600" fill={navy}>
+		{rows.map((r) => (
+			<text x={ix + 46} y={r.y + 14}>{r.label}</text>
+		))}
+	</g>
+</svg>

@@ -137,5 +137,16 @@
 		"links": {
 			"github": "https://github.com/dbouquin"
 		}
+	},
+	{
+		"slug": "chuck-mcandrew",
+		"name": "Chuck McAndrew",
+		"bio": "Director of Infrastructure Engineering at OpenTeams. Writes about platform engineering and infrastructure.",
+		"avatarUrl": "https://avatars.githubusercontent.com/u/6248903",
+		"links": {
+			"github": "https://github.com/dcmcand",
+			"linkedin": "https://www.linkedin.com/in/chuck-mcandrew-93194674/",
+			"website": "https://chuckmcandrew.com"
+		}
 	}
 ]
