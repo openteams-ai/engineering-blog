@@ -1,11 +1,11 @@
 ---
-title: "Write One DataFrame Function for pandas, Polars, DuckDB, and DataFusion with Narwhals"
+title: "Write One DataFrame Function for pandas, Polars, and DuckDB with Narwhals"
 slug: narwhals-one-function-any-dataframe
 date: 2026-11-15
 topic: python-tooling
 authors:
 - khuyen-tran
-meta_description: "Write one Narwhals function for pandas, Polars, DuckDB, or DataFusion. Test it on every backend and keep it working across upgrades."
+meta_description: "Write one Narwhals function for pandas, Polars, and DuckDB. Test it on every backend and keep it working when the libraries upgrade."
 focus_keyword: narwhals
 ---
 
