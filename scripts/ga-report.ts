@@ -19,6 +19,7 @@ import { BLOG_PATH } from "../src/lib/blog-path.ts";
 import { channelFor, creditNewsletterDirect, isoDate, slugFromLandingPage, type TrafficRow } from "../src/lib/traffic.ts";
 import { readPosts } from "./posts.ts";
 import { pycodersFeatures, pycodersSource } from "./pycoders-features.ts";
+import { SOCIAL_SHARES } from "../src/data/social-shares.ts";
 
 const OUT_FILE = "ga-report.json";
 
@@ -83,7 +84,10 @@ const since = new Date(Date.now() - days * 864e5).toISOString().slice(0, 10);
 const features = await pycodersFeatures(posts, since);
 const rows = creditNewsletterDirect(
 	[...merged.values()],
-	features.map((f) => ({ slug: f.slug, date: f.date, source: pycodersSource(f.number) })),
+	[
+		...features.map((f) => ({ slug: f.slug, date: f.date, source: pycodersSource(f.number) })),
+		...SOCIAL_SHARES.filter((s) => s.date >= since).map((s) => ({ ...s, source: "linkedin.com (estimated)", channel: "LinkedIn (estimated)" })),
+	],
 );
 const credited = rows.filter((r) => r.medium === "estimated from direct").reduce((sum, r) => sum + r.sessions, 0);
 console.log(`PyCoder's Weekly featured ${features.length} post(s); credited ${credited} Direct visits to it.`);
