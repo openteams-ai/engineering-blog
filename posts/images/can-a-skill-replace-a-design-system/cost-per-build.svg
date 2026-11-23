@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 240" role="img" aria-label="Average cost per build. Tokens: the registry used 186,410 and the skill used 379,610, about twice as many. Build time: the registry took 6 minutes 30 seconds and the skill took 19 minutes 25 seconds, about three times as long.">
+	<style>
+		text { font-family: "IBM Plex Sans", "Inter Tight", Helvetica, Arial, sans-serif; fill: #e8edff; font-size: 15px; dominant-baseline: central; }
+		.muted { fill: #9aa8c7; }
+		.title { font-size: 16px; font-weight: 600; }
+		.ratio { font-size: 18px; font-weight: 600; fill: #FF8A69; text-anchor: end; }
+		.track { fill: #0b1d47; stroke: #1d2b55; stroke-width: 1; }
+		.registry { fill: #72FCDB; }
+		.skill { fill: #FF8A69; }
+	</style>
+
+	<rect width="780" height="240" rx="12" fill="#041437"/>
+
+	<!-- Tokens: 460px = 379,610 -->
+	<text x="40" y="34" class="title">Tokens per build</text>
+	<text x="740" y="34" class="ratio">2×</text>
+	<text x="40" y="68" class="muted">Registry</text>
+	<rect x="150" y="58" width="460" height="20" rx="4" class="track"/>
+	<rect x="150" y="58" width="226" height="20" rx="4" class="registry"/>
+	<text x="386" y="68">186,410</text>
+	<text x="40" y="98" class="muted">Skill</text>
+	<rect x="150" y="88" width="460" height="20" rx="4" class="skill"/>
+	<text x="620" y="98">379,610</text>
+
+	<!-- Build time: 460px = 19m 25s -->
+	<text x="40" y="146" class="title">Build time</text>
+	<text x="740" y="146" class="ratio">3×</text>
+	<text x="40" y="180" class="muted">Registry</text>
+	<rect x="150" y="170" width="460" height="20" rx="4" class="track"/>
+	<rect x="150" y="170" width="154" height="20" rx="4" class="registry"/>
+	<text x="314" y="180">6m 30s</text>
+	<text x="40" y="210" class="muted">Skill</text>
+	<rect x="150" y="200" width="460" height="20" rx="4" class="skill"/>
+	<text x="620" y="210">19m 25s</text>
+</svg>
