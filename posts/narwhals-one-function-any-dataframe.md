@@ -1,7 +1,7 @@
 ---
 title: "Write One DataFrame Function for pandas, Polars, and DuckDB with Narwhals"
 slug: narwhals-one-function-any-dataframe
-date: 2026-11-15
+date: 2026-11-23
 topic: python-tooling
 authors:
 - khuyen-tran
@@ -36,6 +36,8 @@ In this article, you will use Narwhals to write that function once and keep it w
 ## What Is Narwhals?
 
 [Narwhals](https://github.com/narwhals-dev/narwhals) is a lightweight layer that lets you write dataframe code in Polars syntax and run it on many libraries such as pandas, Polars, and DuckDB.
+
+Libraries such as scikit-learn, Plotly, Altair, and marimo already use Narwhals to accept any dataframe their users pass in ([full list](https://github.com/narwhals-dev/narwhals#used-by)).
 
 For more background on Narwhals, see [Narwhals: Unified DataFrame Functions for pandas, Polars, and PySpark](https://codecut.ai/unified-dataframe-functions-pandas-polars-pyspark/) and [Writing Portable DataFrame Code for Eager and Lazy Execution](https://codecut.ai/eager-to-lazy-dataframes-with-narwhals/).
 
@@ -192,7 +194,7 @@ def ffill_by_store(df):
 
 ## Get the Same Answer on Every Library
 
-Users expect a function to give the same answer on every library. Lazy backends like DuckDB and Polars LazyFrame don't guarantee row order, so Narwhals asks you to set the order for any operation that depends on it.
+Users expect a function to give the same answer on every library. Some lazy backends, like DuckDB, don't guarantee row order the way Polars LazyFrame does. So for any lazy input, Narwhals asks you to set the order for operations that depend on it.
 
 To see why, let's get each store's latest sale in DuckDB:
 
