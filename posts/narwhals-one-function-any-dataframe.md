@@ -192,33 +192,43 @@ def ffill_by_store(df):
 
 ## Get the Same Answer on Every Library
 
-Users expect a function to give the same answer on every library. For operations that depend on row order, Narwhals requires you to say what that order is.
+Users expect a function to give the same answer on every library. Lazy backends like DuckDB and Polars LazyFrame don't guarantee row order, so Narwhals asks you to set the order for any operation that depends on it.
 
-To see why, compare how pandas and DuckDB handle row order.
-
-In pandas, taking the last value per store returns the rows in the same order every time:
+To see why, let's get each store's latest sale in DuckDB:
 
 ```python
-for _ in range(2):
-    print(df_pandas.groupby("store", sort=False).tail(1)[["store", "sales"]].values.tolist())
+query = "SELECT store, last(sale_date)::DATE AS sale_date, last(sales) AS sales FROM {} GROUP BY store ORDER BY store"
+print(duckdb.sql(query.format("df_polars")))
 ```
 
 ```text
-[['Thimphu', 1450.0], ['Paro', nan]]
-[['Thimphu', 1450.0], ['Paro', nan]]
+┌─────────┬────────────┬───────┐
+│  store  │ sale_date  │ sales │
+│ varchar │    date    │ int64 │
+├─────────┼────────────┼───────┤
+│ Paro    │ 2025-05-24 │  NULL │
+│ Thimphu │ 2025-05-24 │  1450 │
+└─────────┴────────────┴───────┘
 ```
 
-But in DuckDB, getting the last value per store might return a different order in different runs:
+Both stores return their May 24 row, the latest date in the data. Reversing the rows doesn't change the latest date, so you'd expect the same answer:
 
 ```python
-for _ in range(2):
-    print(duckdb.sql("SELECT store, last(sales) AS sales FROM duckdb_rel GROUP BY store").fetchall())
+reversed_rows = df_polars.reverse()  # same rows, last row first
+print(duckdb.sql(query.format("reversed_rows")))
 ```
 
 ```text
-[('Paro', None), ('Thimphu', 1450)]
-[('Thimphu', 1450), ('Paro', None)]
+┌─────────┬────────────┬───────┐
+│  store  │ sale_date  │ sales │
+│ varchar │    date    │ int64 │
+├─────────┼────────────┼───────┤
+│ Paro    │ 2025-05-22 │   501 │
+│ Thimphu │ 2025-05-22 │  1100 │
+└─────────┴────────────┴───────┘
 ```
+
+But the second query returns May 22 instead of the latest date, May 24. That's because `last()` without an order takes whichever row DuckDB reads last, not the row with the latest date.
 
 Narwhals prevents this by requiring you to specify the order to use. If you try to take the last value without specifying the order, Narwhals raises an error:
 
@@ -268,7 +278,12 @@ last_sale_per_store(duckdb_rel)
 └─────────┴───────┘
 ```
 
-The same `order_by` works for every operation that depends on row order, such as `first()`, `cum_sum()`, `shift()`, and the forward fill in `ffill_by_store`.
+Other operations that depend on row order, such as `first()` and `cum_sum()`, need an order too:
+
+```python
+nw.col("sales").first(order_by="sale_date")
+nw.col("sales").cum_sum().over(order_by="sale_date")
+```
 
 ## Test the Function on Every Backend
 
