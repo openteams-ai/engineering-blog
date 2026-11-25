@@ -135,7 +135,19 @@
 		"bio": "Senior Developer Advocate at OpenTeams. Writes about open source and AI, and hosts Found in the Machine, a narrative history podcast about the forgotten people, decisions, and accidents that shaped the digital world.",
 		"avatarUrl": "https://avatars.githubusercontent.com/u/5713878?v=4",
 		"links": {
-			"github": "https://github.com/dbouquin"
+			"github": "https://github.com/dbouquin",
+			"linkedin": "https://www.linkedin.com/in/dbouquin/",
+			"website": "https://foundinthemachine.com/"
+		}
+	},
+	{
+		"slug": "pavithra-eswaramoorthy",
+		"name": "Pavithra Eswaramoorthy",
+		"bio": "Developer Advocate at Quansight. Bokeh core team member.",
+		"avatarUrl": "https://avatars.githubusercontent.com/u/33131404?v=4",
+		"links": {
+			"github": "https://github.com/pavithraes",
+			"website": "https://pavithraes.me"
 		}
 	}
 ]

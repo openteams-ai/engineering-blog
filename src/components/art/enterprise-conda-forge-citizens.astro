@@ -1,0 +1,36 @@
+---
+import { code, darkNavy, greenOnNavy, check } from "./style";
+
+// `conda list`: every package came from conda-forge, and one more row is
+// yours. Names left, channel column right, the new row highlighted.
+const rows = ["numpy", "scipy"];
+const nameX = 104, chanX = 374, top = 142, step = 54;
+const mine = { y: 220, h: 60 };
+---
+
+<svg viewBox="0 0 720 380" class="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A conda list where every package comes from conda-forge, with a highlighted new row for your own package">
+	<rect x="-300" y="-300" width="1320" height="980" fill={darkNavy}/>
+
+	<g transform="translate(0 25)">
+	<!-- terminal window -->
+	<rect x="60" y="30" width="600" height="270" rx="16" fill="#0b1c44" stroke="#24386a" stroke-width="2"/>
+	<g font-family={code} font-size="30">
+		<text x={nameX - 12} y="84" fill="#8aa2ff" font-weight="500">$ conda list</text>
+		{rows.map((r, i) => (
+			<g fill="#9fb0d6">
+				<text x={nameX} y={top + i * step}>{r}</text>
+				<text x={chanX} y={top + i * step}>conda-forge</text>
+			</g>
+		))}
+
+		<!-- your package, highlighted -->
+		<rect x="80" y={mine.y} width="560" height={mine.h} rx="10" fill="#18334a" stroke={greenOnNavy} stroke-width="2.5"/>
+		<text x={nameX} y={mine.y + 40} fill="#ffffff" font-weight="500">your-package</text>
+		<text x={chanX} y={mine.y + 40} fill={greenOnNavy} font-weight="500">conda-forge</text>
+	</g>
+	<g transform={`translate(${610} ${mine.y + mine.h / 2})`}>
+		<circle r="18" fill={check}/>
+		<path d="M-7 0 L-2 5 L8 -6" stroke="#ffffff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+	</g>
+	</g>
+</svg>
